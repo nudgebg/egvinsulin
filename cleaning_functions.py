@@ -171,6 +171,9 @@ def FLAIR_cleaning(filepath_data,clean_data_path,data_val = True):
     
     return cleaned_data,patient_data 
 
+def T1DE_cleaning(filepath_data,clean_data_path,data_val = True):
+    return None
+    
 def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
     import pandas as pd
     from datetime import datetime, timedelta
