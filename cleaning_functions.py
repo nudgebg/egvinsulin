@@ -12,15 +12,14 @@ import pathlib
 def datCnv(src):
     return pd.to_datetime(src)
 
-
 def FLAIR_cleaning(filepath_data, clean_data_path, data_val=True):
-    filename = filepath_data + 'FLAIRDevicePump.txt'
+    filename = os.path.join(filepath_data,'Data Tables', 'FLAIRDevicePump.txt')
     InsulinData = pd.read_csv(filename, sep="|", low_memory = False)
 
-    filename = filepath_data + 'FLAIRDeviceCGM.txt'
+    filename = os.path.join(filepath_data,'Data Tables', 'FLAIRDeviceCGM.txt')
     CGM = pd.read_csv(filename, sep="|" , low_memory = False)
 
-    filename = filepath_data + 'PtRoster.txt'
+    filename = os.path.join(filepath_data, 'Data Tables', 'PtRoster.txt')
     roster = pd.read_csv(filename, sep="|", low_memory = False)
 
     PatientInfo = pd.DataFrame(columns=['PtID','StartDate','TrtGroup'])
@@ -174,18 +173,16 @@ def FLAIR_cleaning(filepath_data, clean_data_path, data_val=True):
     return cleaned_data,patient_data 
 
 def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
-
-
-    filename = filepath_data + 'DCLP5TandemBolus_Completed_Combined_b.txt'
+    filename = os.path.join(filepath_data,'DCLP5TandemBolus_Completed_Combined_b.txt')
     Bolus = pd.read_csv(filename, sep="|", low_memory = False)
 
-    filename = filepath_data + 'DCLP5TandemBASALRATECHG_b.txt'
+    filename = os.path.join(filepath_data, 'DCLP5TandemBASALRATECHG_b.txt')
     BasalRate = pd.read_csv(filename, sep="|" , low_memory = False)
 
-    filename = filepath_data + 'DexcomClarityCGM.txt'
+    filename = os.path.join(filepath_data, 'DexcomClarityCGM.txt')
     CGM = pd.read_csv(filename, sep="|", low_memory = False)
 
-    filename = filepath_data + 'PtRoster.txt'
+    filename = os.path.join(filepath_data, 'PtRoster.txt')
     roster = pd.read_csv(filename, sep="|")
     
     PatientInfo = pd.DataFrame(columns=['PtID','StartDate','TrtGroup'])
@@ -360,16 +357,17 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
     return cleaned_data,patient_data
 
 def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
-    filename = filepath_data + 'Pump_BasalRateChange.txt'
+    filename = os.path.join(filepath_data,'Data Files', 'Pump_BasalRateChange.txt')
     BasalRate = pd.read_csv(filename, sep="|", low_memory = False)
 
-    filename = filepath_data + 'Pump_BolusDelivered.txt'
+    filename = os.path.join(filepath_data,'Data Files', 'Pump_BolusDelivered.txt')
     Bolus = pd.read_csv(filename, sep="|" , low_memory = False)
 
-    filename = filepath_data + 'Pump_CGMGlucoseValue.txt'
+    filename = os.path.join(filepath_data,'Data Files', 'Pump_CGMGlucoseValue.txt')
     CGM = pd.read_csv(filename, sep="|", low_memory = False)
-    filename = filepath_data + 'PtRoster_a.csv'
-    roster = pd.read_csv(filename, low_memory = False)
+
+    filename = os.path.join(filepath_data,'Data Files', 'PtRoster_a.txt')
+    roster = pd.read_csv(filename, sep="|", low_memory = False)
     
     PatientInfo = pd.DataFrame(columns=['PtID','StartDate','TrtGroup'])
     PatientInfo['PtID'] = roster['PtID']
@@ -544,7 +542,7 @@ def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
 
 def IOBP2_cleaning(filepath,clean_data_path,data_val = True):
     #load patient roster
-    filename = filepath + 'IOBP2PtRoster.txt'
+    filename = os.path.join(filepath, 'IOBP2PtRoster.txt')
     roster = pd.read_csv(filename, sep="|")
     #build clean roster
     PatientInfo = pd.DataFrame(columns=['PtID','StartDate','EndDate','TrtGroup','Age'])
@@ -555,7 +553,7 @@ def IOBP2_cleaning(filepath,clean_data_path,data_val = True):
     PatientInfo['Age'] = roster['AgeAsofEnrollDt']
     
     #load manual injections data
-    filename = filepath + 'IOBP2ManualInsulinInj.txt'
+    filename = os.path.join(filepath, 'IOBP2ManualInsulinInj.txt')
     data_man_inj = pd.read_csv(filename, sep="|")
     #create datetime objects for easy inclusion
     data_man_inj['DateTime'] = np.nan
@@ -571,7 +569,7 @@ def IOBP2_cleaning(filepath,clean_data_path,data_val = True):
                                            data_man_inj.InsInjMin[i],
                                           )
     #load insulin pump data
-    filename = filepath + 'IOBP2DeviceiLet.txt'
+    filename = os.path.join(filepath, 'IOBP2DeviceiLet.txt')
     data = pd.read_csv(filename, sep="|")
     #create new dateframe for clean data
     cleaned_data = pd.DataFrame()
