@@ -12,8 +12,9 @@ import pathlib
 def datCnv(src):
     return pd.to_datetime(src)
 
-    filename = filepath_data + 'FLAIRDevicePump.txt'
+
 def FLAIR_cleaning(filepath_data, clean_data_path, data_val=True):
+    filename = filepath_data + 'FLAIRDevicePump.txt'
     InsulinData = pd.read_csv(filename, sep="|", low_memory = False)
 
     filename = filepath_data + 'FLAIRDeviceCGM.txt'
