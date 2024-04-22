@@ -1,3 +1,5 @@
+from scipy.io import savemat
+
 def save_data_as(data,file_format,export_filename):
     #input data should have an insulin delivery (basal+boluses) titled 'insulin', a CGM column titled 'egv',
     #a datetime column titled 'datetime', and a patient id column titled 'PtID'
@@ -12,7 +14,6 @@ def save_data_as(data,file_format,export_filename):
         data.to_csv(export_filename + '.csv', index=False)
     
     if file_format == 'MAT':
-        from scipy.io import savemat
         
         data_dict = data.to_dict(orient='dict')
         savemat(export_filename + '.mat', data_dict)
