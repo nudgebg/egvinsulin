@@ -173,8 +173,6 @@ def FLAIR_cleaning(filepath_data, clean_data_path, data_val=True):
     return cleaned_data,patient_data 
 
 def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
-
-
     filename = os.path.join(filepath_data,'DCLP5TandemBolus_Completed_Combined_b.txt')
     Bolus = pd.read_csv(filename, sep="|", low_memory = False)
 
