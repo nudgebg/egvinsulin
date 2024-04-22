@@ -542,7 +542,7 @@ def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
 
 def IOBP2_cleaning(filepath,clean_data_path,data_val = True):
     #load patient roster
-    filename = os.path.join(filepath, 'IOBP2PtRoster.txt')
+    filename = os.path.join(filepath, 'Data Tables', 'IOBP2PtRoster.txt')
     roster = pd.read_csv(filename, sep="|")
     #build clean roster
     PatientInfo = pd.DataFrame(columns=['PtID','StartDate','EndDate','TrtGroup','Age'])
@@ -553,7 +553,7 @@ def IOBP2_cleaning(filepath,clean_data_path,data_val = True):
     PatientInfo['Age'] = roster['AgeAsofEnrollDt']
     
     #load manual injections data
-    filename = os.path.join(filepath, 'IOBP2ManualInsulinInj.txt')
+    filename = os.path.join(filepath, 'Data Tables', 'IOBP2ManualInsulinInj.txt')
     data_man_inj = pd.read_csv(filename, sep="|")
     #create datetime objects for easy inclusion
     data_man_inj['DateTime'] = np.nan
@@ -569,7 +569,7 @@ def IOBP2_cleaning(filepath,clean_data_path,data_val = True):
                                            data_man_inj.InsInjMin[i],
                                           )
     #load insulin pump data
-    filename = os.path.join(filepath, 'IOBP2DeviceiLet.txt')
+    filename = os.path.join(filepath, 'Data Tables', 'IOBP2DeviceiLet.txt')
     data = pd.read_csv(filename, sep="|")
     #create new dateframe for clean data
     cleaned_data = pd.DataFrame()
