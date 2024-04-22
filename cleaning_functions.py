@@ -1,17 +1,17 @@
 #collection of cleaning functions for insulin and egv data
+import os
+import pandas as pd
+from datetime import datetime, timedelta
+import numpy as np
+import warnings
+import time
+warnings.filterwarnings("ignore")
 
-def FLAIR_cleaning(filepath_data,clean_data_path,data_val = True):
-    import pandas as pd
-    from datetime import datetime, timedelta
-    import numpy as np
-    import warnings
-    import time
-    warnings.filterwarnings("ignore")
+import pathlib
+def datCnv(src):
+    return pd.to_datetime(src)
 
-    import pathlib
-    def datCnv(src):
-        return pd.to_datetime(src)
-    
+def FLAIR_cleaning(filepath_data, clean_data_path, data_val=True):
     filename = filepath_data + 'FLAIRDevicePump.txt'
     InsulinData = pd.read_csv(filename, sep="|", low_memory = False)
 
@@ -172,16 +172,7 @@ def FLAIR_cleaning(filepath_data,clean_data_path,data_val = True):
     return cleaned_data,patient_data 
 
 def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
-    import pandas as pd
-    from datetime import datetime, timedelta
-    import numpy as np
-    import warnings
-    import time
-    warnings.filterwarnings("ignore")
-    import pathlib
 
-    def datCnv(src):
-        return pd.to_datetime(src)
 
     filename = filepath_data + 'DCLP5TandemBolus_Completed_Combined_b.txt'
     Bolus = pd.read_csv(filename, sep="|", low_memory = False)
@@ -367,17 +358,6 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
     return cleaned_data,patient_data
 
 def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
-    import pandas as pd
-    from datetime import datetime, timedelta
-    import numpy as np
-    import warnings
-    import time
-    warnings.filterwarnings("ignore")
-    import pathlib
-
-    def datCnv(src):
-        return pd.to_datetime(src)
-
     filename = filepath_data + 'Pump_BasalRateChange.txt'
     BasalRate = pd.read_csv(filename, sep="|", low_memory = False)
 
@@ -561,16 +541,6 @@ def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
     return cleaned_data,patient_data
 
 def IOBP2_cleaning(filepath,clean_data_path,data_val = True):
-    import pandas as pd
-    from datetime import datetime, timedelta
-    import numpy as np
-    import warnings
-    import time
-    warnings.filterwarnings("ignore")
-    import pathlib
-
-    def datCnv(src):
-        return pd.to_datetime(src)
     #load patient roster
     filename = filepath + 'IOBP2PtRoster.txt'
     roster = pd.read_csv(filename, sep="|")
