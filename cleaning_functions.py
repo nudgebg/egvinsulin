@@ -206,14 +206,18 @@ def FLAIR_cleaning(filepath_data, clean_data_path, data_val=True):
     return cleaned_data,patient_data
 
 def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
-    filename = os.path.join(filepath_data,'DCLP5TandemBolus_Completed_Combined_b.txt')
-    Bolus = pd.read_csv(filename, sep="|", low_memory = False)
+    #load insulin related csvs
+    df_bolus = pd.read_csv(os.path.join(filepath_data, 'DCLP5TandemBolus_Completed_Combined_b.txt'), sep="|", low_memory=False,
+                             usecols=['RecID', 'PtID', 'DataDtTm', 'BolusAmount', 'BolusType'])
+    df_bolus = parse_flair_dates(df_bolus,'DataDtTm')
 
-    filename = os.path.join(filepath_data, 'DCLP5TandemBASALRATECHG_b.txt')
-    BasalRate = pd.read_csv(filename, sep="|" , low_memory = False)
-
-    filename = os.path.join(filepath_data, 'DexcomClarityCGM.txt')
-    CGM = pd.read_csv(filename, sep="|", low_memory = False)
+    df_basal = pd.read_csv(os.path.join(filepath_data, 'DCLP5TandemBASALRATECHG_b.txt'), sep="|", low_memory=False,
+                             usecols=['RecID', 'PtID', 'DataDtTm', 'CommandedBasalRate'])
+    df_basal = parse_flair_dates(df_basal,'DataDtTm')
+    #load cgm data
+    df_cgm = pd.read_csv(os.path.join(filepath_data, 'DexcomClarityCGM.txt'), sep="|", low_memory=False,
+                             usecols=['RecID', 'PtID', 'DataDtTm', 'CGM'])
+    df_cgm = parse_flair_dates(df_cgm,'DataDtTm')
 
     filename = os.path.join(filepath_data, 'PtRoster.txt')
     roster = pd.read_csv(filename, sep="|")
@@ -230,13 +234,9 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
     for id in PatientInfo.PtID.values:
         try:
             subj_info = PatientInfo[PatientInfo.PtID == id].reset_index(drop=True)
-            patient_deliv = BasalRate[BasalRate.PtID == id]
-            patient_cgm = CGM[CGM.PtID == id]
-            patient_bolus = Bolus[Bolus.PtID == id]
-
-            patient_deliv['DateTime'] = patient_deliv.DataDtTm.apply(datCnv)
-            patient_cgm['DateTime'] = patient_cgm.DataDtTm.apply(datCnv)
-            patient_bolus['DateTime'] = patient_bolus.DataDtTm.apply(datCnv)
+            patient_deliv = df_basal[df_basal.PtID == id]
+            patient_cgm = df_cgm[df_cgm.PtID == id]
+            patient_bolus = df_bolus[df_bolus.PtID == id]
 
             patient_deliv = patient_deliv.sort_values(by='DateTime').reset_index(drop=True)
             patient_cgm = patient_cgm.sort_values(by='DateTime').reset_index(drop=True)
@@ -319,7 +319,7 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
                 data_merged.BolusDelivery[e] = data_merged.BolusDelivery[e]*0.5
                 data_merged.BolusDelivery.loc[e+1:e+24] = data_merged.BolusDelivery.loc[e+1:e+24] + (data_merged.BolusDelivery[e]*0.5)/24
 
-            data_merged.CGMVal = data_merged.CGMVal.replace({'HIGH': 400, 'High': 400, 'high': 400,
+            data_merged.egv = data_merged.egv.replace({'HIGH': 400, 'High': 400, 'high': 400,
                                                              'LOW': 40, 'Low': 40, 'low': 40})
 
             data_merged['Date'] = [data_merged['DateTime'][x].date() for x in data_merged.index]
@@ -390,14 +390,18 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
     return cleaned_data,patient_data
 
 def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
-    filename = os.path.join(filepath_data,'Data Files', 'Pump_BasalRateChange.txt')
-    BasalRate = pd.read_csv(filename, sep="|", low_memory = False)
+    #load insulin related csvs
+    df_bolus = pd.read_csv(os.path.join(filepath_data, 'Pump_BolusDelivered.txt'), sep="|", low_memory=False,
+                             usecols=['RecID', 'PtID', 'DataDtTm', 'BolusAmount', 'BolusType'])
+    df_bolus = parse_flair_dates(df_bolus,'DataDtTm')
 
-    filename = os.path.join(filepath_data,'Data Files', 'Pump_BolusDelivered.txt')
-    Bolus = pd.read_csv(filename, sep="|" , low_memory = False)
-
-    filename = os.path.join(filepath_data,'Data Files', 'Pump_CGMGlucoseValue.txt')
-    CGM = pd.read_csv(filename, sep="|", low_memory = False)
+    df_basal = pd.read_csv(os.path.join(filepath_data, 'Pump_BasalRateChange.txt'), sep="|", low_memory=False,
+                             usecols=['RecID', 'PtID', 'DataDtTm', 'CommandedBasalRate'])
+    df_basal = parse_flair_dates(df_basal,'DataDtTm')
+    #load cgm data
+    df_cgm = pd.read_csv(os.path.join(filepath_data, 'Pump_CGMGlucoseValue.txt'), sep="|", low_memory=False,
+                             usecols=['RecID', 'PtID', 'DataDtTm', 'CGMValue'])
+    df_cgm = parse_flair_dates(df_cgm,'DataDtTm')
 
     filename = os.path.join(filepath_data,'Data Files', 'PtRoster_a.txt')
     roster = pd.read_csv(filename, sep="|", low_memory = False)
@@ -414,13 +418,9 @@ def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
     for id in PatientInfo.PtID.values:
         try:
             subj_info = PatientInfo[PatientInfo.PtID == id].reset_index(drop=True)
-            patient_deliv = BasalRate[BasalRate.PtID == id]
-            patient_cgm = CGM[CGM.PtID == id]
-            patient_bolus = Bolus[Bolus.PtID == id]
-
-            patient_deliv['DateTime'] = patient_deliv.DataDtTm.apply(datCnv)
-            patient_cgm['DateTime'] = patient_cgm.DataDtTm.apply(datCnv)
-            patient_bolus['DateTime'] = patient_bolus.DataDtTm.apply(datCnv)
+            patient_deliv = df_basal[df_basal.PtID == id]
+            patient_cgm = df_cgm[df_cgm.PtID == id]
+            patient_bolus = df_bolus[df_bolus.PtID == id]
 
             patient_deliv = patient_deliv.sort_values(by='DateTime').reset_index(drop=True)
             patient_cgm = patient_cgm.sort_values(by='DateTime').reset_index(drop=True)
