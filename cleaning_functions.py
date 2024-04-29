@@ -1,4 +1,7 @@
-#collection of cleaning functions for insulin and egv data
+#cleaning_functions.py
+"""Provides functions to extract and transform glucose and insulin data from publicly available diabetes
+study datasets into a common format."""
+
 import os
 import pandas as pd
 from datetime import datetime, timedelta
@@ -12,7 +15,19 @@ import pathlib
 def datCnv(src):
     return pd.to_datetime(src)
 
-def FLAIR_cleaning(filepath_data, clean_data_path, data_val=True):
+def FLAIR_cleaning(filepath_data: str, clean_data_path: str, data_val:bool =True):
+    """ Extract insulin and cgm data from the FLAIR dataset.
+
+    Args:
+        filepath_data: File path to the study folder location
+        clean_data_path: Output path to an existing folder for the cleaned data to be saved
+        data_val:
+
+    Returns:
+        (Tuple[pandas.DataFrame, pandas.DataFrame]): Two pandas dataframes of the cleaned and saved data.
+            *The first element is the cleaned data.
+            *The second element is the patient data.
+    """
     filename = os.path.join(filepath_data,'Data Tables', 'FLAIRDevicePump.txt')
     InsulinData = pd.read_csv(filename, sep="|", low_memory = False)
 
