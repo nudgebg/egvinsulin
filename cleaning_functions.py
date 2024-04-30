@@ -1,4 +1,7 @@
-#collection of cleaning functions for insulin and egv data
+#cleaning_functions.py
+"""Provides functions to extract and transform glucose and insulin data from publicly available diabetes
+study datasets into a common format."""
+
 import os
 import pandas as pd
 from datetime import datetime, timedelta
@@ -11,17 +14,23 @@ warnings.filterwarnings("ignore")
 import pathlib
 def datCnv(src):
     return pd.to_datetime(src)
+def parse_flair_dates(df: pd.DataFrame, date_column: str) -> pd.DataFrame:
+    """Parse date strings with/without time component separately, treating those without as midnight (00AM).
 
+    Some datasets have datestrings with inconsistent formats. For example, the FLAIR and DCLP datestrings
+    follow the format `'%m/%d/%Y %I:%M:%S %p'` but miss the time component at midnight: `'%m/%d/%Y'`. Therefore,
+    passing a single format string fails and using dynamic date parsing is very time-consuming. This function
+    pertains the benefits of parsing the datestrings with supplied format string but does it in two steps,
+    separately for the two cases.
 
-def parse_flair_dates(df, date_column):
-    """Parse date strings separately for those with/without time component, interpret those without as midnight (00AM)
-        Args:
-            df (pandas DataFrame): data frame holding data
-            date_column (string): column name that holds date time strings to be used for parsing
+    Args:
+        df: data frame holding data.
+        date_column: column name that holds date time strings to be used for parsing.
 
-        Returns:
-            df (pandas DataFrame): with new DateTime column holding datetime objects
-        """
+    Returns:
+        dataframe with new DateTime column holding datetime objects
+
+    """
     #
     b_only_date = (df[date_column].str.len() <= 10)
     print(sum(b_only_date))
@@ -29,8 +38,19 @@ def parse_flair_dates(df, date_column):
     df.loc[~b_only_date, 'DateTime'] = pd.to_datetime(df.loc[~b_only_date, date_column], format='%m/%d/%Y %I:%M:%S %p')
     return df
 
+def FLAIR_cleaning(filepath_data: str, clean_data_path: str, data_val:bool =True):
+    """Extract insulin and cgm data from the FLAIR dataset.
 
-def FLAIR_cleaning(filepath_data, clean_data_path, data_val=True):
+        Args:
+            filepath_data: File path to the study folder location
+            clean_data_path: Output path to an existing folder for the cleaned data to be saved
+            data_val:
+
+        Returns:
+            (Tuple[pandas.DataFrame, pandas.DataFrame]): Two pandas dataframes of the cleaned and saved data.
+                *The first element is the cleaned data.
+                *The second element is the patient data.
+    """
     # load insulin csv data
     df_insulin = pd.read_csv(os.path.join(filepath_data, 'Data Tables', 'FLAIRDevicePump.txt'), sep="|", low_memory=False,
                              usecols=['RecID', 'PtID', 'DataDtTm', 'BasalRt', 'BolusDeliv', 'ExtendBolusDuration'])
