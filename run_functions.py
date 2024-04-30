@@ -4,7 +4,7 @@ import os, sys
 # Add higher directory to Python path
 current_dir = os.getcwd()
 print(current_dir)
-original_data_path = os.path.join(current_dir, 'data/test')
+original_data_path = os.path.join(current_dir, 'data/raw')
 cleaned_data_path = os.path.join(current_dir, 'data/cleaned')
 print(original_data_path, cleaned_data_path)
 
