@@ -1,4 +1,7 @@
-#collection of cleaning functions for insulin and egv data
+#cleaning_functions.py
+"""Provides functions to extract and transform glucose and insulin data from publicly available diabetes
+study datasets into a common format."""
+
 import os
 import pandas as pd
 from datetime import datetime, timedelta
@@ -13,7 +16,19 @@ import pathlib
 def datCnv(src):
     return pd.to_datetime(src)
 
-def FLAIR_cleaning(filepath_data, clean_data_path, data_val=True):
+def FLAIR_cleaning(filepath_data: str, clean_data_path: str, data_val:bool =True):
+    """ Extract insulin and cgm data from the FLAIR dataset.
+
+    Args:
+        filepath_data: File path to the study folder location
+        clean_data_path: Output path to an existing folder for the cleaned data to be saved
+        data_val:
+
+    Returns:
+        (Tuple[pandas.DataFrame, pandas.DataFrame]): Two pandas dataframes of the cleaned and saved data.
+            *The first element is the cleaned data.
+            *The second element is the patient data.
+    """
     filename = os.path.join(filepath_data,'Data Tables', 'FLAIRDevicePump.txt')
     InsulinData = pd.read_csv(filename, sep="|", low_memory = False)
 
@@ -28,9 +43,10 @@ def FLAIR_cleaning(filepath_data, clean_data_path, data_val=True):
     PatientInfo['StartDate'] = roster['RandDt']
     PatientInfo['TrtGroup'] = roster['TrtGroup']
     PatientInfo['Age'] = roster['AgeAsofEnrollDt']
-
+    #initialize final data frames
     cleaned_data = pd.DataFrame()
     patient_data = pd.DataFrame()
+    
     for id in PatientInfo.PtID.values:
         try:
             subj_info = PatientInfo[PatientInfo.PtID == id].reset_index(drop=True)
@@ -39,20 +55,23 @@ def FLAIR_cleaning(filepath_data, clean_data_path, data_val=True):
                 patient_cgm = CGM[CGM.PtID == id]
                 
                 bolus_pt['DateTime'] = bolus_pt.DataDtTm.apply(datCnv)
+                #round to nearest 5 minutes - helps combine data that will be slotted into the same datetime values when combining data
                 bolus_pt['DateTime'] = bolus_pt['DateTime'].dt.round("5min")
+                #add unix time column to combine on 'nearest'
                 bolus_pt['UnixTime'] = [int(time.mktime(bolus_pt.DateTime[x].timetuple())) for x in bolus_pt.index]
                 bolus_pt['Date'] = [bolus_pt['DateTime'][x].date() for x in bolus_pt.index]
                 bolus_pt = bolus_pt.sort_values(by='DateTime').reset_index(drop=True)
                 bolus_pt = bolus_pt.filter(items=['DateTime','Date','UnixTime','BasalRt','BolusDeliv', 'ExtendBolusDuration'])
-                                    
+                #use for creating complete 5 minute time steps from midnight                    
                 start_date = bolus_pt.DateTime.iloc[0].date()
                 end_date = bolus_pt.DateTime.iloc[-1].date() + timedelta(days=1)
                 
                 bolus_pt.BolusDeliv = bolus_pt.BolusDeliv.fillna(0)
+                #convert basal rate from U/hr to 5 minute delivery values
                 bolus_pt.BasalRt = bolus_pt.BasalRt/12
                 bolus_pt.BasalRt = bolus_pt.BasalRt.ffill()
                 bolus_pt = bolus_pt.dropna(subset='BasalRt')
-                                
+                #take care of duplicate time values by combining boluses and taking last delivered basal rate at that time                
                 dups = bolus_pt[bolus_pt.duplicated(subset='UnixTime', keep=False)]
                 utime = dups.UnixTime.unique()
                 count = 0
@@ -69,30 +88,31 @@ def FLAIR_cleaning(filepath_data, clean_data_path, data_val=True):
                     count += 1
                 
                 bolus_pt = bolus_pt.drop_duplicates(subset=['UnixTime'],keep=False)
+                #recombine fixed duplicates back into original data
                 patient_deliv = pd.concat([bolus_pt,replace_data]).sort_values(by='UnixTime').reset_index(drop=True)
-                
+                #creates the 5min timeseries data
                 data_new_time = pd.DataFrame(columns=['DateTime_keep'])
                 data_new_time['DateTime_keep'] = pd.date_range(start = start_date, end = end_date, freq="5min").values
                 data_new_time['UnixTime'] = [int(time.mktime(data_new_time.DateTime_keep[x].timetuple())) for x in data_new_time.index]
                 data_new_time = data_new_time.drop_duplicates(subset=['UnixTime']).sort_values(by='UnixTime')
                 
                 patient_deliv.UnixTime = patient_deliv.UnixTime.astype(int)
-                
+                #merge insulin data into the 5min timeseries data frame
                 insulin_merged = pd.merge_asof(data_new_time, patient_deliv, on="UnixTime",direction="nearest",tolerance=149)    
-                
+                #process cgm data to be in the format needed to merge
                 patient_cgm['DateTime'] = patient_cgm.DataDtTm.apply(datCnv)
                 patient_cgm['UnixTime'] = [int(time.mktime(patient_cgm.DateTime[x].timetuple())) for x in patient_cgm.index]
                 patient_cgm = patient_cgm.sort_values(by='DateTime').reset_index(drop=True)
                 patient_cgm = patient_cgm.filter(items=['DateTime','UnixTime','CGM'])
                 patient_cgm = patient_cgm.drop_duplicates(subset=['UnixTime']).reset_index(drop=True)
                 patient_cgm = patient_cgm.dropna(subset=['UnixTime']).sort_values(by='UnixTime')
-                
+                #merge cgm and insulin together
                 data_merged = pd.merge_asof(insulin_merged, patient_cgm, on="UnixTime",direction="nearest",tolerance=149)
                 data_merged = data_merged.filter(items=['DateTime_keep','BasalRt','BolusDeliv','ExtendBolusDuration','CGM'])
-                
+                #forward fill basal rates and replace NaNs in bolus to 0 for easy addition into single column
                 data_merged.BasalRt = data_merged.BasalRt.ffill()
                 data_merged.BolusDeliv = data_merged.BolusDeliv.fillna(0)
-                
+                #process extended boluses 
                 extended_boluses = data_merged[data_merged.ExtendBolusDuration.notna()]
                 if len(extended_boluses) > 0:
                     extended_boluses['Duration'] = [datetime.strptime(extended_boluses.ExtendBolusDuration[t],"%H:%M:%S") for t in extended_boluses.index.values]
@@ -103,7 +123,7 @@ def FLAIR_cleaning(filepath_data, clean_data_path, data_val=True):
                     for ext in extended_boluses.index:
                         bolus_parts = extended_boluses.BolusDeliv[ext]/extended_boluses.Duration_steps[ext]
                         data_merged.BolusDeliv.loc[ext:ext+int(extended_boluses.Duration_steps[ext])] = bolus_parts
-                                
+                #filter out unwanted data and convert column names                
                 data_merged = data_merged.filter(items=['DateTime_keep','BasalRt','BolusDeliv','CGM'])
                 data_merged['PtID'] = id
                 data_merged = data_merged.rename(columns={
@@ -112,6 +132,7 @@ def FLAIR_cleaning(filepath_data, clean_data_path, data_val=True):
                                                 "BolusDeliv": "BolusDelivery",
                                                 "BasalRt": "BasalDelivery",
                                                 }) 
+                #remove insulin data on the days we have no delivery data available. This keeps the full time series complete, but has NaNs in insulin delivery
                 data_merged['Date'] = [data_merged['DateTime'][x].date() for x in data_merged.index]
                 for d in data_merged['Date'].unique():
                     check = bolus_pt[bolus_pt.Date==d]
@@ -119,12 +140,14 @@ def FLAIR_cleaning(filepath_data, clean_data_path, data_val=True):
                     if len(check)==0:
                         data_merged.BasalDelivery.loc[index_values] = np.nan
                         data_merged.BolusDelivery.loc[index_values] = np.nan
-                    
+
                 data_merged['Insulin'] = data_merged.BasalDelivery + data_merged.BolusDelivery
                 data_merged.Insulin = data_merged.Insulin.replace({np.inf: np.nan})                
                 data_merged.egv = data_merged.egv.replace({'HIGH': 400, 'High': 400, 'high': 400, 
                                                                 'LOW': 40, 'Low': 40, 'low': 40})
+                #merge individual cleaned data into one large file
                 cleaned_data = pd.concat([cleaned_data,data_merged])
+                #create a patient summary file
                 if len(data_merged)>0:
                     subj_info['DaysOfData'] = np.nan
                     subj_info['AVG_CGM'] = np.nan
@@ -133,6 +156,7 @@ def FLAIR_cleaning(filepath_data, clean_data_path, data_val=True):
                     subj_info['eA1C'] = np.nan
                     subj_info['TIR'] = np.nan
                     subj_info['TDD'] = np.nan
+                    #validate data to make sure all time is 5 minutes apart (except daylight savings) and all CGM values are valid 
                     if data_val == True:
                         subj_info['5minCheck'] = np.nan
                         subj_info['5minCheck_max'] = np.nan
@@ -269,7 +293,7 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
                                           }) 
             data_merged.BolusDelivery = data_merged.BolusDelivery.astype(float)
             data_merged.BolusDelivery = data_merged.BolusDelivery.fillna(0)
-            
+            #process extended bolus data. assumes that 50% is delivered up front and 50% is extended for 2 hours. There is no data for how patients programmed the boluses
             extended_index = data_merged[data_merged.BolusType=='Extended'].index.values
             for e in extended_index:
                 data_merged.BolusDelivery[e] = data_merged.BolusDelivery[e]*0.5
@@ -501,7 +525,7 @@ def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
 
 def IOBP2_cleaning(filepath,clean_data_path,data_val = True):
     #load patient roster
-    filename = os.path.join(filepath, 'IOBP2PtRoster.txt')
+    filename = os.path.join(filepath, 'Data Tables', 'IOBP2PtRoster.txt')
     roster = pd.read_csv(filename, sep="|")
     #build clean roster
     PatientInfo = pd.DataFrame(columns=['PtID','StartDate','EndDate','TrtGroup','Age'])
@@ -512,7 +536,7 @@ def IOBP2_cleaning(filepath,clean_data_path,data_val = True):
     PatientInfo['Age'] = roster['AgeAsofEnrollDt']
     
     #load manual injections data
-    filename = os.path.join(filepath, 'IOBP2ManualInsulinInj.txt')
+    filename = os.path.join(filepath, 'Data Tables', 'IOBP2ManualInsulinInj.txt')
     data_man_inj = pd.read_csv(filename, sep="|")
     #create datetime objects for easy inclusion
     data_man_inj['DateTime'] = np.nan
@@ -528,7 +552,7 @@ def IOBP2_cleaning(filepath,clean_data_path,data_val = True):
                                            data_man_inj.InsInjMin[i],
                                           )
     #load insulin pump data
-    filename = os.path.join(filepath, 'IOBP2DeviceiLet.txt')
+    filename = os.path.join(filepath, 'Data Tables', 'IOBP2DeviceiLet.txt')
     data = pd.read_csv(filename, sep="|")
     #create new dateframe for clean data
     cleaned_data = pd.DataFrame()
