@@ -14,28 +14,55 @@ warnings.filterwarnings("ignore")
 import pathlib
 def datCnv(src):
     return pd.to_datetime(src)
+def parse_flair_dates(df: pd.DataFrame, date_column: str) -> pd.DataFrame:
+    """Parse date strings with/without time component separately, treating those without as midnight (00AM).
 
-def FLAIR_cleaning(filepath_data: str, clean_data_path: str, data_val:bool =True):
-    """ Extract insulin and cgm data from the FLAIR dataset.
+    Some datasets have datestrings with inconsistent formats. For example, the FLAIR and DCLP datestrings
+    follow the format `'%m/%d/%Y %I:%M:%S %p'` but miss the time component at midnight: `'%m/%d/%Y'`. Therefore,
+    passing a single format string fails and using dynamic date parsing is very time-consuming. This function
+    pertains the benefits of parsing the datestrings with supplied format string but does it in two steps,
+    separately for the two cases.
 
     Args:
-        filepath_data: File path to the study folder location
-        clean_data_path: Output path to an existing folder for the cleaned data to be saved
-        data_val:
+        df: data frame holding data.
+        date_column: column name that holds date time strings to be used for parsing.
 
     Returns:
-        (Tuple[pandas.DataFrame, pandas.DataFrame]): Two pandas dataframes of the cleaned and saved data.
-            *The first element is the cleaned data.
-            *The second element is the patient data.
+        dataframe with new DateTime column holding datetime objects
+
     """
-    filename = os.path.join(filepath_data,'Data Tables', 'FLAIRDevicePump.txt')
-    InsulinData = pd.read_csv(filename, sep="|", low_memory = False)
+    #
+    b_only_date = (df[date_column].str.len() <= 10)
+    print(sum(b_only_date))
+    df.loc[b_only_date, 'DateTime'] = pd.to_datetime(df.loc[b_only_date, date_column], format='%m/%d/%Y')
+    df.loc[~b_only_date, 'DateTime'] = pd.to_datetime(df.loc[~b_only_date, date_column], format='%m/%d/%Y %I:%M:%S %p')
+    return df
 
-    filename = os.path.join(filepath_data,'Data Tables', 'FLAIRDeviceCGM.txt')
-    CGM = pd.read_csv(filename, sep="|" , low_memory = False)
+def FLAIR_cleaning(filepath_data: str, clean_data_path: str, data_val:bool =True):
+    """Extract insulin and cgm data from the FLAIR dataset.
 
-    filename = os.path.join(filepath_data, 'Data Tables', 'PtRoster.txt')
-    roster = pd.read_csv(filename, sep="|", low_memory = False)
+        Args:
+            filepath_data: File path to the study folder location
+            clean_data_path: Output path to an existing folder for the cleaned data to be saved
+            data_val:
+
+        Returns:
+            (Tuple[pandas.DataFrame, pandas.DataFrame]): Two pandas dataframes of the cleaned and saved data.
+                *The first element is the cleaned data.
+                *The second element is the patient data.
+    """
+    # load insulin csv data
+    df_insulin = pd.read_csv(os.path.join(filepath_data, 'Data Tables', 'FLAIRDevicePump.txt'), sep="|", low_memory=False,
+                             usecols=['RecID', 'PtID', 'DataDtTm', 'BasalRt', 'BolusDeliv', 'ExtendBolusDuration'])
+    df_insulin = parse_flair_dates(df_insulin,'DataDtTm')
+
+    # load cgm data
+    df_cgm = pd.read_csv(os.path.join(filepath_data, 'Data Tables', 'FLAIRDeviceCGM.txt'), sep="|", low_memory=False,
+                         usecols=['RecID', 'PtID', 'DataDtTm', 'CGM'])
+    df_cgm = parse_flair_dates(df_cgm, 'DataDtTm')
+
+     # load patient data
+    roster = pd.read_csv(os.path.join(filepath_data, 'Data Tables', 'PtRoster.txt'), sep="|", low_memory = False)
 
     PatientInfo = pd.DataFrame(columns=['PtID','StartDate','TrtGroup'])
     PatientInfo['PtID'] = roster['PtID']
@@ -47,14 +74,15 @@ def FLAIR_cleaning(filepath_data: str, clean_data_path: str, data_val:bool =True
     patient_data = pd.DataFrame()
     #this was for checking TDD followed an expected distribution and can be deleted
     TDD_all = pd.DataFrame(columns=['PtID','TDD'])
+
+    t = time.time()
     for id in PatientInfo.PtID.values:
         try:
             subj_info = PatientInfo[PatientInfo.PtID == id].reset_index(drop=True)
-            bolus_pt = InsulinData[InsulinData.PtID == id]
+            bolus_pt = df_insulin[df_insulin.PtID == id]
             if len(bolus_pt)>0:
-                patient_cgm = CGM[CGM.PtID == id]
-                
-                bolus_pt['DateTime'] = bolus_pt.DataDtTm.apply(datCnv)
+                patient_cgm = df_cgm[df_cgm.PtID == id]
+
                 #round to nearest 5 minutes - helps combine data that will be slotted into the same datetime values when combining data
                 bolus_pt['DateTime'] = bolus_pt['DateTime'].dt.round("5min")
                 #add unix time column to combine on 'nearest'
@@ -65,7 +93,7 @@ def FLAIR_cleaning(filepath_data: str, clean_data_path: str, data_val:bool =True
                 #use for creating complete 5 minute time steps from midnight                    
                 start_date = bolus_pt.DateTime.iloc[0].date()
                 end_date = bolus_pt.DateTime.iloc[-1].date() + timedelta(days=1)
-                
+
                 bolus_pt.BolusDeliv = bolus_pt.BolusDeliv.fillna(0)
                 #convert basal rate from U/hr to 5 minute delivery values
                 bolus_pt.BasalRt = bolus_pt.BasalRt/12
@@ -84,9 +112,9 @@ def FLAIR_cleaning(filepath_data: str, clean_data_path: str, data_val:bool =True
                     replace_data['BolusDeliv'][count] = dup_data['BolusDeliv'].sum()
                     if any(dup_data['ExtendBolusDuration'].notnull()):
                         replace_data['ExtendBolusDuration'][count] = dup_data[dup_data['ExtendBolusDuration'].notnull()].ExtendBolusDuration.iloc[-1]
-                
+
                     count += 1
-                
+
                 bolus_pt = bolus_pt.drop_duplicates(subset=['UnixTime'],keep=False)
                 #recombine fixed duplicates back into original data
                 patient_deliv = pd.concat([bolus_pt,replace_data]).sort_values(by='UnixTime').reset_index(drop=True)
@@ -95,12 +123,12 @@ def FLAIR_cleaning(filepath_data: str, clean_data_path: str, data_val:bool =True
                 data_new_time['DateTime_keep'] = pd.date_range(start = start_date, end = end_date, freq="5min").values
                 data_new_time['UnixTime'] = [int(time.mktime(data_new_time.DateTime_keep[x].timetuple())) for x in data_new_time.index]
                 data_new_time = data_new_time.drop_duplicates(subset=['UnixTime']).sort_values(by='UnixTime')
-                
+
                 patient_deliv.UnixTime = patient_deliv.UnixTime.astype(int)
                 #merge insulin data into the 5min timeseries data frame
-                insulin_merged = pd.merge_asof(data_new_time, patient_deliv, on="UnixTime",direction="nearest",tolerance=149)    
+                insulin_merged = pd.merge_asof(data_new_time, patient_deliv, on="UnixTime",direction="nearest",tolerance=149)
+
                 #process cgm data to be in the format needed to merge
-                patient_cgm['DateTime'] = patient_cgm.DataDtTm.apply(datCnv)
                 patient_cgm['UnixTime'] = [int(time.mktime(patient_cgm.DateTime[x].timetuple())) for x in patient_cgm.index]
                 patient_cgm = patient_cgm.sort_values(by='DateTime').reset_index(drop=True)
                 patient_cgm = patient_cgm.filter(items=['DateTime','UnixTime','CGM'])
@@ -119,7 +147,7 @@ def FLAIR_cleaning(filepath_data: str, clean_data_path: str, data_val:bool =True
                     extended_boluses['Duration_minutes'] = [timedelta(hours=extended_boluses['Duration'][t].hour, minutes=extended_boluses['Duration'][t].minute, seconds=extended_boluses['Duration'][t].second).total_seconds()/60 for t in extended_boluses.index]
                     extended_boluses['Duration_steps'] = extended_boluses['Duration_minutes']/5
                     extended_boluses['Duration_steps'] = extended_boluses['Duration_steps'].round()
-                
+
                     for ext in extended_boluses.index:
                         bolus_parts = extended_boluses.BolusDeliv[ext]/extended_boluses.Duration_steps[ext]
                         data_merged.BolusDeliv.loc[ext:ext+int(extended_boluses.Duration_steps[ext])] = bolus_parts
@@ -131,7 +159,7 @@ def FLAIR_cleaning(filepath_data: str, clean_data_path: str, data_val:bool =True
                                                 "CGM": "egv",
                                                 "BolusDeliv": "BolusDelivery",
                                                 "BasalRt": "BasalDelivery",
-                                                }) 
+                                                })
                 #remove insulin data on the days we have no delivery data available. This keeps the full time series complete, but has NaNs in insulin delivery
                 data_merged['Date'] = [data_merged['DateTime'][x].date() for x in data_merged.index]
                 TDD_pt = pd.DataFrame(index=range(len(data_merged['Date'].unique())),columns=['PtID','TDD'])
@@ -150,8 +178,8 @@ def FLAIR_cleaning(filepath_data: str, clean_data_path: str, data_val:bool =True
                 TDD_all = pd.concat([TDD_all,TDD_pt])
                 #create single insulin column
                 data_merged['Insulin'] = data_merged.BasalDelivery + data_merged.BolusDelivery
-                data_merged.Insulin = data_merged.Insulin.replace({np.inf: np.nan})                
-                data_merged.egv = data_merged.egv.replace({'HIGH': 400, 'High': 400, 'high': 400, 
+                data_merged.Insulin = data_merged.Insulin.replace({np.inf: np.nan})
+                data_merged.egv = data_merged.egv.replace({'HIGH': 400, 'High': 400, 'high': 400,
                                                                 'LOW': 40, 'Low': 40, 'low': 40})
                 #merge individual cleaned data into one large file
                 cleaned_data = pd.concat([cleaned_data,data_merged])
@@ -168,13 +196,13 @@ def FLAIR_cleaning(filepath_data: str, clean_data_path: str, data_val:bool =True
                     if data_val == True:
                         subj_info['5minCheck'] = np.nan
                         subj_info['5minCheck_max'] = np.nan
-                        subj_info['ValidCGMCheck'] = np.nan 
+                        subj_info['ValidCGMCheck'] = np.nan
                         data_merged['TimeBetween'] = data_merged.DateTime.diff()
                         data_merged['TimeBetween'] = [data_merged['TimeBetween'][x].total_seconds()/60 for x in data_merged.index]
                         subj_info['5minCheck'] = len(data_merged[data_merged.TimeBetween>5])
                         subj_info['5minCheck_max'] = data_merged.TimeBetween.max()
                         subj_info['ValidCGMCheck'] = len(data_merged[(data_merged.egv<40) & (data_merged.egv>400)])
-        
+
                     subj_info['DaysOfData'][0] = np.round(len(data_merged)/288,2)
                     subj_info['AVG_CGM'][0] = np.round(data_merged.egv.mean(),2)
                     subj_info['STD_CGM'][0] = np.round(data_merged.egv.std(),2)
@@ -182,38 +210,42 @@ def FLAIR_cleaning(filepath_data: str, clean_data_path: str, data_val:bool =True
                     subj_info['eA1C'][0] = np.round((46.7 + data_merged.egv.mean())/28.7,2)
                     subj_info['TIR'][0] = np.round(100 * len(data_merged[(data_merged.egv>=70) & (data_merged.egv<=180)])/len(data_merged[data_merged.egv>0]),2)
                     subj_info['TDD'][0] = np.round(data_merged.Insulin.sum()/subj_info['DaysOfData'][0],2)
-        
+
                     pt_data = subj_info.filter(items=['PtID','StartDate','TrtGroup','DaysOfData','AVG_CGM','STD_CGM','CGM_Availability',
                                                     'eA1C','TIR','TDD','5minCheck','ValidCGMCheck','5minCheck_max'])
                     patient_data = pd.concat([patient_data,pt_data])
-                        
+
         except:
             pass
+    print(f"running for loop took {t- time.time()}s")
     pathlib.Path(clean_data_path + "CleanedData").mkdir(parents=True, exist_ok=True)
     cleaned_data.to_csv(clean_data_path + "CleanedData/FLAIR_cleaned_egvinsulin.csv",index=False)
     patient_data.to_csv(clean_data_path + "CleanedData/FLAIR_patient_data.csv",index=False)
     TDD_all.to_csv(clean_data_path + "CleanedData/FLAIR_TDD_data.csv",index=False)
-    
-    return cleaned_data,patient_data 
+
+    return cleaned_data,patient_data
 
 def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
-    filename = os.path.join(filepath_data,'DCLP5TandemBolus_Completed_Combined_b.txt')
-    Bolus = pd.read_csv(filename, sep="|", low_memory = False)
+    #load insulin related csvs
+    df_bolus = pd.read_csv(os.path.join(filepath_data, 'DCLP5TandemBolus_Completed_Combined_b.txt'), sep="|", low_memory=False,
+                             usecols=['RecID', 'PtID', 'DataDtTm', 'BolusAmount', 'BolusType'],parse_dates=[2])
 
-    filename = os.path.join(filepath_data, 'DCLP5TandemBASALRATECHG_b.txt')
-    BasalRate = pd.read_csv(filename, sep="|" , low_memory = False)
-
-    filename = os.path.join(filepath_data, 'DexcomClarityCGM.txt')
-    CGM = pd.read_csv(filename, sep="|", low_memory = False)
+    df_basal = pd.read_csv(os.path.join(filepath_data, 'DCLP5TandemBASALRATECHG_b.txt'), sep="|", low_memory=False,
+                             usecols=['RecID', 'PtID', 'DataDtTm', 'CommandedBasalRate'])
+    df_basal = parse_flair_dates(df_basal,'DataDtTm')
+    #load cgm data
+    df_cgm = pd.read_csv(os.path.join(filepath_data, 'DexcomClarityCGM.txt'), sep="|", low_memory=False,
+                             usecols=['RecID', 'PtID', 'DataDtTm', 'CGM'])
+    df_cgm = parse_flair_dates(df_cgm,'DataDtTm')
 
     filename = os.path.join(filepath_data, 'PtRoster.txt')
     roster = pd.read_csv(filename, sep="|")
-    
+
     PatientInfo = pd.DataFrame(columns=['PtID','StartDate','TrtGroup'])
     PatientInfo['PtID'] = roster['PtID']
     PatientInfo['StartDate'] = roster['RandDt']
     PatientInfo['TrtGroup'] = roster['trtGroup']
-    
+
     cleaned_data = pd.DataFrame()
     patient_data = pd.DataFrame()
     j = 0
@@ -221,18 +253,14 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
     for id in PatientInfo.PtID.values:
         try:
             subj_info = PatientInfo[PatientInfo.PtID == id].reset_index(drop=True)
-            patient_deliv = BasalRate[BasalRate.PtID == id]
-            patient_cgm = CGM[CGM.PtID == id]
-            patient_bolus = Bolus[Bolus.PtID == id]
+            patient_deliv = df_basal[df_basal.PtID == id]
+            patient_cgm = df_cgm[df_cgm.PtID == id]
+            patient_bolus = df_bolus[df_bolus.PtID == id]
 
-            patient_deliv['DateTime'] = patient_deliv.DataDtTm.apply(datCnv)
-            patient_cgm['DateTime'] = patient_cgm.DataDtTm.apply(datCnv)
-            patient_bolus['DateTime'] = patient_bolus.DataDtTm.apply(datCnv)
-            
             patient_deliv = patient_deliv.sort_values(by='DateTime').reset_index(drop=True)
             patient_cgm = patient_cgm.sort_values(by='DateTime').reset_index(drop=True)
             patient_bolus = patient_bolus.sort_values(by='DateTime').reset_index(drop=True)
-            
+
             patient_deliv = patient_deliv[patient_deliv.DateTime >= subj_info.StartDate.iloc[0]].reset_index(drop=True)
             patient_cgm = patient_cgm[patient_cgm.DateTime >= subj_info.StartDate.iloc[0]].reset_index(drop=True)
             patient_bolus = patient_bolus[patient_bolus.DateTime >= subj_info.StartDate.iloc[0]].reset_index(drop=True)
@@ -240,19 +268,19 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
             patient_cgm['DateTime'] = patient_cgm['DateTime'].dt.round("5min")
             patient_deliv['DateTime'] = patient_deliv['DateTime'].dt.round("5min")
             patient_bolus['DateTime'] = patient_bolus['DateTime'].dt.round("5min")
-            
+
             patient_cgm['UnixTime'] = [int(time.mktime(patient_cgm.DateTime[x].timetuple())) for x in patient_cgm.index]
             patient_deliv['UnixTime'] = [int(time.mktime(patient_deliv.DateTime[x].timetuple())) for x in patient_deliv.index]
             patient_bolus['UnixTime'] = [int(time.mktime(patient_bolus.DateTime[x].timetuple())) for x in patient_bolus.index]
-            
+
             start_date = patient_deliv.DateTime.iloc[0].date()
             end_date = patient_deliv.DateTime.iloc[-1].date() + timedelta(days=1)
-            
+
             data_new_time = pd.DataFrame(columns=['DateTime_keep'])
             data_new_time['DateTime_keep'] = pd.date_range(start = start_date, end = end_date, freq="5min").values
             data_new_time['UnixTime'] = [int(time.mktime(data_new_time.DateTime_keep[x].timetuple())) for x in data_new_time.index]
             data_new_time = data_new_time.drop_duplicates(subset=['UnixTime']).sort_values(by='UnixTime')
-            
+
             #remove duplicate basal rates
             dups = patient_deliv[patient_deliv.duplicated(subset='UnixTime', keep=False)]
             utime = dups.UnixTime.unique()
@@ -264,15 +292,15 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
                 replace_data['UnixTime'][count] = u
                 replace_data['CommandedBasalRate'][count] = dup_data['CommandedBasalRate'].iloc[-1]
                 count += 1
-            
+
             patient_deliv = patient_deliv.drop_duplicates(subset=['UnixTime'],keep=False)
             patient_deliv.CommandedBasalRate = patient_deliv.CommandedBasalRate/12
             patient_deliv_dup_rem = pd.concat([patient_deliv,replace_data]).sort_values(by='UnixTime').reset_index(drop=True)
             patient_deliv_dup_rem.UnixTime = patient_deliv_dup_rem.UnixTime.astype(int)
-            
+
             insulin_merged = pd.merge_asof(data_new_time, patient_deliv, on="UnixTime",direction="nearest",tolerance=149)
             insulin_merged.CommandedBasalRate = insulin_merged.CommandedBasalRate.ffill()
-            
+
             dups = patient_bolus[patient_bolus.duplicated(subset='UnixTime', keep=False)]
             utime = dups.UnixTime.unique()
             count = 0
@@ -283,7 +311,7 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
                 replace_data['UnixTime'][count] = u
                 replace_data['BolusAmount'][count] = dup_data['BolusAmount'].sum()
                 count += 1
-            
+
             patient_bolus = patient_bolus.drop_duplicates(subset=['UnixTime'],keep=False)
             patient_bolus_dup_rem = pd.concat([patient_bolus,replace_data]).sort_values(by='UnixTime').reset_index(drop=True)
             patient_bolus_dup_rem.UnixTime = patient_bolus_dup_rem.UnixTime.astype(int)
@@ -291,17 +319,17 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
 
             delivery_merged = pd.merge_asof(insulin_merged, patient_bolus_dup_rem, on="UnixTime",direction="nearest",tolerance=149)
             delivery_merged = delivery_merged.filter(items=['DateTime_keep','UnixTime','BolusAmount','CommandedBasalRate','BolusType'])
-            
+
             patient_cgm = patient_cgm.sort_values(by='UnixTime').reset_index(drop=True)
             data_merged = pd.merge_asof(delivery_merged, patient_cgm, on="UnixTime",direction="nearest",tolerance=149)
             data_merged = data_merged.filter(items=['DateTime_keep','UnixTime','BolusAmount','CommandedBasalRate','BolusType','CGM'])
-            
+
             data_merged = data_merged.rename(columns={
                                             "DateTime_keep": "DateTime",
                                             "CGM": "egv",
                                             "BolusDeliv": "BolusDelivery",
                                             "BasalRt": "BasalDelivery",
-                                          }) 
+                                          })
             data_merged.BolusDelivery = data_merged.BolusDelivery.astype(float)
             data_merged.BolusDelivery = data_merged.BolusDelivery.fillna(0)
             #process extended bolus data. assumes that 50% is delivered up front and 50% is extended for 2 hours. There is no data for how patients programmed the boluses
@@ -309,10 +337,10 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
             for e in extended_index:
                 data_merged.BolusDelivery[e] = data_merged.BolusDelivery[e]*0.5
                 data_merged.BolusDelivery.loc[e+1:e+24] = data_merged.BolusDelivery.loc[e+1:e+24] + (data_merged.BolusDelivery[e]*0.5)/24
-            
-            data_merged.CGMVal = data_merged.CGMVal.replace({'HIGH': 400, 'High': 400, 'high': 400, 
+
+            data_merged.egv = data_merged.egv.replace({'HIGH': 400, 'High': 400, 'high': 400,
                                                              'LOW': 40, 'Low': 40, 'low': 40})
-            
+
             data_merged['Date'] = [data_merged['DateTime'][x].date() for x in data_merged.index]
             patient_deliv['Date'] = [patient_deliv['DateTime'][x].date() for x in patient_deliv.index]
             TDD_pt = pd.DataFrame(index=range(len(data_merged['Date'].unique())),columns=['PtID','TDD'])
@@ -329,7 +357,7 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
                     dd += 1
 
             TDD_all = pd.concat([TDD_all,TDD_pt])
-            
+
             data_merged['Insulin'] = data_merged.BasalDelivery + data_merged.BolusDelivery
             data_merged['PtID'] = id
             data_merged = data_merged.filter(items=['PtID','DateTime','UnixTime','BasalDelivery','BolusDelivery','egv','Insulin','BolusType'])
@@ -346,7 +374,7 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
                 if data_val == True:
                     subj_info['5minCheck'] = np.nan
                     subj_info['5minCheck_max'] = np.nan
-                    subj_info['ValidCGMCheck'] = np.nan 
+                    subj_info['ValidCGMCheck'] = np.nan
                     data_merged['TimeBetween'] = data_merged.DateTime.diff()
                     data_merged['TimeBetween'] = [data_merged['TimeBetween'][x].total_seconds()/60 for x in data_merged.index]
                     subj_info['5minCheck'] = len(data_merged[data_merged.TimeBetween>5])
@@ -364,7 +392,7 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
                 pt_data = subj_info.filter(items=['PtID','StartDate','TrtGroup','DaysOfData','AVG_CGM','STD_CGM','CGM_Availability',
                                                   'eA1C','TIR','TDD','5minCheck','ValidCGMCheck','5minCheck_max'])
                 patient_data = pd.concat([patient_data,pt_data])
-                
+
                 # pathlib.Path(clean_data_path + "CleanedData").mkdir(parents=True, exist_ok=True)
                 # data_merged.to_csv(clean_data_path + "CleanedData/DCLP5_cleaned_egvinsulin_" + str(id) + ".csv",index=False)
         except:
@@ -372,7 +400,7 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
         # j +=1
         # if j > 4:
             # break
-            
+
     pathlib.Path(clean_data_path + "CleanedData").mkdir(parents=True, exist_ok=True)
     cleaned_data.to_csv(clean_data_path + "CleanedData/DCLP5_cleaned_egvinsulin.csv",index=False)
     patient_data.to_csv(clean_data_path + "CleanedData/DCLP5_patient_data.csv",index=False)
@@ -381,23 +409,24 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
     return cleaned_data,patient_data
 
 def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
-    filename = os.path.join(filepath_data,'Data Files', 'Pump_BasalRateChange.txt')
-    BasalRate = pd.read_csv(filename, sep="|", low_memory = False)
+    #load insulin related csvs
+    df_bolus = pd.read_csv(os.path.join(filepath_data, 'Pump_BolusDelivered.txt'), sep="|", low_memory=False,
+                             usecols=['RecID', 'PtID', 'DataDtTm', 'BolusAmount', 'BolusType'],parse_dates=[2])
 
-    filename = os.path.join(filepath_data,'Data Files', 'Pump_BolusDelivered.txt')
-    Bolus = pd.read_csv(filename, sep="|" , low_memory = False)
-
-    filename = os.path.join(filepath_data,'Data Files', 'Pump_CGMGlucoseValue.txt')
-    CGM = pd.read_csv(filename, sep="|", low_memory = False)
+    df_basal = pd.read_csv(os.path.join(filepath_data, 'Pump_BasalRateChange.txt'), sep="|", low_memory=False,
+                             usecols=['RecID', 'PtID', 'DataDtTm', 'CommandedBasalRate'],parse_dates=[2])
+    #load cgm data
+    df_cgm = pd.read_csv(os.path.join(filepath_data, 'Pump_CGMGlucoseValue.txt'), sep="|", low_memory=False,
+                             usecols=['RecID', 'PtID', 'DataDtTm', 'CGMValue'],parse_dates=[2])
 
     filename = os.path.join(filepath_data,'Data Files', 'PtRoster_a.txt')
     roster = pd.read_csv(filename, sep="|", low_memory = False)
-    
+
     PatientInfo = pd.DataFrame(columns=['PtID','StartDate','TrtGroup'])
     PatientInfo['PtID'] = roster['PtID']
     PatientInfo['StartDate'] = roster['RandDt']
     PatientInfo['TrtGroup'] = roster['trtGroup']
-    
+
     cleaned_data = pd.DataFrame()
     patient_data = pd.DataFrame()
     j = 0
@@ -405,18 +434,14 @@ def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
     for id in PatientInfo.PtID.values:
         try:
             subj_info = PatientInfo[PatientInfo.PtID == id].reset_index(drop=True)
-            patient_deliv = BasalRate[BasalRate.PtID == id]
-            patient_cgm = CGM[CGM.PtID == id]
-            patient_bolus = Bolus[Bolus.PtID == id]
+            patient_deliv = df_basal[df_basal.PtID == id]
+            patient_cgm = df_cgm[df_cgm.PtID == id]
+            patient_bolus = df_bolus[df_bolus.PtID == id]
 
-            patient_deliv['DateTime'] = patient_deliv.DataDtTm.apply(datCnv)
-            patient_cgm['DateTime'] = patient_cgm.DataDtTm.apply(datCnv)
-            patient_bolus['DateTime'] = patient_bolus.DataDtTm.apply(datCnv)
-            
             patient_deliv = patient_deliv.sort_values(by='DateTime').reset_index(drop=True)
             patient_cgm = patient_cgm.sort_values(by='DateTime').reset_index(drop=True)
             patient_bolus = patient_bolus.sort_values(by='DateTime').reset_index(drop=True)
-            
+
             patient_deliv = patient_deliv[patient_deliv.DateTime >= subj_info.StartDate.iloc[0]].reset_index(drop=True)
             patient_cgm = patient_cgm[patient_cgm.DateTime >= subj_info.StartDate.iloc[0]].reset_index(drop=True)
             patient_bolus = patient_bolus[patient_bolus.DateTime >= subj_info.StartDate.iloc[0]].reset_index(drop=True)
@@ -424,19 +449,19 @@ def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
             patient_cgm['DateTime'] = patient_cgm['DateTime'].dt.round("5min")
             patient_deliv['DateTime'] = patient_deliv['DateTime'].dt.round("5min")
             patient_bolus['DateTime'] = patient_bolus['DateTime'].dt.round("5min")
-            
+
             patient_cgm['UnixTime'] = [int(time.mktime(patient_cgm.DateTime[x].timetuple())) for x in patient_cgm.index]
             patient_deliv['UnixTime'] = [int(time.mktime(patient_deliv.DateTime[x].timetuple())) for x in patient_deliv.index]
             patient_bolus['UnixTime'] = [int(time.mktime(patient_bolus.DateTime[x].timetuple())) for x in patient_bolus.index]
-            
+
             start_date = patient_deliv.DateTime.iloc[0].date()
             end_date = patient_deliv.DateTime.iloc[-1].date() + timedelta(days=1)
-            
+
             data_new_time = pd.DataFrame(columns=['DateTime_keep'])
             data_new_time['DateTime_keep'] = pd.date_range(start = start_date, end = end_date, freq="5min").values
             data_new_time['UnixTime'] = [int(time.mktime(data_new_time.DateTime_keep[x].timetuple())) for x in data_new_time.index]
             data_new_time = data_new_time.drop_duplicates(subset=['UnixTime']).sort_values(by='UnixTime')
-            
+
             #remove duplicate basal rates
             dups = patient_deliv[patient_deliv.duplicated(subset='UnixTime', keep=False)]
             utime = dups.UnixTime.unique()
@@ -448,15 +473,15 @@ def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
                 replace_data['UnixTime'][count] = u
                 replace_data['CommandedBasalRate'][count] = dup_data['CommandedBasalRate'].iloc[-1]
                 count += 1
-            
+
             patient_deliv = patient_deliv.drop_duplicates(subset=['UnixTime'],keep=False)
             patient_deliv.CommandedBasalRate = patient_deliv.CommandedBasalRate/12
             patient_deliv_dup_rem = pd.concat([patient_deliv,replace_data]).sort_values(by='UnixTime').reset_index(drop=True)
             patient_deliv_dup_rem.UnixTime = patient_deliv_dup_rem.UnixTime.astype(int)
-            
+
             insulin_merged = pd.merge_asof(data_new_time, patient_deliv, on="UnixTime",direction="nearest",tolerance=149)
             insulin_merged.CommandedBasalRate = insulin_merged.CommandedBasalRate.ffill()
-            
+
             dups = patient_bolus[patient_bolus.duplicated(subset='UnixTime', keep=False)]
             utime = dups.UnixTime.unique()
             count = 0
@@ -467,7 +492,7 @@ def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
                 replace_data['UnixTime'][count] = u
                 replace_data['BolusAmount'][count] = dup_data['BolusAmount'].sum()
                 count += 1
-            
+
             patient_bolus = patient_bolus.drop_duplicates(subset=['UnixTime'],keep=False)
             patient_bolus_dup_rem = pd.concat([patient_bolus,replace_data]).sort_values(by='UnixTime').reset_index(drop=True)
             patient_bolus_dup_rem.UnixTime = patient_bolus_dup_rem.UnixTime.astype(int)
@@ -475,28 +500,28 @@ def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
 
             delivery_merged = pd.merge_asof(insulin_merged, patient_bolus_dup_rem, on="UnixTime",direction="nearest",tolerance=149)
             delivery_merged = delivery_merged.filter(items=['DateTime_keep','UnixTime','BolusAmount','CommandedBasalRate','BolusType'])
-            
+
             patient_cgm = patient_cgm.sort_values(by='UnixTime').reset_index(drop=True)
             data_merged = pd.merge_asof(delivery_merged, patient_cgm, on="UnixTime",direction="nearest",tolerance=149)
             data_merged = data_merged.filter(items=['DateTime_keep','UnixTime','BolusAmount','CommandedBasalRate','BolusType','CGMValue'])
-            
+
             data_merged = data_merged.rename(columns={
                                             "CGMValue": "egv",
                                             "BolusAmount": "BolusDelivery",
                                             "CommandedBasalRate": "BasalDelivery",
                                             "DateTime_keep": "DateTime",
-                                            }) 
+                                            })
             data_merged.BolusDelivery = data_merged.BolusDelivery.astype(float)
             data_merged.BolusDelivery = data_merged.BolusDelivery.fillna(0)
-            
+
             extended_index = data_merged[data_merged.BolusType=='Extended'].index.values
             for e in extended_index:
                 data_merged.BolusDelivery[e] = data_merged.BolusDelivery[e]*0.5
                 data_merged.BolusDelivery.loc[e+1:e+24] = data_merged.BolusDelivery.loc[e+1:e+24] + (data_merged.BolusDelivery[e]*0.5)/24
-            
-            data_merged.egv = data_merged.egv.replace({'HIGH': 400, 'High': 400, 'high': 400, 
+
+            data_merged.egv = data_merged.egv.replace({'HIGH': 400, 'High': 400, 'high': 400,
                                                                 'LOW': 40, 'Low': 40, 'low': 40})
-            
+
             data_merged['Date'] = [data_merged['DateTime'][x].date() for x in data_merged.index]
             patient_deliv['Date'] = [patient_deliv['DateTime'][x].date() for x in patient_deliv.index]
             TDD_pt = pd.DataFrame(index=range(len(data_merged['Date'].unique())),columns=['PtID','TDD'])
@@ -513,7 +538,7 @@ def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
                     dd += 1
 
             TDD_all = pd.concat([TDD_all,TDD_pt])
-            
+
             data_merged['insulin'] = data_merged.BasalDelivery + data_merged.BolusDelivery
             data_merged['PtID'] = id
             data_merged = data_merged.filter(items=['PtID','DateTime','UnixTime','BasalDelivery','BolusDelivery','egv','insulin','BolusType'])
@@ -530,7 +555,7 @@ def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
                 if data_val == True:
                     subj_info['5minCheck'] = np.nan
                     subj_info['5minCheck_max'] = np.nan
-                    subj_info['ValidCGMCheck'] = np.nan 
+                    subj_info['ValidCGMCheck'] = np.nan
                     data_merged['TimeBetween'] = data_merged.DateTime.diff()
                     data_merged['TimeBetween'] = [data_merged['TimeBetween'][x].total_seconds()/60 for x in data_merged.index]
                     subj_info['5minCheck'] = len(data_merged[data_merged.TimeBetween>5])
@@ -548,7 +573,7 @@ def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
                 pt_data = subj_info.filter(items=['PtID','StartDate','TrtGroup','DaysOfData','AVG_CGM','STD_CGM','CGM_Availability',
                                                     'eA1C','TIR','TDD','5minCheck','ValidCGMCheck','5minCheck_max'])
                 patient_data = pd.concat([patient_data,pt_data])
-                
+
                 # pathlib.Path(clean_data_path + "CleanedData").mkdir(parents=True, exist_ok=True)
                 # data_merged.to_csv(clean_data_path + "CleanedData/DCLP3_cleaned_egvinsulin_" + str(id) + ".csv",index=False)
         except:
@@ -556,7 +581,7 @@ def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
         # j +=1
         # if j > 5:
         #     break
-            
+
     pathlib.Path(clean_data_path + "CleanedData").mkdir(parents=True, exist_ok=True)
     cleaned_data.to_csv(clean_data_path + "CleanedData/DCLP3_cleaned_egvinsulin.csv",index=False)
     patient_data.to_csv(clean_data_path + "CleanedData/DCLP3_patient_data.csv",index=False)
@@ -575,7 +600,7 @@ def IOBP2_cleaning(filepath,clean_data_path,data_val = True):
     PatientInfo['EndDate'] = roster['TransRandDt']
     PatientInfo['TrtGroup'] = roster['TrtGroup']
     PatientInfo['Age'] = roster['AgeAsofEnrollDt']
-    
+
     #load manual injections data
     filename = os.path.join(filepath, 'Data Tables', 'IOBP2ManualInsulinInj.txt')
     data_man_inj = pd.read_csv(filename, sep="|")
@@ -601,7 +626,7 @@ def IOBP2_cleaning(filepath,clean_data_path,data_val = True):
     for id in PatientInfo.PtID.values:
         try:
             subj_data = data[data.PtID == id].reset_index(drop=True)
-            
+
 
             subj_info = PatientInfo[PatientInfo.PtID == id].reset_index(drop=True)
             if len(subj_data) > 0:
@@ -623,7 +648,7 @@ def IOBP2_cleaning(filepath,clean_data_path,data_val = True):
                 try:
                     subj_info['StartDate'] = subj_info.StartDate[0].apply(datCnv)
                     data_preclean = data_preclean[data_preclean.DateTime >= subj_info.StartDate.iloc[0]]
-                    
+
                 except:
                     pass
                 #not everyone has an end data
@@ -656,11 +681,11 @@ def IOBP2_cleaning(filepath,clean_data_path,data_val = True):
                 data_new_time['UnixTime'] = [int(time.mktime(data_new_time.DateTime_keep[x].timetuple())) for x in data_new_time.index]
                 data_new_time = data_new_time.drop_duplicates(subset=['UnixTime']).sort_values(by='UnixTime')
                 clean_subj['UnixTime'] = [int(time.mktime(clean_subj.DateTime[x].timetuple())) for x in clean_subj.index]
-                
+
                 clean_data_merged = pd.merge_asof(data_new_time, clean_subj, on="UnixTime",direction="nearest",tolerance=149)
 
                 clean_data_merged = clean_data_merged.filter(items=['DateTime_keep','PtID','CGMVal','BGMVal','InsDelivAvail','InsulinDelivered','ManualIns'])
-                clean_data_merged = clean_data_merged.rename(columns={"DateTime_keep": "DateTime", 
+                clean_data_merged = clean_data_merged.rename(columns={"DateTime_keep": "DateTime",
                                         "CGMVal": "egv",
                                         "InsulinDelivered": "insulin",
                                         "ManualIns": "ManualDelivery"
@@ -671,7 +696,7 @@ def IOBP2_cleaning(filepath,clean_data_path,data_val = True):
                     if data_val == True:
                         subj_info['5minCheck'] = np.nan
                         subj_info['5minCheck_max'] = np.nan
-                        subj_info['ValidCGMCheck'] = np.nan 
+                        subj_info['ValidCGMCheck'] = np.nan
                         clean_data_merged['TimeBetween'] = clean_data_merged.DateTime.diff()
                         clean_data_merged['TimeBetween'] = [clean_data_merged['TimeBetween'][x].total_seconds()/60 for x in clean_data_merged.index]
                         subj_info['5minCheck'] = len(clean_data_merged[clean_data_merged.TimeBetween>5])
@@ -696,7 +721,7 @@ def IOBP2_cleaning(filepath,clean_data_path,data_val = True):
         pathlib.Path(clean_data_path + "CleanedData").mkdir(parents=True, exist_ok=True)
         cleaned_data.to_csv(clean_data_path + "CleanedData/IOBP2_cleaned_egvinsulin.csv",index=False)
         patient_data.to_csv(clean_data_path + "CleanedData/IOBP2_patient_data.csv",index=False)
-    
+
     return cleaned_data,patient_data
 
 ##########-------------- Run Functions for Testing 
