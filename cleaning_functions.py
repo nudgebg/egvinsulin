@@ -7,6 +7,7 @@ import warnings
 import time
 import os
 warnings.filterwarnings("ignore")
+from save_data_as import save_data_as
 
 import pathlib
 def datCnv(src):
@@ -30,7 +31,6 @@ def FLAIR_cleaning(filepath_data, clean_data_path, data_val=True):
 
     cleaned_data = pd.DataFrame()
     patient_data = pd.DataFrame()
-    TDD_all = pd.DataFrame(columns=['PtID','TDD'])
     for id in PatientInfo.PtID.values:
         try:
             subj_info = PatientInfo[PatientInfo.PtID == id].reset_index(drop=True)
@@ -113,21 +113,13 @@ def FLAIR_cleaning(filepath_data, clean_data_path, data_val=True):
                                                 "BasalRt": "BasalDelivery",
                                                 }) 
                 data_merged['Date'] = [data_merged['DateTime'][x].date() for x in data_merged.index]
-                TDD_pt = pd.DataFrame(index=range(len(data_merged['Date'].unique())),columns=['PtID','TDD'])
-                dd = 0
                 for d in data_merged['Date'].unique():
                     check = bolus_pt[bolus_pt.Date==d]
                     index_values = data_merged[data_merged.Date==d].index.values
                     if len(check)==0:
                         data_merged.BasalDelivery.loc[index_values] = np.nan
                         data_merged.BolusDelivery.loc[index_values] = np.nan
-                    if (data_val == True) & (len(check)!=0):
-                        TDD_pt['PtID'][dd] = id
-                        TDD_pt['TDD'][dd] = data_merged.BasalDelivery.loc[index_values].sum() + data_merged.BolusDelivery.loc[index_values].sum()
-                        dd += 1
-
-                TDD_all = pd.concat([TDD_all,TDD_pt])
-
+                    
                 data_merged['Insulin'] = data_merged.BasalDelivery + data_merged.BolusDelivery
                 data_merged.Insulin = data_merged.Insulin.replace({np.inf: np.nan})                
                 data_merged.egv = data_merged.egv.replace({'HIGH': 400, 'High': 400, 'high': 400, 
@@ -166,10 +158,9 @@ def FLAIR_cleaning(filepath_data, clean_data_path, data_val=True):
         except:
             pass
     pathlib.Path(clean_data_path + "CleanedData").mkdir(parents=True, exist_ok=True)
-    cleaned_data.to_csv(clean_data_path + "CleanedData/FLAIR_cleaned_egvinsulin.csv",index=False)
-    patient_data.to_csv(clean_data_path + "CleanedData/FLAIR_patient_data.csv",index=False)
-    TDD_all.to_csv(clean_data_path + "CleanedData/FLAIR_TDD_data.csv",index=False)
-    
+    save_data_as(cleaned_data,'CSV',clean_data_path + 'CleanedData/FLAIR_cleaned_egvinsulin')
+    save_data_as(patient_data,'CSV',clean_data_path + "CleanedData/FLAIR_patient_data")
+
     return cleaned_data,patient_data 
 
 def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
@@ -192,8 +183,6 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
     
     cleaned_data = pd.DataFrame()
     patient_data = pd.DataFrame()
-    j = 0
-    TDD_all = pd.DataFrame(columns=['PtID','TDD'])
     for id in PatientInfo.PtID.values:
         try:
             subj_info = PatientInfo[PatientInfo.PtID == id].reset_index(drop=True)
@@ -291,20 +280,12 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
             
             data_merged['Date'] = [data_merged['DateTime'][x].date() for x in data_merged.index]
             patient_deliv['Date'] = [patient_deliv['DateTime'][x].date() for x in patient_deliv.index]
-            TDD_pt = pd.DataFrame(index=range(len(data_merged['Date'].unique())),columns=['PtID','TDD'])
-            dd = 0
             for d in data_merged['Date'].unique():
                 check = patient_deliv[patient_deliv.Date==d]
                 index_values = data_merged[data_merged.Date==d].index.values
                 if len(check)==0:
                     data_merged.BasalDelivery.loc[index_values] = np.nan
                     data_merged.BolusDelivery.loc[index_values] = np.nan
-                if (data_val == True) & (len(check)!=0):
-                    TDD_pt['PtID'][dd] = id
-                    TDD_pt['TDD'][dd] = data_merged.BasalDelivery.loc[index_values].sum() + data_merged.BolusDelivery.loc[index_values].sum()
-                    dd += 1
-
-            TDD_all = pd.concat([TDD_all,TDD_pt])
             
             data_merged['Insulin'] = data_merged.BasalDelivery + data_merged.BolusDelivery
             data_merged['PtID'] = id
@@ -341,18 +322,12 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
                                                   'eA1C','TIR','TDD','5minCheck','ValidCGMCheck','5minCheck_max'])
                 patient_data = pd.concat([patient_data,pt_data])
                 
-                # pathlib.Path(clean_data_path + "CleanedData").mkdir(parents=True, exist_ok=True)
-                # data_merged.to_csv(clean_data_path + "CleanedData/DCLP5_cleaned_egvinsulin_" + str(id) + ".csv",index=False)
         except:
             pass
-        # j +=1
-        # if j > 4:
-            # break
             
     pathlib.Path(clean_data_path + "CleanedData").mkdir(parents=True, exist_ok=True)
-    cleaned_data.to_csv(clean_data_path + "CleanedData/DCLP5_cleaned_egvinsulin.csv",index=False)
-    patient_data.to_csv(clean_data_path + "CleanedData/DCLP5_patient_data.csv",index=False)
-    TDD_all.to_csv(clean_data_path + "CleanedData/DCLP5_TDD_data.csv",index=False)
+    save_data_as(cleaned_data,'CSV',clean_data_path + 'CleanedData/DCLP5_cleaned_egvinsulin')
+    save_data_as(patient_data,'CSV',clean_data_path + "CleanedData/DCLP5_patient_data")
 
     return cleaned_data,patient_data
 
@@ -376,8 +351,6 @@ def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
     
     cleaned_data = pd.DataFrame()
     patient_data = pd.DataFrame()
-    j = 0
-    TDD_all = pd.DataFrame(columns=['PtID','TDD'])
     for id in PatientInfo.PtID.values:
         try:
             subj_info = PatientInfo[PatientInfo.PtID == id].reset_index(drop=True)
@@ -475,20 +448,12 @@ def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
             
             data_merged['Date'] = [data_merged['DateTime'][x].date() for x in data_merged.index]
             patient_deliv['Date'] = [patient_deliv['DateTime'][x].date() for x in patient_deliv.index]
-            TDD_pt = pd.DataFrame(index=range(len(data_merged['Date'].unique())),columns=['PtID','TDD'])
-            dd = 0
             for d in data_merged['Date'].unique():
                 check = patient_deliv[patient_deliv.Date==d]
                 index_values = data_merged[data_merged.Date==d].index.values
                 if len(check)==0:
                     data_merged.BasalDelivery.loc[index_values] = np.nan
                     data_merged.BolusDelivery.loc[index_values] = np.nan
-                if (data_val == True) & (len(check)!=0):
-                    TDD_pt['PtID'][dd] = id
-                    TDD_pt['TDD'][dd] = data_merged.BasalDelivery.loc[index_values].sum() + data_merged.BolusDelivery.loc[index_values].sum()
-                    dd += 1
-
-            TDD_all = pd.concat([TDD_all,TDD_pt])
             
             data_merged['insulin'] = data_merged.BasalDelivery + data_merged.BolusDelivery
             data_merged['PtID'] = id
@@ -525,18 +490,12 @@ def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
                                                     'eA1C','TIR','TDD','5minCheck','ValidCGMCheck','5minCheck_max'])
                 patient_data = pd.concat([patient_data,pt_data])
                 
-                # pathlib.Path(clean_data_path + "CleanedData").mkdir(parents=True, exist_ok=True)
-                # data_merged.to_csv(clean_data_path + "CleanedData/DCLP3_cleaned_egvinsulin_" + str(id) + ".csv",index=False)
         except:
             pass
-        # j +=1
-        # if j > 5:
-        #     break
             
     pathlib.Path(clean_data_path + "CleanedData").mkdir(parents=True, exist_ok=True)
-    cleaned_data.to_csv(clean_data_path + "CleanedData/DCLP3_cleaned_egvinsulin.csv",index=False)
-    patient_data.to_csv(clean_data_path + "CleanedData/DCLP3_patient_data.csv",index=False)
-    TDD_all.to_csv(clean_data_path + "CleanedData/DCLP3_TDD_data.csv",index=False)
+    save_data_as(cleaned_data,'CSV',clean_data_path + 'CleanedData/DCLP3_cleaned_egvinsulin')
+    save_data_as(patient_data,'CSV',clean_data_path + "CleanedData/DCLP3_patient_data")
 
     return cleaned_data,patient_data
 
@@ -670,9 +629,9 @@ def IOBP2_cleaning(filepath,clean_data_path,data_val = True):
             pass
         #creates a new folder (if it doesnt exist) for cleaned data to be saved
         pathlib.Path(clean_data_path + "CleanedData").mkdir(parents=True, exist_ok=True)
-        cleaned_data.to_csv(clean_data_path + "CleanedData/IOBP2_cleaned_egvinsulin.csv",index=False)
-        patient_data.to_csv(clean_data_path + "CleanedData/IOBP2_patient_data.csv",index=False)
-    
+        save_data_as(cleaned_data,'CSV',clean_data_path + 'CleanedData/IOBP2_cleaned_egvinsulin')
+        save_data_as(patient_data,'CSV',clean_data_path + "CleanedData/IOBP2_patient_data")
+
     return cleaned_data,patient_data
 
 ##########-------------- Run Functions for Testing 

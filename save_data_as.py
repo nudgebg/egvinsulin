@@ -1,9 +1,12 @@
 from scipy.io import savemat
 
 def save_data_as(data,file_format,export_filename):
-    #input data should have an insulin delivery (basal+boluses) titled 'insulin', a CGM column titled 'egv',
-    #a datetime column titled 'datetime', and a patient id column titled 'PtID'
-    #data is a dataframe of cleaned data that needs to be saved
+    #data = pandas dataframe with 4 columns: 
+    #PtID (int): the patient identifier, 
+    #datetime (datetime): datetime of event in iso format, 
+    #insulin (float): insulin delivery as units of insulin (both basal and boluses), 
+    #egv (float): cgm values as mg/dl
+
     #fileformat is the format of the saved data: 
     #   For a .mat file specify 'MAT'
     #   For a .csv file specify 'CSV'
