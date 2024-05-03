@@ -228,8 +228,7 @@ def FLAIR_cleaning(filepath_data: str, clean_data_path: str, data_val:bool =True
 def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
     #load insulin related csvs
     df_bolus = pd.read_csv(os.path.join(filepath_data, 'DCLP5TandemBolus_Completed_Combined_b.txt'), sep="|", low_memory=False,
-                             usecols=['RecID', 'PtID', 'DataDtTm', 'BolusAmount', 'BolusType'])
-    df_bolus = parse_flair_dates(df_bolus,'DataDtTm')
+                             usecols=['RecID', 'PtID', 'DataDtTm', 'BolusAmount', 'BolusType'],parse_dates=[2])
 
     df_basal = pd.read_csv(os.path.join(filepath_data, 'DCLP5TandemBASALRATECHG_b.txt'), sep="|", low_memory=False,
                              usecols=['RecID', 'PtID', 'DataDtTm', 'CommandedBasalRate'])
@@ -412,16 +411,13 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
 def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
     #load insulin related csvs
     df_bolus = pd.read_csv(os.path.join(filepath_data, 'Pump_BolusDelivered.txt'), sep="|", low_memory=False,
-                             usecols=['RecID', 'PtID', 'DataDtTm', 'BolusAmount', 'BolusType'])
-    df_bolus = parse_flair_dates(df_bolus,'DataDtTm')
+                             usecols=['RecID', 'PtID', 'DataDtTm', 'BolusAmount', 'BolusType'],parse_dates=[2])
 
     df_basal = pd.read_csv(os.path.join(filepath_data, 'Pump_BasalRateChange.txt'), sep="|", low_memory=False,
-                             usecols=['RecID', 'PtID', 'DataDtTm', 'CommandedBasalRate'])
-    df_basal = parse_flair_dates(df_basal,'DataDtTm')
+                             usecols=['RecID', 'PtID', 'DataDtTm', 'CommandedBasalRate'],parse_dates=[2])
     #load cgm data
     df_cgm = pd.read_csv(os.path.join(filepath_data, 'Pump_CGMGlucoseValue.txt'), sep="|", low_memory=False,
-                             usecols=['RecID', 'PtID', 'DataDtTm', 'CGMValue'])
-    df_cgm = parse_flair_dates(df_cgm,'DataDtTm')
+                             usecols=['RecID', 'PtID', 'DataDtTm', 'CGMValue'],parse_dates=[2])
 
     filename = os.path.join(filepath_data,'Data Files', 'PtRoster_a.txt')
     roster = pd.read_csv(filename, sep="|", low_memory = False)
