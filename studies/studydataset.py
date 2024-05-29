@@ -53,7 +53,36 @@ def validate_load_data(func):
     return wrapper
 
 class StudyDataset:
-    df:  pd.DataFrame = None
+    """
+    The `StudyDataset` class is designed to handle and validate data related to a medical study.
+    It has a member variable `df` which is a pandas DataFrame that holds the data.
+    The class is initialized with a `filepath` which is the path to the data file.
+
+    The class has several methods:
+
+    - `load_data`: This method is meant to be overridden by subclasses to load data into the `df` DataFrame.
+      It has a decorator `validate_load_data` which checks if the DataFrame `df` is not None after loading the data.
+
+    - `extract_bolus_event_history`, `extract_basal_event_history`, and `extract_cgm_history`:
+      These methods are designed to extract specific types of data from the DataFrame.
+      They are decorated with `validate_bolus_output_dataframe`, `validate_basal_output_dataframe`,
+      and `validate_cgm_output_dataframe` respectively, which validate the output data.
+      These methods should not be overridden by subclasses. Instead, subclasses should implement the corresponding `_extract_*` methods.
+
+    - `_extract_bolus_event_history`, `_extract_basal_event_history`, and `_extract_cgm_history`:
+      These methods are meant to be overridden by subclasses to extract specific types of data from the DataFrame.
+
+    The returned dataframes are as follows:
+
+    - For bolus event history: The DataFrame should have the columns 'patient_id' (string),
+      'datetime' (pandas datetime), 'bolus' (float), and 'delivery_duration' (pandas timedelta).
+
+    - For basal event history: The DataFrame should have the columns 'patient_id' (string),
+      'datetime' (pandas datetime), and 'basal_rate' (float).
+
+    - For cgm history: The DataFrame should have the columns 'patient_id' (string),
+      'datetime' (pandas datetime), and 'cgm' (float).
+    """
 
     def __init__(self, filepath):
         self.filepath = filepath
