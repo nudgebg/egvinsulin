@@ -1,4 +1,4 @@
-site_name: Bebelbetes
+site_name: Babelbetes
 
 theme:
   name: "material"
@@ -16,7 +16,9 @@ plugins:
           show_symbol_type_toc: true
  
 nav:
- - Bebelbetes: index.md
+ - Babelbetes: index.md
  - How to Guides: how-to-guides.md
  - Code Reference: reference.md
  - Explanation: explanation.md
+ - Data Sets: 
+    - IOBP2: data_sets/IOBP2-dataset.md
