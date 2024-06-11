@@ -410,13 +410,13 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
 
 def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
     #load insulin related csvs
-    df_bolus = pd.read_csv(os.path.join(filepath_data, 'Pump_BolusDelivered.txt'), sep="|", low_memory=False,
+    df_bolus = pd.read_csv(os.path.join(filepath_data, 'Data Files', 'Pump_BolusDelivered.txt'), sep="|", low_memory=False,
                              usecols=['RecID', 'PtID', 'DataDtTm', 'BolusAmount', 'BolusType'],parse_dates=[2])
 
-    df_basal = pd.read_csv(os.path.join(filepath_data, 'Pump_BasalRateChange.txt'), sep="|", low_memory=False,
+    df_basal = pd.read_csv(os.path.join(filepath_data, 'Data Files', 'Pump_BasalRateChange.txt'), sep="|", low_memory=False,
                              usecols=['RecID', 'PtID', 'DataDtTm', 'CommandedBasalRate'],parse_dates=[2])
     #load cgm data
-    df_cgm = pd.read_csv(os.path.join(filepath_data, 'Pump_CGMGlucoseValue.txt'), sep="|", low_memory=False,
+    df_cgm = pd.read_csv(os.path.join(filepath_data, 'Data Files', 'Pump_CGMGlucoseValue.txt'), sep="|", low_memory=False,
                              usecols=['RecID', 'PtID', 'DataDtTm', 'CGMValue'],parse_dates=[2])
 
     filename = os.path.join(filepath_data,'Data Files', 'PtRoster_a.txt')
