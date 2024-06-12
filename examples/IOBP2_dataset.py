@@ -10,8 +10,8 @@ class IOBP2StudyData(StudyDataset):
     
     def load_data(self):
         self.df = pd.read_csv(self.filepath, sep="|", low_memory=False,
-                           usecols=['PtID', 'DeviceDtTm', 'CGMVal', 'BGTarget', 'InsDelivPrev', 'BasalDelivPrev',
-                                    'BolusDelivPrev'])
+                           usecols=['PtID', 'DeviceDtTm', 'CGMVal', 'BGTarget', 'BasalDelivPrev',
+                                    'BolusDelivPrev','MealBolusDelivPrev'])
         """ there are date time strings that do not contain a time and only contain a date. For this reason the datetime strings
             are separated by length and then handled separately. The datetime strings without a time are assumed to be midnight
             of the date.
@@ -30,7 +30,8 @@ class IOBP2StudyData(StudyDataset):
         """The insulin delivery is reported as the pervious amount delivered by the device. All deliveries are shifted
         back by one time step to align with when they were 'anounced' by the algorithm
         """
-        self.df['bolus'] = self.df['BolusDelivPrev'].diff(-1)
+        #boluses are separated into two columns. Meal Bolus and Bolus
+        self.df['bolus'] = self.df['BolusDelivPrev'].diff(-1) + self.df['MealBolusDelivPrev'].diff(-1)
         self.df['bolus'] = self.df['bolus'].fillna(0)
         """basal delivery is reported as a 5 minute delivery. These reported values were converted from a 5 minute delivery
         to a hourly basal rate"""
