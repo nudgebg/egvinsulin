@@ -56,7 +56,7 @@ class StudyDataset:
     """
     The `StudyDataset` class is designed to handle and validate data related to a medical study.
     It has a member variable `df` which is a pandas DataFrame that holds the data.
-    The class is initialized with a `filepath` which is the path to the data file.
+    The class is initialized with a `study_path` which is the path to the study directory
 
     The class has several methods:
 
@@ -84,8 +84,9 @@ class StudyDataset:
       'datetime' (pandas datetime), and 'cgm' (float).
     """
 
-    def __init__(self, filepath):
-        self.filepath = filepath
+    def __init__(self, study_path, study_name):
+        self.study_path = study_path
+        self.study_name = study_name
 
     @validate_load_data
     def load_data(self):
