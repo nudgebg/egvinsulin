@@ -65,17 +65,19 @@ The study data was analyzed to understand which data is relevant, how it must be
 * **Temp Basal:** We have 1446 temp basal values. only 9 of these are set by insulin rate, the others are in percent. These need to be factored in.
 * **Suspend:** There are 72424 suspend events. These need to be factored in.
 * **Date Adjustments:** There are many adjusted datetime events for CGM (none for Insulin). We need to understand how to factor them in.
-* **Date time strings**: From manual inspection we know that are date time strings without time component. We treat those without as midnight (00AM). If we don't do this in two steps, the loading is extremely slow because python needs to dynamically adjust the formatter. 
+* **There are 684** instances where the device time changes. Unclear if these are reflected
 
-## Datetime Adjustments
-<div class="alert alert-block alert-warning">
-<b>Date Adjustments:</b> We need to use the adjusted datetimes for cgm, when it exists.
-</div>
+### Datetimes
+* **Date time strings**: From manual inspection we know that are date time strings without time component. We treat those without as midnight (00AM). If we don't do this in two steps, the loading is extremely slow because python needs to dynamically adjust the formatter. 
+* Date Adjustments: We need to use the adjusted datetimes for cgm, when it exists.
+
+**Unknowns:**
+
+* We don't know the implications of NewDeviceDtTm. These should be clarified!
 
 ## Basal Rates
-### Background information
-According to Lane, 100% refers to the normal basal rate. Medtronic allows setting temp basal percentages from 0 (shut off) to 200% (twice the basal rate). These values are confirmed by the histogram of the data. This is confirmed by the *Medtronic Manual* [1,2]
-![Basal Rate Histograms](assets/flair_basal_rate_histograms.svg)
+### Temp Basal Rates (Background)
+Medtronic allows setting temp basal percentages from 0 (shut off) to 200% (twice the basal rate)
 
 **Temp basal rates:** "The duration of the temp basal rate can range from 30 minutes to 24 hours. After the temp basal rate delivery is completed or canceled, the programmed basal pattern resumes. The temp basal rates and preset temp basal rates can be defined using either a **percentage** of the current basal pattern or by setting a *specific rate*, as described [...]"
 
@@ -86,16 +88,19 @@ According to Lane, 100% refers to the normal basal rate. Medtronic allows settin
 [1] MiniMed-780G-system-user-guide-with-Guardian-4-sensor.pdf
 [2] user_guide_minimed_670g_pump-skompresowany.pdf
 
+![Basal Rate Histograms](assets/flair_basal_rate_histograms.svg)
+> Description: Histogram of temporary basal rates reported in the flair data.
 
-## What we learned about basal rates
-
-![Basal Rate Histograms](assets/flair_events_around_temporary_basal_rates.png)
->**Description**: The figure above shows that temporary basal rates are not reflected in the reported basal rates.
+### Processing Temp Basal Rates
 
 * We have no unknown basal rates, therefore this column can be ignored
+* Basal rates are reported every time they change
 * Standard basal rates do not reflect temporary basal rate changes
 * Temporary basal rates are either given in percent [%] of the normal basal (TempBasalType=='Percent') or as a delivery rate [U/h]  replacing standard basal (TempBasalType=='Rate') 
 * During temp basal rates are active, Standard BasalRt events can change and are reported
+
+![Temp Basal event reporting](assets/flair_events_around_temporary_basal_rates.png)
+>**Description**: The figure above shows that temporary basal rates are not reflected in the reported basal rates.
 
 **Percent**:
 * Standard Basal rates are reported shortly after temp basal start and stop
@@ -103,7 +108,7 @@ According to Lane, 100% refers to the normal basal rate. Medtronic allows settin
 * Interpreting Temp Basal of 100 Percent:The manual notices that *The percentage used is based on the largest basal rate scheduled during the temp basal rate duration*. So a value of 100% would change the basal rate to the highest standard basal rate, even if it occurs occurs within the duration of the temp basal rate. (*Assumption*)
 
 **Rate:**
-* There are only 9 cases where temporary basal is "Rate", in these cases, standard basal rate is not reported shortly after the temp basal rate *starts*
+* There are only 9 cases where temporary basal is "Rate", in these cases, standard basal rate is **not** reported shortly after the temp basal rate *starts*
 * Temporary Basal Percent rates are reported **once**, without leading 0 for duration hour (0:15:00) 
 
 **Takeaway:** 
@@ -111,11 +116,11 @@ To reconstruct true basal rates, we need to consider the TempBasalAmt and TempBa
 
 To create the correct event history, we take advantage of the fact that basal rates are reported shortly after a Percent rate is set. Here, we simply multiply all basal rates within the temp basal duration period. After the temp basal duration, the standard basal rate is reported and automatically takes over. In the "Rate" case, we know that the standard basal rate is not reported shortly after the temp basal starts, so we need to treat the event as a new basal rate by copying the temp basal amount. While the temp basal Rate is set, standard basal rate changes should be ignored, we do this by setting all basal rates within the active duration to NaN (not 0!). As before, we take advantage of the fact that after the temp basal stops, a standard basal event is reported and automtaically takes over. 
 
- ![Absolute Basal Rates](assets/flair_absolute_basal_rates.png)
-
+![Absolute Basal Rates](assets/flair_absolute_basal_rates.png)
 >**Description**: The figure above shows the result of applying the method described in the previous section to reconstruct the true basal rates. 
 
-### What we learned about Pump Suspends
+
+### Pump Suspends
 ![Suspend Events](assets/flair_suspends.png)
 * **End suspend without start:**  The very small difference is likely due to glucose suspend events that were started before the observation period. But this makes matching a little *more difficult*. We want to make sure we match the right pairs!
 * **Most users start with NORMAL_PUMPING:** For the majority of users we get a NORMAL_PUMPING event as the first Suspend event without a previous Suspend event. This could be because a) the pump was being set-up (e.g. catridge change etc.) and reported normal operation (to be verified) or b) there was a suspend event before the data collection started (unlikely because suspends are often short). 
@@ -124,3 +129,62 @@ To create the correct event history, we take advantage of the fact that basal ra
 * **Basal rates** are *not* reported before/after a suspend event starts/stops
 
 ![Suspend Events with CGM](assets/flair_suspends_with_cgm.png)
+
+
+## SmartGuard
+**670g manual:**
+>SmartGuard suspend (Suspend before low and Suspend on low) features. SmartGuard suspend features can automatically stop and resume insulin delivery based on your SG values and low limit.
+>When a SmartGuard suspend event occurs, basal insulin delivery automatically resumes if your SG values are rising and have met the specified criteria,
+
+From this it is unclear wether boluses are also cancelled or just basal.
+
+**Medtronic FAQ:**
+>I bolused for food I did not eat, will the system stop insulin delivery?
+>If the system sees that the sensor glucose is falling it will decrease the insulin being delivered and/or stop insulin from being delivered. However, it is important that you eat the amount of carbohydrates that you bolused for because the bolus insulin that you gave will already be working in your body.
+This indicates that boluses will in fact be stopped
+
+>Can you deliver a Dual Wave™ or Square Wave™ bolus in SmartGuard™ technology?
+>You cannot deliver a dual or square wave bolus in SmartGuard™ technology. The system is designed to compensate for a delayed rise in sensor glucose levels due to high fat, high carb meals. The auto basal adjustments every 5 minutes and auto corrections may eliminate the need for using the dual or squave wave bolus.
+So it might not even be relevant for us. Question remains what happens during a suspend while a standard bolus is ongoing.
+
+**User Blog Post**
+https://littlet1d.blogspot.com/2015/03/smartguard-dual-wave-bolus-cancellation.html
+>In this article from 2015 a user complains:
+The message in the data file (not the pump screen) is the same as before:-
+Suspend Before / At Low will suspend basal and cancel an extended bolus. 
+>
+>The answer for us is the same: We need to manually go back in after basal has resumed and put in a revised Square Wave bolus if necessary.
+>
+>Ok, I get it, but I’m still concerned: We know and understand that we need to think about manually inputting a revised Square Wave bolus following a Suspend before Low.
+>
+>But - and this is, I think a big “but”, there’s no obvious warning / reminder message on Resume to prompt you (or whoever happens to be looking after Janki) to do this. There is an alarm in the pump log, but it doesn’t make it to the screen...
+:arrow_right: At least in 2015 boluses seem to be cancelled and not resumed automatically, only basal resumes.```
+
+### What we learned about SmartGuard
+* Extended bolus are not possible during closed loop mode
+* Boluses during closed loop mode are often reduced, this is likely a result of the smartguard feature.
+* pump suspsends stop basal rates
+* pump suspend *might* also cancel boluses (moving forward, we rely on the reported delivered bolus amounts)
+
+**Unknows**: 
+* It is yet unclear if suspend events are reflected in the "delivered" boluses (we assume the reported delivered amounts are correct)
+ * One way to check this would be to identify boluses that overlap with a suspend event.
+
+
+# Boluses:
+* **Normal bolus**: provides a single immediate dose of insulin.
+* **Square Wave bolus**: delivers a single bolus evenly over an extended period of time from 30 minutes up to 8 hours.
+* **Dual Wave bolus**: delivers a combination of an immediate normal bo‐ lus followed by a Square Wave bolus.
+
+![Bolus Types](assets/Bolus Types Medtronic.png)
+>**Description**: Bolus types explained from the Medtronic Manual.
+
+### What we learned about Boluses
+* There are (697 or 534) dual wave and 46 sqaure (extended) boluses (<0.02% of the boluses). The dual wave bolus events (square part) (normal part) should be equal in theory. But this could be because some boluses were stopped (working assumption).
+* There are very little extended boluses because these are not allowed during closed loop mode
+* For dual wave boluses, the number of normal an square events don't match up. We **assume** that these boluses were stopped early. This could be further verified by checking if the number of missing events matches the amount of boluses for which the deliverd amount < the selected (were stopped early).
+* When a bolus is stopped early, the shorter duration appears to be automatically reflected in the reported duration. (data based assumption)
+* We need to use the delivered over the selected bolus
+
+**Unknowns**:
+* It remains unclear if pump suspend events impact the boluses, this should be clarified with the investigator or manufacturer
