@@ -16,9 +16,4 @@ def save_data_as(data,file_format,export_filename):
     if file_format == 'CSV':
         data.to_csv(export_filename + '.csv', index=False)
     
-    if file_format == 'MAT':
-        
-        data_dict = data.to_dict(orient='dict')
-        savemat(export_filename + '.mat', data_dict)
-    
     return 
