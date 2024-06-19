@@ -11,8 +11,8 @@ import time
 import os
 warnings.filterwarnings("ignore")
 from save_data_as import save_data_as
-
 import pathlib
+
 def datCnv(src):
     return pd.to_datetime(src)
 def parse_flair_dates(df: pd.DataFrame, date_column: str) -> pd.DataFrame:
@@ -207,7 +207,6 @@ def FLAIR_cleaning(filepath_data: str, clean_data_path: str, data_val:bool =True
 
         except:
             pass
-    print(f"running for loop took {t- time.time()}s")
     pathlib.Path(clean_data_path + "CleanedData").mkdir(parents=True, exist_ok=True)
     save_data_as(cleaned_data,'CSV',clean_data_path + 'CleanedData/FLAIR_cleaned_egvinsulin')
     save_data_as(patient_data,'CSV',clean_data_path + "CleanedData/FLAIR_patient_data")
