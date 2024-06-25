@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from datetime import timedelta
 import os 
-from studydataset import StudyDataset
+from studies.studydataset import StudyDataset
 
 class IOBP2StudyData(StudyDataset):
 
@@ -36,9 +36,9 @@ class IOBP2StudyData(StudyDataset):
 
     def _extract_bolus_event_history(self):
         bolus_history = self.df[['patient_id', 'datetime', 'bolus', 'delivery_duration']]
-        
         #insulin delivery is reported as the previous amount delivered. Therefore data is shifted to to align with algorithm announcement
         bolus_history['datetime'] = bolus_history['datetime'] - timedelta(minutes=5)
+        bolus_history['datetime'] = bolus_history['datetime'].astype("datetime64[ns]")
         bolus_history['bolus'] = bolus_history['bolus'].fillna(0)
 
         return bolus_history.dropna()
@@ -48,27 +48,26 @@ class IOBP2StudyData(StudyDataset):
         
         #insulin delivery is reported as the previous amount delivered. Therefore data is shifted to to align with algorithm announcement
         basal_history['datetime'] = basal_history['datetime'] - timedelta(minutes=5)
-        
+        basal_history['datetime'] = basal_history['datetime'].astype("datetime64[ns]")
         #convert 5 minute basal deliveries to a hourly basal rate
-        basal_history['basal_rate'] = basal_history.df['basal_rate'] * 12
-        basal_history['basal_rate'] = basal_history.df['basal_rate'].fillna(0)
+        basal_history['basal_rate'] = basal_history['basal_rate'] * 12
+        basal_history['basal_rate'] = basal_history['basal_rate'].fillna(0)
         
         return basal_history.dropna()
 
     def _extract_cgm_history(self):
         cgm_history = self.df[['patient_id', 'datetime', 'cgm']]
-        cgm_history.columns = ['patient_id', 'datetime', 'cgm']
-        
-        #missing cgm values are marked by a -1 regardless of the reason they are missing.
-        cgm_history['cgm'] = cgm_history['cgm'].replace(-1,np.nan, inplace=True)
+        cgm_history['datetime'] = cgm_history['datetime'].astype("datetime64[ns]")
 
+        
+        # cgm_history['cgm'] = cgm_history['cgm'].replace(-1,np.nan, inplace=True)
         return cgm_history.dropna()
 
 
 
 if __name__ == '__main__':
     current_dir = os.path.dirname(__file__)
-    path = os.path.join(current_dir, '..', 'data/test', 'IOBP2 RCT Public Dataset')
+    path = os.path.join(current_dir, 'IOBP2 RCT Public Dataset')
     
     study = IOBP2StudyData(study_name='IOBP2', study_path=path)
     study.load_data()
