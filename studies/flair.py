@@ -30,7 +30,7 @@ def convert_duration_to_timedelta(duration):
     hours, minutes, seconds = map(int, duration.split(':'))
     return timedelta(hours=hours, minutes=minutes, seconds=seconds)
 
-def calculate_absolute_basal(df):
+def merge_basal_and_temp_basal(df):
     """
     Calculates the absolute basal rates based on the provided DataFrame.
 
@@ -74,14 +74,15 @@ def calculate_absolute_basal(df):
             adjusted_basal[affected_basal_indexes] = np.NaN
     return adjusted_basal
 
+@profile
 def adjust_basal_for_pump_suspends(df):
-    df = df.sort_values('DateTime')
-    
+    assert df.DateTime.is_monotonic_increasing, 'Data must be sorted by DateTime'
+
     basals = df.dropna(subset=['BasalRt'])
     adjusted_basals = df.BasalRt.copy() # we start with absolute basals
 
     #combine pump suspend start and end events
-    suspends = df.loc[df['Suspend'].notna(), ['Suspend', 'DateTime']].sort_values('DateTime').copy()
+    suspends = df.loc[df['Suspend'].notna(), ['Suspend', 'DateTime']]
     suspends['SuspendEndIndex'] = suspends.index
     suspends['SuspendEndIndex'] = suspends.SuspendEndIndex.shift(-1)
     suspends['SuspendEndEvent'] = suspends['Suspend'].shift(-1)
@@ -103,13 +104,12 @@ def adjust_basal_for_pump_suspends(df):
             adjusted_basals.loc[suspend.SuspendIndex] = 0
         
             #set affected existing basal rates to zero 
-            indexes = basals.loc[(basals.DateTime >= suspend.DateTime) & (basals.DateTime <= suspend.SuspendEndDateTime)].index
+            indexes = basals[(basals.DateTime >= suspend.DateTime) & (basals.DateTime <= suspend.SuspendEndDateTime)].index
             adjusted_basals[indexes] = 0
     return adjusted_basals
 
 
 class Flair(StudyDataset):
-
     def __init__(self, study_name: str, study_path: str):
         super().__init__(study_path, study_name)
         self.pump_file = os.path.join(
@@ -132,7 +132,7 @@ class Flair(StudyDataset):
                                                                                   'BolusSource', 'BolusDeliv', 'BolusSelected', 'ExtendBolusDuration', 'BasalRtUnKnown',
                                                                                   'Suspend', 'PrimeVolumeDeliv', 'Rewind', 'TDD'])
         df_pump['DateTime'] = df_pump.loc[df_pump.DataDtTm.notna(), 'DataDtTm'].transform(parse_flair_dates)
-        self.df_pump = df_pump
+        self.df_pump = df_pump.sort_values('DateTime')
 
         return self.df_cgm, self.df_pump
 
@@ -142,7 +142,7 @@ class Flair(StudyDataset):
     def _extract_basal_event_history(self):
         print('called')
         #merge basal and temp basal
-        adjusted_basal = self.df_pump.groupby('PtID').apply(calculate_absolute_basal).droplevel(0)#remove patient id index
+        adjusted_basal = self.df_pump.groupby('PtID').apply(merge_basal_and_temp_basal).droplevel(0)#remove patient id index
         df_temp = pd.merge(self.df_pump[['PtID','DateTime','Suspend']], adjusted_basal, left_index=True, right_index=True)
         
         #adjust for pump suspends
@@ -161,7 +161,7 @@ class Flair(StudyDataset):
 def main():
     #get directory of this file
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    study_path = os.path.join(current_dir, '..', 'data/test', 'FLAIRPublicDataSet')
+    study_path = os.path.join(current_dir, '..', 'data/raw', 'FLAIRPublicDataSet')
     flair = Flair('FLAIR', study_path)
     flair.load_data()
     print(f'loaded data for {flair.study_name} from {flair.study_path}')
