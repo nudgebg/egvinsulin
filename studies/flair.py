@@ -74,7 +74,6 @@ def merge_basal_and_temp_basal(df):
             adjusted_basal[affected_basal_indexes] = np.NaN
     return adjusted_basal
 
-@profile
 def adjust_basal_for_pump_suspends(df):
     assert df.DateTime.is_monotonic_increasing, 'Data must be sorted by DateTime'
 
@@ -107,7 +106,6 @@ def adjust_basal_for_pump_suspends(df):
             indexes = basals[(basals.DateTime >= suspend.DateTime) & (basals.DateTime <= suspend.SuspendEndDateTime)].index
             adjusted_basals[indexes] = 0
     return adjusted_basals
-
 
 class Flair(StudyDataset):
     def __init__(self, study_name: str, study_path: str):
@@ -152,21 +150,31 @@ class Flair(StudyDataset):
         #reduce
         adjusted_basal = adjusted_basal.dropna(subset=['BasalRt'])[['PtID', 'DateTime', 'BasalRt']]
         adjusted_basal = adjusted_basal.rename(columns={'PtID':'patient_id', 'DateTime':'datetime', 'BasalRt':'basal_rate'})
+        adjusted_basal['patient_id'] = adjusted_basal['patient_id'].astype(str)
         return adjusted_basal
     
     def _extract_cgm_history(self):
-        pass
+        # Use np.where to select DateTimeAdjusted if it's not null, otherwise use DateTime
+        datetime = np.where(self.df_cgm['DateTimeAdjusted'].notnull(),
+                            self.df_cgm['DateTimeAdjusted'],
+                            self.df_cgm['DateTime'])
+        # Select the AdjustedDateTime and CGM columns
+        tmp = pd.DataFrame({'patient_id': self.df_cgm['PtID'].astype(str),
+                            'datetime': datetime,
+                            'cgm': self.df_cgm['CGM']})
+        return tmp
 
 
 def main():
     #get directory of this file
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    study_path = os.path.join(current_dir, '..', 'data/raw', 'FLAIRPublicDataSet')
+    study_path = os.path.join(current_dir, '..', 'data/test', 'FLAIRPublicDataSet')
     flair = Flair('FLAIR', study_path)
     flair.load_data()
     print(f'loaded data for {flair.study_name} from {flair.study_path}')
     basal_events = flair.extract_basal_event_history()
-    print(basal_events)
+    cgm = flair.extract_cgm_history()
+    
     
 if __name__ == "__main__":
     main()

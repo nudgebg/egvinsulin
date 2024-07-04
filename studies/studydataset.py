@@ -21,7 +21,12 @@ def validate_basal_output_dataframe(func):
         df = func(*args, **kwargs)
         required_columns = ['patient_id', 'datetime', 'basal_rate']
         if not all(col in df.columns for col in required_columns):
-            raise ValueError("DataFrame should have columns 'datetime' and 'basal_rate'")
+            raise ValueError("DataFrame should have columns 'patient_id', 'datetime' and 'basal_rate'")
+        if 'patient_id' not in df.columns or not pd.api.types.is_object_dtype(df['patient_id'].dtype) or not all(isinstance(item, str) for item in df['patient_id']):
+            raise ValueError("DataFrame should have a 'patient_id' column of type string")
+        if not pd.api.types.is_numeric_dtype(df['basal_rate'].dtype):
+            raise ValueError("DataFrame should have a 'basal_rate' column of numeric type")
+
         return df
     return wrapper
 
@@ -31,12 +36,13 @@ def validate_cgm_output_dataframe(func):
 
         if not isinstance(df, pd.DataFrame):
             raise TypeError("Output should be a pandas DataFrame")
-        if 'datetime' not in df.columns or not pd.api.types.is_datetime64_dtype(df['datetime'].dtype):
-            raise ValueError("DataFrame should have a 'datetime' column of type pandas datetime")
+        required_columns = ['patient_id', 'datetime', 'cgm']
+        if not all(col in df.columns for col in required_columns):
+            raise ValueError("DataFrame should have columns 'patient_id', 'datetime' and 'cgm'")
         if 'patient_id' not in df.columns or not pd.api.types.is_object_dtype(df['patient_id'].dtype) or not all(isinstance(item, str) for item in df['patient_id']):
             raise ValueError("DataFrame should have a 'patient_id' column of type string")
-        if 'cgm' not in df.columns or df['cgm'].dtype != 'float64':
-            raise ValueError("DataFrame should have a 'cgm' column of type float")
+        if not pd.api.types.is_numeric_dtype(df['cgm'].dtype):
+            raise ValueError("DataFrame should have a 'cgm' column of numeric type")
 
         return df
     return wrapper
