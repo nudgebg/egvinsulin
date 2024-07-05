@@ -129,13 +129,21 @@ class Flair(StudyDataset):
                                                                                   'TempBasalAmt', 'TempBasalType', 'TempBasalDur', 'BolusType',
                                                                                   'BolusSource', 'BolusDeliv', 'BolusSelected', 'ExtendBolusDuration', 'BasalRtUnKnown',
                                                                                   'Suspend', 'PrimeVolumeDeliv', 'Rewind', 'TDD'])
+        
         df_pump['DateTime'] = df_pump.loc[df_pump.DataDtTm.notna(), 'DataDtTm'].transform(parse_flair_dates)
+        #to datetime required because otherwise pandas provides a Object type which will fail the studydataset validation
+        df_pump['DateTime'] = pd.to_datetime(df_pump['DateTime'])
         self.df_pump = df_pump.sort_values('DateTime')
 
         return self.df_cgm, self.df_pump
-
+    
     def _extract_bolus_event_history(self):
-        pass
+        subFrame = self.df_pump.dropna(subset=['BolusDeliv'])
+        boluses = pd.DataFrame({'patient_id': subFrame['PtID'].astype(str), 
+                                'datetime': subFrame['DateTime'], 
+                                'bolus': subFrame['BolusDeliv'],
+                                'delivery_duration': subFrame.ExtendBolusDuration.apply(lambda x: convert_duration_to_timedelta(x) if pd.notnull(x) else pd.Timedelta(0))})
+        return boluses
     
     def _extract_basal_event_history(self):
         print('called')
@@ -172,8 +180,9 @@ def main():
     flair = Flair('FLAIR', study_path)
     flair.load_data()
     print(f'loaded data for {flair.study_name} from {flair.study_path}')
-    basal_events = flair.extract_basal_event_history()
-    cgm = flair.extract_cgm_history()
+    #basal_events = flair.extract_basal_event_history()
+    #cgm = flair.extract_cgm_history()
+    boluses = flair.extract_bolus_event_history()
     
     
 if __name__ == "__main__":
