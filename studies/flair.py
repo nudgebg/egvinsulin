@@ -146,7 +146,6 @@ class Flair(StudyDataset):
         return boluses
     
     def _extract_basal_event_history(self):
-        print('called')
         #merge basal and temp basal
         adjusted_basal = self.df_pump.groupby('PtID').apply(merge_basal_and_temp_basal).droplevel(0)#remove patient id index
         df_temp = pd.merge(self.df_pump[['PtID','DateTime','Suspend']], adjusted_basal, left_index=True, right_index=True)
