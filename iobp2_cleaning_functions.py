@@ -19,6 +19,16 @@ basal_history = study.extract_basal_event_history()
 cgm_history = study.extract_cgm_history()
 
 def bolus_transform(bolus_data):
+    """
+    Transform the bolus data by aligning timestamps, handling duplicates, and extending boluses based on durations.
+
+    Parameters:
+    - bolus_data (DataFrame): The input is a bolus data dataframe containing columns 'patient_id, 'datetime', 'bolus', and 'delivery_duration'.
+
+    Returns:
+    - bolus_data (DataFrame): The transformed bolus data with aligned timestamps, duplicates removed, and extended bolus handling.
+    """
+
     #start data from midnight
     bolus_data = bolus_data.sort_values(by='datetime').reset_index(drop=True)
     #round to the nearest 5 minute value so timestamps that are close become duplicates (2:32:35 and 2:36:05 would both become 2:35:00)
@@ -34,18 +44,18 @@ def bolus_transform(bolus_data):
     bolus_from_mid['UnixTime'] = [int(time.mktime(bolus_from_mid.datetime_adj[x].timetuple())) for x in bolus_from_mid.index]
     bolus_from_mid = bolus_from_mid.drop_duplicates(subset=['UnixTime']).sort_values(by='UnixTime')
     #sum boluses if there is a duplicate time (happens when two or more boluses are announces <5 minutes apart)
-    bolus_data = bolus_data.groupby('UnixTime').agg({'bolus':'sum'})
-    
+    #keep maximum duration of the bolus - in the rare case a standard and extended are announced int the same 5 minute window, it will be treated as an extended bolus
+    bolus_data = bolus_data.groupby('UnixTime').agg({'bolus':'sum','delivery_duration':'max','patient_id':'first'}).reset_index()
+   
     #merge new midnight aligned times with bolus data
     bolus_merged = pd.merge_asof(bolus_from_mid, bolus_data, on="UnixTime",direction="nearest",tolerance=149)
-
-    bolus_data = bolus_merged.filter(items=['patient_id','datetime_adj','bolus'])
+    bolus_data = bolus_merged.filter(items=['patient_id','datetime_adj','bolus','delivery_duration'])
     bolus_data = bolus_data.rename(columns={"datetime_adj": "datetime",
                                         }) 
-    
     #extended bolus handling: duration must be a timedelta for this to work
     extended_boluses = bolus_data[bolus_data.delivery_duration > timedelta(minutes=5)]
     #determine how many 5 minute steps the bolus is extended for and round to the nearst whole number step
+    extended_boluses['Duration_minutes'] = extended_boluses['delivery_duration'].dt.total_seconds()/60
     extended_boluses['Duration_steps'] = extended_boluses['Duration_minutes']/5
     extended_boluses['Duration_steps'] = extended_boluses['Duration_steps'].round()
     #extend the bolus out assumming an equal amount of delivery for each time step            
@@ -62,6 +72,15 @@ def bolus_transform(bolus_data):
     return bolus_data
 
 def cgm_transform(cgm_data):
+    """
+    time aligns the cgm data to midnight with a 5 minute sampling rate.
+
+    Parameters:
+    - cgm_data (DataFrame): The input is a cgm data dataframe containing columns 'patient_id, 'datetime', and 'cgm'.
+
+    Returns:
+    - cgm_data (DataFrame): The transformed cgm data with aligned timestamps.
+    """
     #start data from midnight
     cgm_data = cgm_data.sort_values(by='datetime').reset_index(drop=True)
     cgm_data['datetime'] = cgm_data['datetime'].dt.round("5min")
@@ -88,6 +107,15 @@ def cgm_transform(cgm_data):
     return cgm_data
 
 def basal_transform(basal_data):
+    """
+    Transform the basal data by aligning timestamps and handling duplicates.
+
+    Parameters:
+    - basal_data (DataFrame): The input is a basal data dataframe containing columns 'patient_id, 'datetime', and 'basal_rate'.
+
+    Returns:
+    - basal_data (DataFrame): The transformed basal data with aligned timestamps and duplicates removed.
+    """
     #start data from midnight
     basal_data = basal_data.sort_values(by='datetime').reset_index(drop=True)
     basal_data['datetime'] = basal_data['datetime'].dt.round("5min")
@@ -119,7 +147,7 @@ def basal_transform(basal_data):
     return basal_data
 
 #transform data 
-cgm_data = cgm_history.groupby('patient_id').apply(cgm_transform).reset_index(drop=True)
+# cgm_data = cgm_history.groupby('patient_id').apply(cgm_transform).reset_index(drop=True)
 bolus_data = bolus_history.groupby('patient_id').apply(bolus_transform).reset_index(drop=True)
-basal_data = basal_history.groupby('patient_id').apply(basal_transform).reset_index(drop=True)
+# basal_data = basal_history.groupby('patient_id').apply(basal_transform).reset_index(drop=True)
 

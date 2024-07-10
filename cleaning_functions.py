@@ -5,12 +5,140 @@ from datetime import datetime, timedelta
 import numpy as np
 import warnings
 import time
-import os
 warnings.filterwarnings("ignore")
-
+from studies.iobp2 import IOBP2StudyData
 import pathlib
 def datCnv(src):
     return pd.to_datetime(src)
+from studies.iobp2 import IOBP2StudyData
+#functions for time alignment and transformation of basal, bolus, and cgm event data. These functions can be used for any study dataset.
+def bolus_transform(bolus_data):
+    """
+    Transform the bolus data by aligning timestamps, handling duplicates, and extending boluses based on durations.
+
+    Parameters:
+    - bolus_data (DataFrame): The input is a bolus data dataframe containing columns 'patient_id, 'datetime', 'bolus', and 'delivery_duration'.
+
+    Returns:
+    - bolus_data (DataFrame): The transformed bolus data with aligned timestamps, duplicates removed, and extended bolus handling.
+    """
+
+    #start data from midnight
+    bolus_data = bolus_data.sort_values(by='datetime').reset_index(drop=True)
+    #round to the nearest 5 minute value so timestamps that are close become duplicates (2:32:35 and 2:36:05 would both become 2:35:00)
+    #this allows us to handle duplicates before needing to align data
+    bolus_data['datetime'] = bolus_data['datetime'].dt.round("5min")
+    #data aligns on unix time
+    bolus_data['UnixTime'] = [int(time.mktime(bolus_data.datetime[x].timetuple())) for x in bolus_data.index]
+    #create a new dataset of 5 minute time series data starting at midnight based on the data available
+    start_date = bolus_data['datetime'].iloc[0].date()
+    end_date = bolus_data['datetime'].iloc[-1].date() + timedelta(days=1)
+    bolus_from_mid = pd.DataFrame(columns=['datetime_adj'])
+    bolus_from_mid['datetime_adj'] = pd.date_range(start = start_date, end = end_date, freq="5min").values
+    bolus_from_mid['UnixTime'] = [int(time.mktime(bolus_from_mid.datetime_adj[x].timetuple())) for x in bolus_from_mid.index]
+    bolus_from_mid = bolus_from_mid.drop_duplicates(subset=['UnixTime']).sort_values(by='UnixTime')
+    #sum boluses if there is a duplicate time (happens when two or more boluses are announces <5 minutes apart)
+    #keep maximum duration of the bolus - in the rare case a standard and extended are announced int the same 5 minute window, it will be treated as an extended bolus
+    bolus_data = bolus_data.groupby('UnixTime').agg({'bolus':'sum','delivery_duration':'max','patient_id':'first'}).reset_index()
+   
+    #merge new midnight aligned times with bolus data
+    bolus_merged = pd.merge_asof(bolus_from_mid, bolus_data, on="UnixTime",direction="nearest",tolerance=149)
+    bolus_data = bolus_merged.filter(items=['patient_id','datetime_adj','bolus','delivery_duration'])
+    bolus_data = bolus_data.rename(columns={"datetime_adj": "datetime",
+                                        }) 
+    #extended bolus handling: duration must be a timedelta for this to work
+    extended_boluses = bolus_data[bolus_data.delivery_duration > timedelta(minutes=5)]
+    #determine how many 5 minute steps the bolus is extended for and round to the nearst whole number step
+    extended_boluses['Duration_minutes'] = extended_boluses['delivery_duration'].dt.total_seconds()/60
+    extended_boluses['Duration_steps'] = extended_boluses['Duration_minutes']/5
+    extended_boluses['Duration_steps'] = extended_boluses['Duration_steps'].round()
+    #extend the bolus out assumming an equal amount of delivery for each time step            
+    for ext in extended_boluses.index:
+        #devide the bolus by the number of time steps it is extended by
+        bolus_parts = extended_boluses.bolus[ext]/extended_boluses.Duration_steps[ext]
+        #replace bolus info with extended data
+        bolus_data.bolus.loc[ext:ext+int(extended_boluses.Duration_steps[ext])] = bolus_parts
+                        
+    #fill nans with 0
+    bolus_data = bolus_data.fillna(0)
+    bolus_data.patient_id = bolus_data.patient_id.ffill()
+
+    return bolus_data
+
+def cgm_transform(cgm_data):
+    """
+    time aligns the cgm data to midnight with a 5 minute sampling rate.
+
+    Parameters:
+    - cgm_data (DataFrame): The input is a cgm data dataframe containing columns 'patient_id, 'datetime', and 'cgm'.
+
+    Returns:
+    - cgm_data (DataFrame): The transformed cgm data with aligned timestamps.
+    """
+    #start data from midnight
+    cgm_data = cgm_data.sort_values(by='datetime').reset_index(drop=True)
+    cgm_data['datetime'] = cgm_data['datetime'].dt.round("5min")
+    cgm_data['UnixTime'] = [int(time.mktime(cgm_data.datetime[x].timetuple())) for x in cgm_data.index]
+
+    start_date = cgm_data['datetime'].iloc[0].date()
+    end_date = cgm_data['datetime'].iloc[-1].date() + timedelta(days=1)
+    
+    cgm_from_mid = pd.DataFrame(columns=['datetime_adj'])
+    cgm_from_mid['datetime_adj'] = pd.date_range(start = start_date, end = end_date, freq="5min").values
+
+    cgm_from_mid['UnixTime'] = [int(time.mktime(cgm_from_mid.datetime_adj[x].timetuple())) for x in cgm_from_mid.index]
+    cgm_from_mid = cgm_from_mid.drop_duplicates(subset=['UnixTime']).sort_values(by='UnixTime')
+    cgm_data = cgm_data.drop_duplicates(subset=['UnixTime']).sort_values(by='UnixTime')
+
+    #merge new time with cgm data
+    cgm_merged = pd.merge_asof(cgm_from_mid, cgm_data, on="UnixTime",direction="nearest",tolerance=149)
+
+    cgm_data = cgm_merged.filter(items=['patient_id','datetime_adj','cgm'])
+    cgm_data = cgm_data.rename(columns={"datetime_adj": "datetime",
+                                        }) 
+    cgm_data.patient_id = cgm_data.patient_id.ffill()
+   
+    return cgm_data
+
+def basal_transform(basal_data):
+    """
+    Transform the basal data by aligning timestamps and handling duplicates.
+
+    Parameters:
+    - basal_data (DataFrame): The input is a basal data dataframe containing columns 'patient_id, 'datetime', and 'basal_rate'.
+
+    Returns:
+    - basal_data (DataFrame): The transformed basal data with aligned timestamps and duplicates removed.
+    """
+    #start data from midnight
+    basal_data = basal_data.sort_values(by='datetime').reset_index(drop=True)
+    basal_data['datetime'] = basal_data['datetime'].dt.round("5min")
+    basal_data['UnixTime'] = [int(time.mktime(basal_data.datetime[x].timetuple())) for x in basal_data.index]
+
+    start_date = basal_data['datetime'].iloc[0].date()
+    end_date = basal_data['datetime'].iloc[-1].date() + timedelta(days=1)
+    
+    basal_from_mid = pd.DataFrame(columns=['datetime_adj'])
+    basal_from_mid['datetime_adj'] = pd.date_range(start = start_date, end = end_date, freq="5min").values
+
+    basal_from_mid['UnixTime'] = [int(time.mktime(basal_from_mid.datetime_adj[x].timetuple())) for x in basal_from_mid.index]
+    basal_from_mid = basal_from_mid.drop_duplicates(subset=['UnixTime']).sort_values(by='UnixTime')
+    #keep last basal rate if there is a duplicate time
+    basal_data = basal_data.drop_duplicates(subset='UnixTime',keep='last')
+    #merge new time with basal data
+    basal_merged = pd.merge_asof(basal_from_mid, basal_data, on="UnixTime",direction="nearest",tolerance=149)
+
+    basal_data = basal_merged.filter(items=['patient_id','datetime_adj','basal_rate'])
+    basal_data = basal_data.rename(columns={"datetime_adj": "datetime",
+                                        }) 
+
+    #convert basal rate to 5 minute deliveries
+    basal_data['basal_delivery'] = basal_data.basal_rate/12
+    #forward fill basal values until next new value
+    basal_data.basal_delivery = basal_data.basal_delivery.ffill()
+    basal_data.patient_id = basal_data.patient_id.ffill()
+
+    return basal_data
 
 def FLAIR_cleaning(filepath_data, clean_data_path, data_val=True):
 
@@ -543,145 +671,28 @@ def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
 
     return cleaned_data,patient_data
 
-def IOBP2_cleaning(filepath,clean_data_path,data_val = True):
-    #load patient roster
-    filename = os.path.join(filepath, 'IOBP2PtRoster.txt')
-    roster = pd.read_csv(filename, sep="|")
-    #build clean roster
-    PatientInfo = pd.DataFrame(columns=['PtID','StartDate','EndDate','TrtGroup','Age'])
-    PatientInfo['PtID'] = roster['PtID']
-    PatientInfo['StartDate'] = roster['RandDt']
-    PatientInfo['EndDate'] = roster['TransRandDt']
-    PatientInfo['TrtGroup'] = roster['TrtGroup']
-    PatientInfo['Age'] = roster['AgeAsofEnrollDt']
-    
-    #load manual injections data
-    filename = os.path.join(filepath, 'IOBP2ManualInsulinInj.txt')
-    data_man_inj = pd.read_csv(filename, sep="|")
-    #create datetime objects for easy inclusion
-    data_man_inj['DateTime'] = np.nan
-    data_man_inj.InsInjDt = [datetime.strptime(data_man_inj['InsInjDt'][x],'%m/%d/%Y').date() for x in data_man_inj.index.values]
-    for i in data_man_inj.index.values:
-        if (data_man_inj.InsInjAMPM[i] == 'PM') & (data_man_inj.InsInjHr[i]!= 12):
-            data_man_inj.InsInjHr[i] = data_man_inj.InsInjHr[i] + 12
+def IOBP2_cleaning(filepath,clean_data_path):
+    study = IOBP2StudyData(study_name='IOBP2', study_path=filepath)
+    study.load_data()
+    bolus_history = study.extract_bolus_event_history()
+    basal_history = study.extract_basal_event_history()
+    cgm_history = study.extract_cgm_history()
 
-        data_man_inj['DateTime'][i] = datetime(data_man_inj.InsInjDt[i].year,
-                                           data_man_inj.InsInjDt[i].month,
-                                           data_man_inj.InsInjDt[i].day,
-                                           data_man_inj.InsInjHr[i],
-                                           data_man_inj.InsInjMin[i],
-                                          )
-    #load insulin pump data
-    filename = os.path.join(filepath, 'IOBP2DeviceiLet.txt')
-    data = pd.read_csv(filename, sep="|")
-    #create new dateframe for clean data
-    cleaned_data = pd.DataFrame()
-    patient_data = pd.DataFrame()
-    for id in PatientInfo.PtID.values:
-        try:
-            subj_data = data[data.PtID == id].reset_index(drop=True)
-            
+    cgm_data = cgm_history.groupby('patient_id').apply(cgm_transform).reset_index(drop=True)
+    bolus_data = bolus_history.groupby('patient_id').apply(bolus_transform).reset_index(drop=True)
+    basal_data = basal_history.groupby('patient_id').apply(basal_transform).reset_index(drop=True)
 
-            subj_info = PatientInfo[PatientInfo.PtID == id].reset_index(drop=True)
-            if len(subj_data) > 0:
-                subj_info['DaysOfData'] = np.nan
-                subj_info['Weight'] = np.nan
-                subj_info['AVG_CGM'] = np.nan
-                subj_info['STD_CGM'] = np.nan
-                subj_info['CGM_Availability'] = np.nan
-                subj_info['eA1C'] = np.nan
-                subj_info['TIR'] = np.nan
-                subj_info['TDD'] = np.nan
+    pathlib.Path(clean_data_path + "CleanedData").mkdir(parents=True, exist_ok=True)
+    cgm_data.to_csv(clean_data_path + "CleanedData/IOBP2_cleaned_egv.csv",index=False)
+    bolus_data.to_csv(clean_data_path + "CleanedData/IOBP2_cleaned_bolus.csv",index=False)
+    basal_data.to_csv(clean_data_path + "CleanedData/IOBP2_cleaned_basal.csv",index=False)
 
-                subj_inj = data_man_inj[data_man_inj.PtID == id].reset_index(drop=True)
-                data_preclean = subj_data.filter(items=['DeviceDtTm','PtID','CGMVal','BGMVal','InsDelivAvail','InsDelivPrev'])
-                data_preclean['InsulinDelivered'] = data_preclean.InsDelivPrev.shift(-1)
-                data_preclean['DateTime'] = data_preclean.DeviceDtTm.apply(datCnv)
-
-                data_preclean = data_preclean.sort_values(by='DateTime').reset_index(drop=True)
-                try:
-                    subj_info['StartDate'] = subj_info.StartDate[0].apply(datCnv)
-                    data_preclean = data_preclean[data_preclean.DateTime >= subj_info.StartDate.iloc[0]]
-                    
-                except:
-                    pass
-                #not everyone has an end data
-                try:
-                    subj_info['EndDate'] = subj_info.EndDate[0].apply(datCnv)
-                    data_preclean = data_preclean[data_preclean.DateTime <= subj_info.EndDate.iloc[0]]
-                except:
-                    pass
-
-                data_preclean['TimeBetween'] = data_preclean.DateTime.diff()
-                data_preclean['TimeBetween'] = [data_preclean['TimeBetween'][x].total_seconds()/60 for x in data_preclean.index]
-                #add manual injections
-                data_preclean['ManualIns'] = 0
-                if len(subj_inj)>0:
-                    #find closest CGM time to injection
-                    for i in subj_inj.index.values:
-                        data_preclean['TimeFromInj'] = [(data_preclean['DateTime'][x] - subj_inj.DateTime[i]).total_seconds() for x in data_preclean.index]
-                        data_preclean['TimeFromInj'] = data_preclean['TimeFromInj'].abs()
-                        injection_index = data_preclean[data_preclean.TimeFromInj == data_preclean.TimeFromInj.min()].index.values[0]
-                        data_preclean['ManualIns'][injection_index] = subj_inj.InsInjAmt[i]
-
-                clean_subj = data_preclean.filter(items=['DateTime','PtID','CGMVal','BGMVal','InsDelivAvail','InsulinDelivered','ManualIns'])
-                # clean_subj['DateTime'] = [clean_subj['DateTime'][x].isoformat() for x in clean_subj.index]
-                #adjust data to start at midnight
-                # print(clean_subj)
-                start_date = clean_subj.DateTime.iloc[0].date()
-                end_date = clean_subj.DateTime.iloc[-1].date() + timedelta(days=1)
-                data_new_time = pd.DataFrame(columns=['DateTime_keep'])
-                data_new_time['DateTime_keep'] = pd.date_range(start = start_date, end = end_date, freq="5min").values
-                data_new_time['UnixTime'] = [int(time.mktime(data_new_time.DateTime_keep[x].timetuple())) for x in data_new_time.index]
-                data_new_time = data_new_time.drop_duplicates(subset=['UnixTime']).sort_values(by='UnixTime')
-                clean_subj['UnixTime'] = [int(time.mktime(clean_subj.DateTime[x].timetuple())) for x in clean_subj.index]
-                
-                clean_data_merged = pd.merge_asof(data_new_time, clean_subj, on="UnixTime",direction="nearest",tolerance=149)
-
-                clean_data_merged = clean_data_merged.filter(items=['DateTime_keep','PtID','CGMVal','BGMVal','InsDelivAvail','InsulinDelivered','ManualIns'])
-                clean_data_merged = clean_data_merged.rename(columns={"DateTime_keep": "DateTime", 
-                                        "CGMVal": "egv",
-                                        "InsulinDelivered": "insulin",
-                                        "ManualIns": "ManualDelivery"
-                                        })
-
-                cleaned_data = pd.concat([cleaned_data,clean_data_merged])
-                if len(clean_data_merged)>0:
-                    if data_val == True:
-                        subj_info['5minCheck'] = np.nan
-                        subj_info['5minCheck_max'] = np.nan
-                        subj_info['ValidCGMCheck'] = np.nan 
-                        clean_data_merged['TimeBetween'] = clean_data_merged.DateTime.diff()
-                        clean_data_merged['TimeBetween'] = [clean_data_merged['TimeBetween'][x].total_seconds()/60 for x in clean_data_merged.index]
-                        subj_info['5minCheck'] = len(clean_data_merged[clean_data_merged.TimeBetween>5])
-                        subj_info['5minCheck_max'] = clean_data_merged.TimeBetween.max()
-                        subj_info['ValidCGMCheck'] = len(clean_data_merged[(clean_data_merged.egv<40) & (clean_data_merged.egv>400)])
-
-                    subj_info['DaysOfData'][0] = np.round(len(subj_data)/288,2)
-                    subj_info['Weight'][0] = subj_data.PtWeight.iloc[-1]
-                    subj_info['AVG_CGM'][0] = np.round(clean_data_merged.egv.mean(),2)
-                    subj_info['STD_CGM'][0] = np.round(clean_data_merged.egv.std(),2)
-                    subj_info['CGM_Availability'][0] = np.round(100 * len(clean_data_merged[clean_data_merged.egv>0])/len(clean_data_merged),2)
-                    subj_info['eA1C'][0] = np.round((46.7 + clean_data_merged.egv.mean())/28.7,2)
-                    subj_info['TIR'][0] = np.round(100 * len(clean_data_merged[(clean_data_merged.egv>=70) & (clean_data_merged.egv<=180)])/len(clean_data_merged[clean_data_merged.egv>0]),2)
-                    subj_info['TDD'][0] = np.round(clean_data_merged.insulin.sum()/subj_info['DaysOfData'][0],2)
-
-                    pt_data = subj_info.filter(items=['PtID','StartDate','EndDate','TrtGroup','Age','DaysOfData','Weight','AVG_CGM','STD_CGM','CGM_Availability',
-                                                    'eA1C','TIR','TDD','5minCheck','ValidCGMCheck','5minCheck_max'])
-                    patient_data = pd.concat([patient_data,pt_data])
-        except:
-            pass
-        #creates a new folder (if it doesnt exist) for cleaned data to be saved
-        pathlib.Path(clean_data_path + "CleanedData").mkdir(parents=True, exist_ok=True)
-        cleaned_data.to_csv(clean_data_path + "CleanedData/IOBP2_cleaned_egvinsulin.csv",index=False)
-        patient_data.to_csv(clean_data_path + "CleanedData/IOBP2_patient_data.csv",index=False)
-    
-    return cleaned_data,patient_data
+    return cgm_data,bolus_data,basal_data
 
 ##########-------------- Run Functions for Testing 
-# print('starting FLAIR')
-# filepath = '/Users/rachelbrandt/Downloads/FLAIRPublicDataSet/Data Tables/'
-# cleaned_data_path = '/Users/rachelbrandt/egvinsulin/' #location where you want cleaned data to be stored
+# print('starting IOBP2')
+# filepath = '/Users/rachelbrandt/egvinsulin_1/studies/IOBP2 RCT Public Dataset'
+# cleaned_data_path = '/Users/rachelbrandt/egvinsulin_1/' #location where you want cleaned data to be stored
 
 # cleaned_data,patient_data =  FLAIR_cleaning(filepath,cleaned_data_path)
 
@@ -700,5 +711,5 @@ def IOBP2_cleaning(filepath,clean_data_path,data_val = True):
 # filepath = '/Users/rachelbrandt/Downloads/IOBP2 RCT Public Dataset/Data Tables/'
 # cleaned_data_path = '/Users/rachelbrandt/egvinsulin/' #location where you want cleaned data to be stored
 
-# cleaned_data,patient_data =  IOBP2_cleaning(filepath,cleaned_data_path)
-# print(patient_data)
+# cgm_data,bolus_data,basal_data =  IOBP2_cleaning(filepath,cleaned_data_path)
+# print(bolus_data[bolus_data.bolus>0])
