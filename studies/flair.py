@@ -1,4 +1,4 @@
-from studydataset import StudyDataset
+from studies.studydataset import StudyDataset
 import pandas as pd
 import os
 import numpy as np
@@ -74,12 +74,7 @@ def merge_basal_and_temp_basal(df):
             adjusted_basal[affected_basal_indexes] = np.NaN
     return adjusted_basal
 
-def adjust_basal_for_pump_suspends(df):
-    assert df.DateTime.is_monotonic_increasing, 'Data must be sorted by DateTime'
-
-    basals = df.dropna(subset=['BasalRt'])
-    adjusted_basals = df.BasalRt.copy() # we start with absolute basals
-
+def _extract_suspends(df):
     #combine pump suspend start and end events
     suspends = df.loc[df['Suspend'].notna(), ['Suspend', 'DateTime']]
     suspends['SuspendEndIndex'] = suspends.index
@@ -89,6 +84,16 @@ def adjust_basal_for_pump_suspends(df):
     #we select pairs that start with a suspend event and end with a normal pumping event
     suspends = suspends.loc[(suspends['Suspend'] != 'NORMAL_PUMPING') & (suspends['SuspendEndEvent'] == 'NORMAL_PUMPING')]
     suspends =  suspends.reset_index().rename(columns={'index': 'SuspendIndex'})
+    return suspends
+
+def adjust_basal_for_pump_suspends(df):
+    assert df.DateTime.is_monotonic_increasing, 'Data must be sorted by DateTime'
+
+    basals = df.dropna(subset=['BasalRt'])
+    adjusted_basals = df.BasalRt.copy() # we start with absolute basals
+
+    #combine pump suspend start and end events
+    suspends = _extract_suspends(df)
 
     # Iterate over each suspend period
     for _, suspend in suspends.iterrows():
@@ -179,8 +184,8 @@ def main():
     flair = Flair('FLAIR', study_path)
     flair.load_data()
     print(f'loaded data for {flair.study_name} from {flair.study_path}')
-    #basal_events = flair.extract_basal_event_history()
-    #cgm = flair.extract_cgm_history()
+    basal_events = flair.extract_basal_event_history()
+    cgm = flair.extract_cgm_history()
     boluses = flair.extract_bolus_event_history()
     
     
