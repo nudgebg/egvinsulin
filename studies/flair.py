@@ -144,6 +144,7 @@ class Flair(StudyDataset):
     
     def _extract_bolus_event_history(self):
         subFrame = self.df_pump.dropna(subset=['BolusDeliv'])
+        #subFrame = subFrame[~subFrame.duplicated(subset=['PtID', 'DateTime'], keep=False)]
         boluses = pd.DataFrame({'patient_id': subFrame['PtID'].astype(str), 
                                 'datetime': subFrame['DateTime'], 
                                 'bolus': subFrame['BolusDeliv'],
