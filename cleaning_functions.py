@@ -635,19 +635,16 @@ def IOBP2_cleaning(filepath,clean_data_path):
     study = IOBP2StudyData(study_name='IOBP2', study_path=filepath)
     study.load_data()
     bolus_history = study.extract_bolus_event_history()
-    basal_history = study.extract_basal_event_history()
     cgm_history = study.extract_cgm_history()
 
     cgm_data = cgm_history.groupby('patient_id').apply(cgm_transform).reset_index(drop=True)
     bolus_data = bolus_history.groupby('patient_id').apply(bolus_transform).reset_index(drop=True)
-    basal_data = basal_history.groupby('patient_id').apply(basal_transform).reset_index(drop=True)
 
     pathlib.Path(clean_data_path + "CleanedData").mkdir(parents=True, exist_ok=True)
     cgm_data.to_csv(clean_data_path + "CleanedData/IOBP2_cleaned_egv.csv",index=False)
     bolus_data.to_csv(clean_data_path + "CleanedData/IOBP2_cleaned_bolus.csv",index=False)
-    basal_data.to_csv(clean_data_path + "CleanedData/IOBP2_cleaned_basal.csv",index=False)
 
-    return cgm_data,bolus_data,basal_data
+    return cgm_data,bolus_data
 
 ##########-------------- Run Functions for Testing 
 # print('starting IOBP2')
