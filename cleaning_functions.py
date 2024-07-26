@@ -60,8 +60,8 @@ def bolus_transform(bolus_data):
         bolus_data.bolus.loc[ext:ext+int(extended_boluses.Duration_steps[ext])] = bolus_parts
                         
     #fill nans with 0
-    bolus_data = bolus_data.fillna(0)
     bolus_data.patient_id = bolus_data.patient_id.ffill()
+    bolus_data = bolus_data.fillna(0)
 
     return bolus_data
 
