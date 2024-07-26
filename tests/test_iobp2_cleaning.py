@@ -25,23 +25,45 @@ def test_IOBP2_cleaning(clean_data_path='tests/'):
                        0.2, 0.1, 0.7, 0.3],
         'CGMVal': [100, 110, 105,
                 120, 130, 140, 105,
-                150, 160, 170, 10.5],
+                150, 160, 170, 155],
+    })
+    expected_TDDs = pd.DataFrame({
+        'patient_id': ['1','1', '2', '2', '3', '3'],
+        
+        'date': pd.to_datetime(['01/01/2023', '01/02/2023',
+                     '01/01/2023', '01/02/2023',
+                     '01/01/2023', '01/02/2023'],),
+        
+        'TDD': [36.4, 0.0,
+                20, 18.1,
+                13.8, 16.1],               
     })
     #create csv of mock data and save to folder structure and filename to mimic original data
     pathlib.Path('tests/Data Tables').mkdir(parents=True, exist_ok=True)
     mock_data.to_csv('tests/Data Tables/IOBP2DeviceiLet.txt', sep='|',index=False)
     
     # Call the function
-    cgm_data, bolus_data, basal_data = IOBP2_cleaning('tests', clean_data_path)
+    cgm_data, bolus_data = IOBP2_cleaning('tests', clean_data_path)
 
     # Verify the content of the files if necessary
     cgm_df = pd.read_csv('tests/CleanedData/IOBP2_cleaned_egv.csv')
     bolus_df = pd.read_csv('tests/CleanedData/IOBP2_cleaned_bolus.csv')
-    basal_df = pd.read_csv('tests/CleanedData/IOBP2_cleaned_basal.csv')
 
     assert not cgm_df.empty
     assert not bolus_df.empty
-    assert not basal_df.empty
-
+    
+    #calculate sum of bolus on each unique patient_id and unique date 
+    #convert datetime column to date column
+    bolus_df['datetime'] = pd.to_datetime(bolus_df['datetime'])
+    bolus_df['TDD'] = bolus_df.groupby(['patient_id', bolus_df['datetime'].dt.date])['bolus'].transform('sum')
+    bolus_df['date'] = bolus_df['datetime'].dt.date
+    #convert patient_id to string - reading in csv to get final data results in the strings being converted to ints
+    bolus_df['patient_id'] = bolus_df['patient_id'].astype(str)
+    #drop duplicates to get unique patient_id and date with TDD
+    result_TDDs = bolus_df.drop_duplicates(subset=['TDD'], keep='first')
+    result_TDDs = result_TDDs.filter(items=['patient_id', 'date', 'TDD']).reset_index(drop=True)
+    #check if result_TDDs is equal to expected_TDDs
+    expected_TDDs['date'] = expected_TDDs['date'].dt.date
+    pd.testing.assert_frame_equal(result_TDDs, expected_TDDs)
 if __name__ == "__main__":
     pytest.main()

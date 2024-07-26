@@ -23,7 +23,7 @@ def test_extract_event_history():
                        0.2, 0.1, 0.7, 0.3],
         'CGMVal': [100, 110, 105,
                 120, 130, 140, 105,
-                150, 160, 170, 10.5],
+                150, 160, 170, 155],
     })
     #create csv of mock data and save to folder structure and filename to mimic original data
     pathlib.Path('tests/Data Tables').mkdir(parents=True, exist_ok=True)
@@ -35,25 +35,13 @@ def test_extract_event_history():
         'datetime': pd.to_datetime(['01/01/2023 10:03:30 AM', '01/01/2023 1:10:00 PM', '01/01/2023 11:57:00 PM',
                      '01/01/2023 9:58:15 AM', '01/01/2023 11:02:45 AM', '01/02/2023 12:07:00 PM','01/02/2023 4:07:00 PM',
                      '01/01/2023 10:10:00 AM', '01/01/2023 2:19:50 PM','01/02/2023 6:25:00 PM','01/02/2023 8:05:00 PM'],),
-        'bolus': [10.0, 15.2, 10.0,
-                  8.5, 11.1, 9.0, 8.0,
-                  6.3, 7.2, 8.1, 7.0],
+        'bolus': [10.5, 15.8, 10.1,
+                  8.6, 11.4, 9.9, 8.2,
+                  6.5, 7.3, 8.8, 7.3],
 
         'delivery_duration': pd.to_timedelta(['5 minutes', '5 minutes', '5 minutes', 
                               '5 minutes', '5 minutes', '5 minutes', '5 minutes', 
                               '5 minutes', '5 minutes','5 minutes','5 minutes']),  
-    })
-
-    expected_result_basal = pd.DataFrame({
-        'patient_id': ['1', '1', '1', '2', '2', '2', '2', '3', '3', '3', '3'],
-        
-        'datetime': pd.to_datetime(['01/01/2023 10:03:30 AM', '01/01/2023 1:10:00 PM', '01/01/2023 11:57:00 PM',
-                     '01/01/2023 9:58:15 AM', '01/01/2023 11:02:45 AM', '01/02/2023 12:07:00 PM','01/02/2023 4:07:00 PM',
-                     '01/01/2023 10:10:00 AM', '01/01/2023 2:19:50 PM','01/02/2023 6:25:00 PM','01/02/2023 8:05:00 PM'],),
-         
-        'basal_rate': [0.5*12, 0.6*12, 0.1*12,
-                       0.1*12, 0.3*12, 0.9*12, 0.2*12,
-                       0.2*12, 0.1*12, 0.7*12, 0.3*12],              
     })
 
     expected_result_cgm = pd.DataFrame({
@@ -63,9 +51,20 @@ def test_extract_event_history():
                      '01/01/2023 10:03:15 AM', '01/01/2023 11:07:45 AM', '01/02/2023 12:12:00 PM','01/02/2023 4:12:00 PM',
                      '01/01/2023 10:15:00 AM', '01/01/2023 2:24:50 PM','01/02/2023 6:30:00 PM','01/02/2023 8:10:00 PM'],),
         
-        'cgm': [100, 110, 105,
-                120, 130, 140, 105,
-                150, 160, 170, 10.5],               
+        'cgm': [100.0, 110.0, 105.0,
+                120.0, 130.0, 140.0, 105.0,
+                150.0, 160.0, 170.0, 155.0],               
+    })
+    expected_TDDs = pd.DataFrame({
+        'patient_id': ['1', '2', '2', '3', '3'],
+        
+        'date': pd.to_datetime(['01/01/2023',
+                     '01/01/2023', '01/02/2023',
+                     '01/01/2023', '01/02/2023'],),
+        
+        'TDD': [36.4,
+                20, 18.1,
+                13.8, 16.1],               
     })
     
     # Call the function
@@ -80,15 +79,6 @@ def test_extract_event_history():
     print('expected extracted bolus event history')
     print()
     print(expected_result_bolus)
-    #test basal history
-    result_basal = study.extract_basal_event_history()
-    print('resulting extracted basal event history')
-    print()
-    print(result_basal)
-    print()
-    print('expected extracted basal event history')
-    print()
-    print(expected_result_basal)
     #test cgm history
     result_cgm = study.extract_cgm_history()
     print('resulting extracted cgm event history')
@@ -101,14 +91,22 @@ def test_extract_event_history():
     
     # Assertions
     pd.testing.assert_frame_equal(result_bolus, expected_result_bolus)
-    pd.testing.assert_frame_equal(result_basal, expected_result_basal)
     pd.testing.assert_frame_equal(result_cgm, expected_result_cgm)
+    #calculate sum of bolus on each unique patient_id and unique date 
+    result_bolus['TDD'] = result_bolus.groupby(['patient_id', result_bolus['datetime'].dt.date])['bolus'].transform('sum')
+    result_bolus['date'] = result_bolus['datetime'].dt.date
+    result_TDDs = result_bolus.drop_duplicates(subset=['TDD'], keep='first')
+    result_TDDs = result_TDDs.filter(items=['patient_id', 'date', 'TDD']).reset_index(drop=True)
+    #check if result_TDDs is equal to expected_TDDs
+    expected_TDDs['date'] = expected_TDDs['date'].dt.date
+    pd.testing.assert_frame_equal(result_TDDs, expected_TDDs)
+    
     #delete file and folder created for test
     pathlib.Path('tests/Data Tables/IOBP2DeviceiLet.txt').unlink()
     pathlib.Path('tests/Data Tables').rmdir()
-    return result_bolus, result_basal, result_cgm   #return mock data to use in cleaning function test
+    return result_bolus, result_cgm   
 
 
 if __name__ == "__main__":
-    # pytest.main()
-    test_extract_event_history()
+    pytest.main()
+    # test_extract_event_history()
