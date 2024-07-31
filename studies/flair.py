@@ -130,10 +130,13 @@ class Flair(StudyDataset):
         df_cgm['DateTimeAdjusted'] = df_cgm.loc[df_cgm.DataDtTm_adjusted.notna(), 'DataDtTm_adjusted'].transform(parse_flair_dates)
         self.df_cgm = df_cgm
 
-        df_pump = pd.read_csv(self.pump_file, sep="|", low_memory=False, usecols=['PtID', 'DataDtTm', 'NewDeviceDtTm', 'BasalRt',
-                                                                                  'TempBasalAmt', 'TempBasalType', 'TempBasalDur', 'BolusType',
-                                                                                  'BolusSource', 'BolusDeliv', 'BolusSelected', 'ExtendBolusDuration', 'BasalRtUnKnown',
-                                                                                  'Suspend', 'PrimeVolumeDeliv', 'Rewind', 'TDD'])
+        df_pump = pd.read_csv(self.pump_file, sep="|", low_memory=False, usecols=['PtID', 'DataDtTm', 'NewDeviceDtTm', 
+                                                                                  'BasalRt', 'BasalRtUnKnown', 'TempBasalAmt', 'TempBasalType', 'TempBasalDur',
+                                                                                  'BolusType', 'BolusSource', 'BolusDeliv', 'BolusSelected', 'ExtendBolusDuration',
+                                                                                  'Suspend', 
+                                                                                  'PrimeVolumeDeliv', 'Rewind', 
+                                                                                  'AutoModeFeat','AutoModeStatus','AutoBolusFeat', 'PLGMFeat', 
+                                                                                  'TDD'])
         
         df_pump['DateTime'] = df_pump.loc[df_pump.DataDtTm.notna(), 'DataDtTm'].transform(parse_flair_dates)
         #to datetime required because otherwise pandas provides a Object type which will fail the studydataset validation
