@@ -1,15 +1,9 @@
-import pathlib
-import pytest
 import pandas as pd
-#import sys
-#import os
-#root_dir = os.path.dirname(os.path.abspath(__file__))
-#sys.path.append(root_dir)
 
 from studies.iobp2 import IOBP2StudyData    
 
-def test_extract_event_history():
-    # Mock data
+def test_extract_event_history(tmp_path):
+    # create test data using temporary tmp_path fixture directory providede by pytest
     mock_data = pd.DataFrame({
         'PtID': [1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3],
         'DeviceDtTm': ['01/01/2023 10:08:30 AM', '01/01/2023 1:15:00 PM', '01/02/2023 12:02:00 AM',
@@ -28,10 +22,10 @@ def test_extract_event_history():
                 120, 130, 140, 105,
                 150, 160, 170, 155],
     })
-    #create csv of mock data and save to folder structure and filename to mimic original data
-    pathlib.Path('tests/Data Tables').mkdir(parents=True, exist_ok=True)
-    mock_data.to_csv('tests/Data Tables/IOBP2DeviceiLet.txt', sep='|',index=False)
-    # Expected result
+    (tmp_path / "Data Tables").mkdir()
+    mock_data.to_csv(tmp_path / "Data Tables" / "IOBP2DeviceiLet.txt", sep='|', index=False)
+
+    # Defin expected results
     expected_result_bolus = pd.DataFrame({
         'patient_id': ['1', '1', '1', '2', '2', '2', '2', '3', '3', '3', '3'],
         
@@ -58,58 +52,11 @@ def test_extract_event_history():
                 120.0, 130.0, 140.0, 105.0,
                 150.0, 160.0, 170.0, 155.0],               
     })
-    expected_TDDs = pd.DataFrame({
-        'patient_id': ['1', '2', '2', '3', '3'],
-        
-        'date': pd.to_datetime(['01/01/2023',
-                     '01/01/2023', '01/02/2023',
-                     '01/01/2023', '01/02/2023'],),
-        
-        'TDD': [36.4,
-                20, 18.1,
-                13.8, 16.1],               
-    })
-    
-    # Call the function
-    study = IOBP2StudyData(study_name='IOBP2', study_path='tests')
+
+    study = IOBP2StudyData(study_name='IOBP2', study_path=tmp_path)
     study.load_data()
-    #test bolus history
     result_bolus = study.extract_bolus_event_history()
-    print('resulting extracted bolus event history')
-    print()
-    print(result_bolus)
-    print()
-    print('expected extracted bolus event history')
-    print()
-    print(expected_result_bolus)
-    #test cgm history
     result_cgm = study.extract_cgm_history()
-    print('resulting extracted cgm event history')
-    print()
-    print(result_cgm)
-    print()
-    print('expected extracted cgm event history')
-    print()
-    print(expected_result_cgm)
     
-    # Assertions
     pd.testing.assert_frame_equal(result_bolus, expected_result_bolus)
     pd.testing.assert_frame_equal(result_cgm, expected_result_cgm)
-    #calculate sum of bolus on each unique patient_id and unique date 
-    result_bolus['TDD'] = result_bolus.groupby(['patient_id', result_bolus['datetime'].dt.date])['bolus'].transform('sum')
-    result_bolus['date'] = result_bolus['datetime'].dt.date
-    result_TDDs = result_bolus.drop_duplicates(subset=['TDD'], keep='first')
-    result_TDDs = result_TDDs.filter(items=['patient_id', 'date', 'TDD']).reset_index(drop=True)
-    #check if result_TDDs is equal to expected_TDDs
-    expected_TDDs['date'] = expected_TDDs['date'].dt.date
-    pd.testing.assert_frame_equal(result_TDDs, expected_TDDs)
-    
-    #delete file and folder created for test
-    pathlib.Path('tests/Data Tables/IOBP2DeviceiLet.txt').unlink()
-    pathlib.Path('tests/Data Tables').rmdir()
-    return result_bolus, result_cgm   
-
-
-if __name__ == "__main__":
-    pytest.main()
-    test_extract_event_history()

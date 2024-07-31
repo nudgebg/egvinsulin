@@ -1,14 +1,10 @@
 import pytest
 import pandas as pd
-import pathlib
-import shutil
-#import rootpath
-#rootpath.append()
 from cleaning_functions import IOBP2_cleaning
-#from iobp2_extract_history_test import test_extract_event_history
 
-def test_IOBP2_cleaning(clean_data_path='tests/'):
-    # Mock data from test_extract_event_history
+
+def test_IOBP2_cleaning(tmp_path):
+    # Create test data using temporary tmp_path fixture directory provided by pytest
     mock_data = pd.DataFrame({
         'PtID': [1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3],
         'DeviceDtTm': ['01/01/2023 10:08:30 AM', '01/01/2023 1:15:00 PM', '01/02/2023 12:02:00 AM',
@@ -38,16 +34,17 @@ def test_IOBP2_cleaning(clean_data_path='tests/'):
                 20, 18.1,
                 13.8, 16.1],               
     })
-    #create csv of mock data and save to folder structure and filename to mimic original data
-    pathlib.Path('tests/Data Tables').mkdir(parents=True, exist_ok=True)
-    mock_data.to_csv('tests/Data Tables/IOBP2DeviceiLet.txt', sep='|',index=False)
+    data_tables_path = tmp_path / 'Data Tables'
+    data_tables_path.mkdir()
+    clean_data_path = tmp_path / 'CleanedData'
+    result = clean_data_path.mkdir()
+    print(result)
+    mock_data.to_csv(data_tables_path / 'IOBP2DeviceiLet.txt', sep='|',index=False)
     
-    # Call the function
-    cgm_data, bolus_data = IOBP2_cleaning('tests', clean_data_path)
 
-    # Verify the content of the files if necessary
-    cgm_df = pd.read_csv('tests/CleanedData/IOBP2_cleaned_egv.csv')
-    bolus_df = pd.read_csv('tests/CleanedData/IOBP2_cleaned_bolus.csv')
+    IOBP2_cleaning(str(tmp_path), str(clean_data_path))
+    cgm_df = pd.read_csv(clean_data_path / 'IOBP2_cleaned_egv.csv')
+    bolus_df = pd.read_csv(clean_data_path / 'IOBP2_cleaned_bolus.csv')
 
     assert not cgm_df.empty
     assert not bolus_df.empty

@@ -632,7 +632,7 @@ def DCLP3_cleaning(filepath_data,clean_data_path,data_val = True):
 
     return cleaned_data,patient_data
 
-def IOBP2_cleaning(filepath,clean_data_path):
+def IOBP2_cleaning(filepath, clean_data_path):
     study = IOBP2StudyData(study_name='IOBP2', study_path=filepath)
     study.load_data()
     bolus_history = study.extract_bolus_event_history()
@@ -641,9 +641,8 @@ def IOBP2_cleaning(filepath,clean_data_path):
     cgm_data = cgm_history.groupby('patient_id').apply(cgm_transform).reset_index(drop=True)
     bolus_data = bolus_history.groupby('patient_id').apply(bolus_transform).reset_index(drop=True)
 
-    pathlib.Path(clean_data_path + "CleanedData").mkdir(parents=True, exist_ok=True)
-    cgm_data.to_csv(clean_data_path + "CleanedData/IOBP2_cleaned_egv.csv",index=False)
-    bolus_data.to_csv(clean_data_path + "CleanedData/IOBP2_cleaned_bolus.csv",index=False)
+    cgm_data.to_csv(os.path.join(clean_data_path, "IOBP2_cleaned_egv.csv"), index=False)
+    bolus_data.to_csv(os.path.join(clean_data_path, "IOBP2_cleaned_bolus.csv"), index=False)
 
     return cgm_data,bolus_data
 
