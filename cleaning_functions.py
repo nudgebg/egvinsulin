@@ -1,16 +1,17 @@
-#collection of cleaning functions for insulin and egv data
-import os
+import os, time 
 import pandas as pd
 from datetime import datetime, timedelta
 import numpy as np
 import warnings
-import time
-warnings.filterwarnings("ignore")
-from studies.iobp2 import IOBP2StudyData
 import pathlib
+from studies.iobp2 import IOBP2StudyData
+from save_data_as import save_data_as
+
+warnings.filterwarnings("ignore")
+
 def datCnv(src):
     return pd.to_datetime(src)
-from studies.iobp2 import IOBP2StudyData
+
 #functions for time alignment and transformation of basal, bolus, and cgm event data. These functions can be used for any study dataset.
 def bolus_transform(bolus_data):
     """
@@ -295,8 +296,8 @@ def FLAIR_cleaning(filepath_data, clean_data_path, data_val=True):
         except:
             pass
     pathlib.Path(clean_data_path + "CleanedData").mkdir(parents=True, exist_ok=True)
-    save_data_as(cleaned_data,'CSV',clean_data_path + 'CleanedData/FLAIR_cleaned_egvinsulin')
-    save_data_as(patient_data,'CSV',clean_data_path + "CleanedData/FLAIR_patient_data")
+    save_data_as(cleaned_data,'CSV',os.path.join(clean_data_path, 'FLAIR_cleaned_egvinsulin'))
+    save_data_as(patient_data,'CSV',os.path.join(clean_data_path, 'FLAIR_patient_data'))
 
     return cleaned_data,patient_data 
 
@@ -462,8 +463,8 @@ def DCLP5_cleaning(filepath_data,clean_data_path,data_val = True):
             pass
             
     pathlib.Path(clean_data_path + "CleanedData").mkdir(parents=True, exist_ok=True)
-    save_data_as(cleaned_data,'CSV',clean_data_path + 'CleanedData/DCLP5_cleaned_egvinsulin')
-    save_data_as(patient_data,'CSV',clean_data_path + "CleanedData/DCLP5_patient_data")
+    save_data_as(cleaned_data,'CSV', os.path.join(clean_data_path, 'DCLP5_cleaned_egvinsulin'))
+    save_data_as(patient_data,'CSV', os.path.join(clean_data_path, 'DCLP5_patient_data'))
 
     return cleaned_data,patient_data
 
@@ -641,32 +642,7 @@ def IOBP2_cleaning(filepath, clean_data_path):
     cgm_data = cgm_history.groupby('patient_id').apply(cgm_transform).reset_index(drop=True)
     bolus_data = bolus_history.groupby('patient_id').apply(bolus_transform).reset_index(drop=True)
 
-    cgm_data.to_csv(os.path.join(clean_data_path, "IOBP2_cleaned_egv.csv"), index=False)
-    bolus_data.to_csv(os.path.join(clean_data_path, "IOBP2_cleaned_bolus.csv"), index=False)
+    save_data_as(cgm_data, 'CSV', os.path.join(clean_data_path, "IOBP2_cleaned_egv"))
+    save_data_as(bolus_data, 'CSV', os.path.join(clean_data_path, "IOBP2_cleaned_bolus"))
 
     return cgm_data,bolus_data
-
-##########-------------- Run Functions for Testing 
-# print('starting IOBP2')
-# filepath = '/Users/rachelbrandt/egvinsulin_1/studies/IOBP2 RCT Public Dataset'
-# cleaned_data_path = '/Users/rachelbrandt/egvinsulin_1/' #location where you want cleaned data to be stored
-
-# cleaned_data,patient_data =  FLAIR_cleaning(filepath,cleaned_data_path)
-
-# print('starting DCLP5')
-# filepath = '/Users/rachelbrandt/Downloads/DCLP5_Dataset_2022-01-20-5e0f3b16-c890-4ace-9e3b-531f3687cf53/'
-# cleaned_data_path = '/Users/rachelbrandt/egvinsulin/' #location where you want cleaned data to be stored
-
-# cleaned_data,patient_data =  DCLP5_cleaning(filepath,cleaned_data_path)
-
-# filepath = '/Users/rachelbrandt/Downloads/DCLP3 Public Dataset - Release 3 - 2022-08-04/Data Files/'
-# cleaned_data_path = '/Users/rachelbrandt/egvinsulin/' #location where you want cleaned data to be stored
-
-# cleaned_data,patient_data =  DCLP3_cleaning(filepath,cleaned_data_path)
-# print(patient_data)
-
-# filepath = '/Users/rachelbrandt/Downloads/IOBP2 RCT Public Dataset/Data Tables/'
-# cleaned_data_path = '/Users/rachelbrandt/egvinsulin/' #location where you want cleaned data to be stored
-
-# cgm_data,bolus_data,basal_data =  IOBP2_cleaning(filepath,cleaned_data_path)
-# print(bolus_data[bolus_data.bolus>0])
