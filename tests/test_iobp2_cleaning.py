@@ -2,10 +2,10 @@ import pytest
 import pandas as pd
 import pathlib
 import shutil
-import rootpath
-rootpath.append()
+#import rootpath
+#rootpath.append()
 from cleaning_functions import IOBP2_cleaning
-from iobp2_extract_history_test import test_extract_event_history
+#from iobp2_extract_history_test import test_extract_event_history
 
 def test_IOBP2_cleaning(clean_data_path='tests/'):
     # Mock data from test_extract_event_history

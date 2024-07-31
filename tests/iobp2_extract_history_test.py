@@ -1,8 +1,11 @@
 import pathlib
 import pytest
 import pandas as pd
-import rootpath
-rootpath.append()
+#import sys
+#import os
+#root_dir = os.path.dirname(os.path.abspath(__file__))
+#sys.path.append(root_dir)
+
 from studies.iobp2 import IOBP2StudyData    
 
 def test_extract_event_history():
@@ -109,4 +112,4 @@ def test_extract_event_history():
 
 if __name__ == "__main__":
     pytest.main()
-    # test_extract_event_history()
+    test_extract_event_history()
