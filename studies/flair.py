@@ -153,11 +153,12 @@ class Flair(StudyDataset):
     def _extract_bolus_event_history(self):
         if self.boluses is None:
             subFrame = self.df_pump.dropna(subset=['BolusDeliv'])
-            #subFrame = subFrame[~subFrame.duplicated(subset=['PtID', 'DateTime'], keep=False)]
-            self.boluses = pd.DataFrame({'patient_id': subFrame['PtID'].astype(str), 
-                                    'datetime': subFrame['DateTime'], 
-                                    'bolus': subFrame['BolusDeliv'],
-                                    'delivery_duration': subFrame.ExtendBolusDuration.apply(lambda x: convert_duration_to_timedelta(x) if pd.notnull(x) else pd.Timedelta(0))})
+            #ther are duplicated boluses, we need to remove them
+            subFrame = subFrame[~subFrame.duplicated(subset=['PtID','DateTime', 'BolusDeliv'], keep='first')]
+            boluses = subFrame[['PtID', 'DateTime', 'BolusDeliv', 'ExtendBolusDuration']].copy().astype({'PtID': str})
+            boluses = boluses.rename(columns={'PtID': 'patient_id', 'DateTime': 'datetime', 'BolusDeliv': 'bolus', 'ExtendBolusDuration': 'delivery_duration'})
+            boluses.delivery_duration = boluses.delivery_duration.apply(lambda x: convert_duration_to_timedelta(x) if pd.notnull(x) else pd.Timedelta(0))
+            self.boluses = boluses
         return self.boluses
     
     def _extract_basal_event_history(self):
