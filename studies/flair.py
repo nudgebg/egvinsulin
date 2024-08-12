@@ -115,6 +115,11 @@ def adjust_basal_for_pump_suspends(df):
 class Flair(StudyDataset):
     def __init__(self, study_name: str, study_path: str):
         super().__init__(study_path, study_name)
+        self.basals = None
+        self.boluses = None
+        self.cgms = None
+        self.df_pump = None
+        self.df_cgm = None
         self.pump_file = os.path.join(
             self.study_path, 'Data Tables', 'FLAIRDevicePump.txt')
         
@@ -125,60 +130,95 @@ class Flair(StudyDataset):
             raise FileNotFoundError(f"File not found: {self.study_path}")
 
     def load_data(self) -> tuple[pd.DataFrame, pd.DataFrame]:
-        df_cgm = pd.read_csv(self.cgm_file, sep="|", low_memory=False, usecols=['PtID', 'DataDtTm', 'DataDtTm_adjusted', 'CGM'])
-        df_cgm['DateTime'] = df_cgm.loc[df_cgm.DataDtTm.notna(), 'DataDtTm'].transform(parse_flair_dates)
-        df_cgm['DateTimeAdjusted'] = df_cgm.loc[df_cgm.DataDtTm_adjusted.notna(), 'DataDtTm_adjusted'].transform(parse_flair_dates)
-        self.df_cgm = df_cgm
+        if self.df_pump is None and self.df_cgm is None:
+            df_cgm = pd.read_csv(self.cgm_file, sep="|", low_memory=False, usecols=['PtID', 'DataDtTm', 'DataDtTm_adjusted', 'CGM'])
+            df_cgm['DateTime'] = df_cgm.loc[df_cgm.DataDtTm.notna(), 'DataDtTm'].transform(parse_flair_dates)
+            df_cgm['DateTimeAdjusted'] = df_cgm.loc[df_cgm.DataDtTm_adjusted.notna(), 'DataDtTm_adjusted'].transform(parse_flair_dates)
+            self.df_cgm = df_cgm
 
-        df_pump = pd.read_csv(self.pump_file, sep="|", low_memory=False, usecols=['PtID', 'DataDtTm', 'NewDeviceDtTm', 
-                                                                                  'BasalRt', 'BasalRtUnKnown', 'TempBasalAmt', 'TempBasalType', 'TempBasalDur',
-                                                                                  'BolusType', 'BolusSource', 'BolusDeliv', 'BolusSelected', 'ExtendBolusDuration',
-                                                                                  'Suspend', 
-                                                                                  'PrimeVolumeDeliv', 'Rewind', 
-                                                                                  'AutoModeFeat','AutoModeStatus','AutoBolusFeat', 'PLGMFeat', 
-                                                                                  'TDD'])
-        
-        df_pump['DateTime'] = df_pump.loc[df_pump.DataDtTm.notna(), 'DataDtTm'].transform(parse_flair_dates)
-        #to datetime required because otherwise pandas provides a Object type which will fail the studydataset validation
-        df_pump['DateTime'] = pd.to_datetime(df_pump['DateTime'])
-        self.df_pump = df_pump.sort_values('DateTime')
-
+            df_pump = pd.read_csv(self.pump_file, sep="|", low_memory=False, usecols=['PtID', 'DataDtTm', 'NewDeviceDtTm', 
+                                                                                    'BasalRt', 'BasalRtUnKnown', 'TempBasalAmt', 'TempBasalType', 'TempBasalDur',
+                                                                                    'BolusType', 'BolusSource', 'BolusDeliv', 'BolusSelected', 'ExtendBolusDuration',
+                                                                                    'Suspend', 
+                                                                                    'PrimeVolumeDeliv', 'Rewind', 
+                                                                                    'AutoModeFeat','AutoModeStatus','AutoBolusFeat', 'PLGMFeat', 
+                                                                                    'TDD'])
+            
+            df_pump['DateTime'] = df_pump.loc[df_pump.DataDtTm.notna(), 'DataDtTm'].transform(parse_flair_dates)
+            #to datetime required because otherwise pandas provides a Object type which will fail the studydataset validation
+            df_pump['DateTime'] = pd.to_datetime(df_pump['DateTime'])
+            self.df_pump = df_pump.sort_values('DateTime')
         return self.df_cgm, self.df_pump
     
     def _extract_bolus_event_history(self):
-        subFrame = self.df_pump.dropna(subset=['BolusDeliv'])
-        #subFrame = subFrame[~subFrame.duplicated(subset=['PtID', 'DateTime'], keep=False)]
-        boluses = pd.DataFrame({'patient_id': subFrame['PtID'].astype(str), 
-                                'datetime': subFrame['DateTime'], 
-                                'bolus': subFrame['BolusDeliv'],
-                                'delivery_duration': subFrame.ExtendBolusDuration.apply(lambda x: convert_duration_to_timedelta(x) if pd.notnull(x) else pd.Timedelta(0))})
-        return boluses
+        if self.boluses is None:
+            subFrame = self.df_pump.dropna(subset=['BolusDeliv'])
+            #subFrame = subFrame[~subFrame.duplicated(subset=['PtID', 'DateTime'], keep=False)]
+            self.boluses = pd.DataFrame({'patient_id': subFrame['PtID'].astype(str), 
+                                    'datetime': subFrame['DateTime'], 
+                                    'bolus': subFrame['BolusDeliv'],
+                                    'delivery_duration': subFrame.ExtendBolusDuration.apply(lambda x: convert_duration_to_timedelta(x) if pd.notnull(x) else pd.Timedelta(0))})
+        return self.boluses
     
     def _extract_basal_event_history(self):
-        #merge basal and temp basal
-        adjusted_basal = self.df_pump.groupby('PtID').apply(merge_basal_and_temp_basal).droplevel(0)#remove patient id index
-        df_temp = pd.merge(self.df_pump[['PtID','DateTime','Suspend']], adjusted_basal, left_index=True, right_index=True)
-        
-        #adjust for pump suspends
-        adjusted_basal = df_temp.groupby('PtID').apply(adjust_basal_for_pump_suspends).droplevel(0) #remove patient group index
-        adjusted_basal = pd.merge(self.df_pump[['PtID','DateTime']], adjusted_basal, left_index=True, right_index=True)
+        if self.basals is None:
+            #merge basal and temp basal
+            adjusted_basal = self.df_pump.groupby('PtID').apply(merge_basal_and_temp_basal).droplevel(0)#remove patient id index
+            df_temp = pd.merge(self.df_pump[['PtID','DateTime','Suspend']], adjusted_basal, left_index=True, right_index=True)
+            
+            #adjust for pump suspends
+            adjusted_basal = df_temp.groupby('PtID').apply(adjust_basal_for_pump_suspends).droplevel(0) #remove patient group index
+            adjusted_basal = pd.merge(self.df_pump[['PtID','DateTime']], adjusted_basal, left_index=True, right_index=True)
 
-        #reduce
-        adjusted_basal = adjusted_basal.dropna(subset=['BasalRt'])[['PtID', 'DateTime', 'BasalRt']]
-        adjusted_basal = adjusted_basal.rename(columns={'PtID':'patient_id', 'DateTime':'datetime', 'BasalRt':'basal_rate'})
-        adjusted_basal['patient_id'] = adjusted_basal['patient_id'].astype(str)
-        return adjusted_basal
+            #reduce
+            adjusted_basal = adjusted_basal.dropna(subset=['BasalRt'])[['PtID', 'DateTime', 'BasalRt']]
+            adjusted_basal = adjusted_basal.rename(columns={'PtID':'patient_id', 'DateTime':'datetime', 'BasalRt':'basal_rate'})
+            adjusted_basal['patient_id'] = adjusted_basal['patient_id'].astype(str)
+            self.basals = adjusted_basal
+        return self.basals
     
     def _extract_cgm_history(self):
-        # Use np.where to select DateTimeAdjusted if it's not null, otherwise use DateTime
-        datetime = np.where(self.df_cgm['DateTimeAdjusted'].notnull(),
-                            self.df_cgm['DateTimeAdjusted'],
-                            self.df_cgm['DateTime'])
-        # Select the AdjustedDateTime and CGM columns
-        tmp = pd.DataFrame({'patient_id': self.df_cgm['PtID'].astype(str),
-                            'datetime': datetime,
-                            'cgm': self.df_cgm['CGM']})
-        return tmp
+        if self.cgms is None:
+            # Use np.where to select DateTimeAdjusted if it's not null, otherwise use DateTime
+            datetime = np.where(self.df_cgm['DateTimeAdjusted'].notnull(),
+                                self.df_cgm['DateTimeAdjusted'],
+                                self.df_cgm['DateTime'])
+            # Select the AdjustedDateTime and CGM columns
+            temp = pd.DataFrame({'patient_id': self.df_cgm['PtID'].astype(str),
+                                'datetime': datetime,
+                                'cgm': self.df_cgm['CGM']})
+            self.cgms = temp
+        return self.cgms
+
+    def get_reported_tdds(self, method='max'):
+        """
+        Retrieves reported total daily doses (TDDs) based on the specified method.
+        Parameters:
+            method (str): The method to use for retrieving the TDDs. 
+                - 'max': Returns the TDD with the maximum reported value for each patient and date.
+                - 'sum': Returns the sum of all reported TDDs for each patient and date.
+                - 'latest': Returns the TDD with the latest reported datetime for each patient and date.
+                - 'all': Returns all TDDs without any grouping or filtering.
+        Returns:
+            pandas.DataFrame: The DataFrame containing the retrieved TDDs based on the specified method.
+        Raises:
+            ValueError: If the method is not one of: 'max', 'sum', 'latest', 'all'.
+        """
+        TDDs = self.df_pump.dropna(subset=['TDD'])[['PtID','DateTime','TDD']]
+        TDDs['date'] = TDDs.DateTime.dt.date
+        TDDs['PtID'] = TDDs.PtID.astype(str)
+        TDDs = TDDs.rename(columns={'PtID':'patient_id','TDD':'tdd', 'DateTime':'datetime'})
+    
+        if method == 'max':
+            return TDDs.groupby(['patient_id','date']).apply(lambda x: x.iloc[x.tdd.argmax()]).reset_index(drop=True)
+        elif method == 'sum':
+            return TDDs.groupby(['patient_id','date']).agg({'tdd':'sum'}).reset_index()
+        elif method == 'latest':
+            return TDDs.groupby(['patient_id','date']).apply(lambda x: x.iloc[x.datetime.argmax()]).reset_index(drop=True)
+        elif method == 'all':
+            return TDDs
+        else:
+            raise ValueError('method must be one of: max, sum, latest, all')
 
 
 def main():
