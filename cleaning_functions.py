@@ -12,6 +12,31 @@ warnings.filterwarnings("ignore")
 def datCnv(src):
     return pd.to_datetime(src)
 
+def parse_flair_dates(df: pd.DataFrame, date_column: str) -> pd.DataFrame:
+    """Parse date strings with/without time component separately, treating those without as midnight (00AM).
+
+    Some datasets have datestrings with inconsistent formats. For example, the FLAIR and DCLP datestrings
+    follow the format `'%m/%d/%Y %I:%M:%S %p'` but miss the time component at midnight: `'%m/%d/%Y'`. Therefore,
+    passing a single format string fails and using dynamic date parsing is very time-consuming. This function
+    pertains the benefits of parsing the datestrings with supplied format string but does it in two steps,
+    separately for the two cases.
+
+    Args:
+        df: data frame holding data.
+        date_column: column name that holds date time strings to be used for parsing.
+
+    Returns:
+        dataframe with new DateTime column holding datetime objects
+
+    """
+    #
+    b_only_date = (df[date_column].str.len() <= 10)
+    print(sum(b_only_date))
+    df.loc[b_only_date, 'DateTime'] = pd.to_datetime(df.loc[b_only_date, date_column], format='%m/%d/%Y')
+    df.loc[~b_only_date, 'DateTime'] = pd.to_datetime(df.loc[~b_only_date, date_column], format='%m/%d/%Y %I:%M:%S %p')
+    return df
+
+
 #functions for time alignment and transformation of basal, bolus, and cgm event data. These functions can be used for any study dataset.
 def bolus_transform(bolus_data):
     """
