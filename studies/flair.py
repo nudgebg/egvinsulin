@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import numpy as np
 from datetime import timedelta
-
+from src.find_periods import find_periods
 def parse_flair_dates(dates):
     """Parse date strings separately for those with/without time component, interpret those without as midnight (00AM)
     Args:
@@ -86,29 +86,25 @@ def _extract_suspends(df):
     suspends =  suspends.reset_index().rename(columns={'index': 'SuspendIndex'})
     return suspends
 
-def adjust_basal_for_pump_suspends(df):
+def disable_basal(df, periods, column):
     assert df.DateTime.is_monotonic_increasing, 'Data must be sorted by DateTime'
 
-    basals = df.dropna(subset=['BasalRt'])
-    adjusted_basals = df.BasalRt.copy() # we start with absolute basals
+    basals = df.dropna(subset=[column])
+    adjusted_basals = df[column].copy() # we start with absolute basals
 
-    #combine pump suspend start and end events
-    suspends = _extract_suspends(df)
-
-    # Iterate over each suspend period
-    for _, suspend in suspends.iterrows():
+    for suspend in periods:
         
         #find the last reported basal value before suspend ends
-        previous_basal_rows = basals[basals.DateTime <= suspend.SuspendEndDateTime]
+        previous_basal_rows = basals[basals.DateTime <= suspend.time_end]
         if not previous_basal_rows.empty:
             #for the suspend end event, reset basal to the last reported basal rate
-            adjusted_basals.loc[suspend.SuspendEndIndex] = previous_basal_rows.iloc[-1]['BasalRt']
+            adjusted_basals.loc[suspend.index_end] = previous_basal_rows.iloc[-1][column]
 
             #for the suspend start event, set the basal rate to zero
-            adjusted_basals.loc[suspend.SuspendIndex] = 0
+            adjusted_basals.loc[suspend.index_start] = 0
         
             #set affected existing basal rates to zero 
-            indexes = basals[(basals.DateTime >= suspend.DateTime) & (basals.DateTime <= suspend.SuspendEndDateTime)].index
+            indexes = basals[(basals.DateTime >= suspend.time_start) & (basals.DateTime <= suspend.time_end)].index
             adjusted_basals[indexes] = 0
     return adjusted_basals
 
@@ -163,18 +159,33 @@ class Flair(StudyDataset):
     
     def _extract_basal_event_history(self):
         if self.basals is None:
-            #merge basal and temp basal
-            adjusted_basal = self.df_pump.groupby('PtID').apply(merge_basal_and_temp_basal).droplevel(0)#remove patient id index
-            df_temp = pd.merge(self.df_pump[['PtID','DateTime','Suspend']], adjusted_basal, left_index=True, right_index=True)
+            df_pump_copy = self.df_pump.copy()
+
+            #adjust for temp basals
+            df_pump_copy['merged_basal'] = df_pump_copy.groupby('PtID').apply(merge_basal_and_temp_basal).droplevel(0)
             
+            #adjust for closed loop periods
+            #get the close loop start period indexes
+            periods = []
+            for _, df in df_pump_copy.dropna(subset='AutoModeStatus').groupby('PtID'):
+                temp = find_periods(df, 'AutoModeStatus', 'DateTime', lambda x: x==True, lambda x: x==False)
+                periods.extend(temp)
+            closed_loop_start_indexes = [period.index_start for period in periods]
+            #set basal rates to zero at start of closed loop periods
+            close_loop_adjusted_basal = df_pump_copy['merged_basal']
+            close_loop_adjusted_basal.loc[closed_loop_start_indexes] = 0.0
+            df_pump_copy['basal_adj_cl'] = close_loop_adjusted_basal
+
             #adjust for pump suspends
-            adjusted_basal = df_temp.groupby('PtID').apply(adjust_basal_for_pump_suspends).droplevel(0) #remove patient group index
-            adjusted_basal = pd.merge(self.df_pump[['PtID','DateTime']], adjusted_basal, left_index=True, right_index=True)
+            df_pump_copy['basal_adj_cl_spd'] = df_pump_copy.groupby('PtID').apply(lambda x: disable_basal(x, find_periods(x.dropna(subset='Suspend'), 'Suspend', 'DateTime', 
+                                                                                                     lambda x: x != 'NORMAL_PUMPING', 
+                                                                                                     lambda x: x == 'NORMAL_PUMPING'), 'basal_adj_cl'), include_groups=False).droplevel(0)
 
             #reduce
-            adjusted_basal = adjusted_basal.dropna(subset=['BasalRt'])[['PtID', 'DateTime', 'BasalRt']]
-            adjusted_basal = adjusted_basal.rename(columns={'PtID':'patient_id', 'DateTime':'datetime', 'BasalRt':'basal_rate'})
+            adjusted_basal = df_pump_copy.dropna(subset=['basal_adj_cl_spd'])[['PtID', 'DateTime', 'basal_adj_cl_spd']]
+            adjusted_basal = adjusted_basal.rename(columns={'PtID':'patient_id', 'DateTime':'datetime', 'basal_adj_cl_spd':'basal_rate'})
             adjusted_basal['patient_id'] = adjusted_basal['patient_id'].astype(str)
+
             self.basals = adjusted_basal
         return self.basals
     
