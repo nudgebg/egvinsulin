@@ -172,7 +172,7 @@ class Flair(StudyDataset):
                 periods.extend(temp)
             closed_loop_start_indexes = [period.index_start for period in periods]
             #set basal rates to zero at start of closed loop periods
-            close_loop_adjusted_basal = df_pump_copy['merged_basal']
+            close_loop_adjusted_basal = df_pump_copy['merged_basal'].copy()
             close_loop_adjusted_basal.loc[closed_loop_start_indexes] = 0.0
             df_pump_copy['basal_adj_cl'] = close_loop_adjusted_basal
 
