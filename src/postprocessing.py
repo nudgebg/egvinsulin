@@ -48,10 +48,11 @@ def bolus_transform(bolus_data):
         #devide the bolus by the number of time steps it is extended by
         bolus_parts = extended_boluses.bolus[ext]/extended_boluses.Duration_steps[ext]
         #replace bolus info with extended data
-        bolus_data.bolus.loc[ext:ext+int(extended_boluses.Duration_steps[ext])] = bolus_parts
+        bolus_data.bolus.loc[ext:ext+int(extended_boluses.Duration_steps[ext])-1] = bolus_parts
                         
     #fill nans with 0
     bolus_data.patient_id = bolus_data.patient_id.ffill()
+    bolus_data.patient_id = bolus_data.patient_id.bfill()
     bolus_data = bolus_data.dropna(subset=['patient_id'])
     bolus_data.bolus = bolus_data.bolus.fillna(0)
 
@@ -89,7 +90,12 @@ def cgm_transform(cgm_data):
     cgm_data = cgm_data.rename(columns={"datetime_adj": "datetime",
                                         }) 
     cgm_data.patient_id = cgm_data.patient_id.ffill()
-   
+    cgm_data.patient_id = cgm_data.patient_id.bfill()
+
+    #replace not null values outside of 40-400 range with 40 or 400
+    cgm_data.loc[cgm_data['cgm'] < 40, 'cgm'] = 40
+    cgm_data.loc[cgm_data['cgm'] > 400, 'cgm'] = 400
+    
     return cgm_data
 
 def basal_transform(basal_data):
@@ -129,5 +135,6 @@ def basal_transform(basal_data):
     #forward fill basal values until next new value
     basal_data.basal_delivery = basal_data.basal_delivery.ffill()
     basal_data.patient_id = basal_data.patient_id.ffill()
+    basal_data.patient_id = basal_data.patient_id.bfill()
 
     return basal_data
