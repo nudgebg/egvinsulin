@@ -4,6 +4,7 @@ import os
 import numpy as np
 from datetime import timedelta
 from src.find_periods import find_periods
+
 def parse_flair_dates(dates):
     """Parse date strings separately for those with/without time component, interpret those without as midnight (00AM)
     Args:
@@ -74,18 +75,6 @@ def merge_basal_and_temp_basal(df):
             adjusted_basal[affected_basal_indexes] = np.NaN
     return adjusted_basal
 
-def _extract_suspends(df):
-    #combine pump suspend start and end events
-    suspends = df.loc[df['Suspend'].notna(), ['Suspend', 'DateTime']]
-    suspends['SuspendEndIndex'] = suspends.index
-    suspends['SuspendEndIndex'] = suspends.SuspendEndIndex.shift(-1)
-    suspends['SuspendEndEvent'] = suspends['Suspend'].shift(-1)
-    suspends['SuspendEndDateTime'] = suspends['DateTime'].shift(-1)
-    #we select pairs that start with a suspend event and end with a normal pumping event
-    suspends = suspends.loc[(suspends['Suspend'] != 'NORMAL_PUMPING') & (suspends['SuspendEndEvent'] == 'NORMAL_PUMPING')]
-    suspends =  suspends.reset_index().rename(columns={'index': 'SuspendIndex'})
-    return suspends
-
 def disable_basal(df, periods, column):
     assert df.DateTime.is_monotonic_increasing, 'Data must be sorted by DateTime'
 
@@ -132,12 +121,10 @@ class Flair(StudyDataset):
             df_cgm['DateTimeAdjusted'] = df_cgm.loc[df_cgm.DataDtTm_adjusted.notna(), 'DataDtTm_adjusted'].transform(parse_flair_dates)
             self.df_cgm = df_cgm
 
-            df_pump = pd.read_csv(self.pump_file, sep="|", low_memory=False, usecols=['PtID', 'DataDtTm', 'NewDeviceDtTm', 
-                                                                                    'BasalRt', 'BasalRtUnKnown', 'TempBasalAmt', 'TempBasalType', 'TempBasalDur',
-                                                                                    'BolusType', 'BolusSource', 'BolusDeliv', 'BolusSelected', 'ExtendBolusDuration',
-                                                                                    'Suspend', 
-                                                                                    'PrimeVolumeDeliv', 'Rewind', 
-                                                                                    'AutoModeFeat','AutoModeStatus','AutoBolusFeat', 'PLGMFeat', 
+            df_pump = pd.read_csv(self.pump_file, sep="|", low_memory=False, usecols=['PtID', 'DataDtTm', 
+                                                                                    'BasalRt', 'TempBasalAmt', 'TempBasalType', 'TempBasalDur',
+                                                                                    'BolusDeliv', 'ExtendBolusDuration',
+                                                                                    'Suspend', 'AutoModeStatus', 
                                                                                     'TDD'])
             
             df_pump['DateTime'] = df_pump.loc[df_pump.DataDtTm.notna(), 'DataDtTm'].transform(parse_flair_dates)
@@ -162,7 +149,7 @@ class Flair(StudyDataset):
             df_pump_copy = self.df_pump.copy()
 
             #adjust for temp basals
-            df_pump_copy['merged_basal'] = df_pump_copy.groupby('PtID').apply(merge_basal_and_temp_basal).droplevel(0)
+            df_pump_copy['merged_basal'] = df_pump_copy.groupby('PtID').apply(merge_basal_and_temp_basal,include_groups=False).droplevel(0)
             
             #adjust for closed loop periods
             df_pump_copy['basal_adj_cl'] = df_pump_copy.merged_basal
