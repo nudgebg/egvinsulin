@@ -1,7 +1,7 @@
-import rootpath
-import os
-cwd = os.getcwd()
-rootpath.append(cwd)
+# import rootpath
+# import os
+# cwd = os.getcwd()
+# rootpath.append(cwd)
 
 import pytest
 import pandas as pd
@@ -25,12 +25,12 @@ def cleaned_bolus():
 def cleaned_basal():
     return pd.DataFrame({
         'patient_id': ['1', '1', '2', '2', '3', '3', '3','3'],
-        'datetime': pd.to_datetime(['01/01/2023 8:00:00 AM', '01/01/2023 12:30:00 PM', 
+        'datetime': pd.to_datetime(['01/01/2023 8:00:00 AM', '01/02/2023 12:30:00 PM', 
                                     '01/01/2023 9:00:00 AM', '01/03/2023 4:00:00 PM',
-                                    '01/01/2023 10:13:33 AM', '01/01/2023 2:19:22 PM', '01/02/2023 6:12:30 PM', '01/02/2023 8:07:00 PM']),
-        'basal_rate': [1.3, 2, 
-                       0.7, 1.5, 
-                       0.1, 4, 0.75, 0.2]
+                                    '01/01/2023 10:13:33 AM', '01/01/2023 2:13:22 PM', '01/02/2023 6:02:30 PM', '01/02/2023 8:03:00 PM']),
+        'basal_rate': [1.2, 2.4, 
+                       0.75, 1.5, 
+                       0.12, 4.2, 0.75, 0.24]
     })
 
 @pytest.fixture
@@ -75,11 +75,11 @@ def test_bolus_transform(cleaned_bolus):
 
 def test_basal_transform(cleaned_basal):
     transformed_basal_data = cleaned_basal.groupby('patient_id').apply(basal_transform).reset_index(drop=True)
+    transformed_basal_data.to_csv('basal.csv')
     print(transformed_basal_data)
     #check if basals sum correctly
-    assert transformed_basal_data['basal_delivery'].sum().round(1) == 189.6
+    assert transformed_basal_data['basal_delivery'].sum().round(1) == 190.5
     
-
 if __name__ == '__main__':
     pytest.main([__file__])
   
