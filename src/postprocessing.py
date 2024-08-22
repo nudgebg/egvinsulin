@@ -1,6 +1,7 @@
 import pandas as pd
 import time 
 from datetime import timedelta
+import numpy as np
 
 #functions for time alignment and transformation of basal, bolus, and cgm event data. These functions can be used for any study dataset.
 def bolus_transform(bolus_data):
@@ -133,7 +134,37 @@ def basal_transform(basal_data):
     #convert basal rate to 5 minute deliveries
     basal_data['basal_delivery'] = basal_data.basal_rate/12
     #forward fill basal values until next new value
-    basal_data.basal_delivery = basal_data.basal_delivery.ffill()
+    def durations_since_previous_valid_value(dates, values):
+        """
+        Calculate the durations between each date and the previous date with a valid value (non NaN).
+
+        Parameters:
+        dates (list): A list of dates.
+        values (list): A list of values.
+
+        Returns:
+        list: A list of durations between each date and the previous valid date. NaN if there is no previous valid date.
+        """
+        last_valid_date = None
+        durations = []
+        for (date, value) in zip(dates, values):
+            duration = np.NaN
+            if last_valid_date is not None:
+                duration = date - last_valid_date
+            if not np.isnan(value):
+                last_valid_date = date
+            durations.append(duration)
+        return durations
+
+    def combine_and_forward_fill(basal_df, gap=float('inf')):
+        #forward fill, but only if duration between basal values is smaller than the threshold
+        durations = durations_since_previous_valid_value(basal_df['datetime'], basal_df['basal_delivery'])    
+        bSignificantGap = [True if pd.notna(duration) and duration >= gap else False for duration in np.array(durations)]
+        basal_df['basal_delivery'] = basal_df['basal_delivery'].where(bSignificantGap, basal_df['basal_delivery'].ffill())
+        return basal_df
+    
+    # basal_data.basal_delivery = basal_data.basal_delivery.ffill()
+    basal_data = combine_and_forward_fill(basal_data, gap=timedelta(hours=24))
     basal_data.patient_id = basal_data.patient_id.ffill()
     basal_data.patient_id = basal_data.patient_id.bfill()
 
