@@ -1,5 +1,4 @@
 import pandas as pd
-
 from studies.iobp2 import IOBP2StudyData    
 
 def test_extract_event_history(tmp_path):
@@ -22,10 +21,8 @@ def test_extract_event_history(tmp_path):
                 120, 130, 140, 105,
                 150, 160, 170, 155],
     })
-    (tmp_path / "Data Tables").mkdir()
-    mock_data.to_csv(tmp_path / "Data Tables" / "IOBP2DeviceiLet.txt", sep='|', index=False)
-
-    # Defin expected results
+    
+    # Expected results
     expected_result_bolus = pd.DataFrame({
         'patient_id': ['1', '1', '1', '2', '2', '2', '2', '3', '3', '3', '3'],
         
@@ -52,11 +49,18 @@ def test_extract_event_history(tmp_path):
                 120.0, 130.0, 140.0, 105.0,
                 150.0, 160.0, 170.0, 155.0],               
     })
+    #save the test data to a file
+    (tmp_path / "Data Tables").mkdir()
+    mock_data.to_csv(tmp_path / "Data Tables" / "IOBP2DeviceiLet.txt", sep='|', index=False)
 
-    study = IOBP2StudyData(study_name='IOBP2', study_path=tmp_path)
+    #load the data
+    study = IOBP2StudyData(study_path=tmp_path)
     study.load_data()
+
+    #extract
     result_bolus = study.extract_bolus_event_history()
     result_cgm = study.extract_cgm_history()
     
+    #validate
     pd.testing.assert_frame_equal(result_bolus, expected_result_bolus)
     pd.testing.assert_frame_equal(result_cgm, expected_result_cgm)

@@ -6,8 +6,8 @@ from studies.studydataset import StudyDataset
 
 class IOBP2StudyData(StudyDataset):
 
-    def __init__(self, study_name: str, study_path: str):
-        super().__init__(study_path, study_name)
+    def __init__(self, study_path: str):
+        super().__init__(study_path, "IOBP2")
         #in place for testing purposes
         self.iletFilePath = self.study_path
         self.iletFilePath = os.path.join(self.study_path, 'Data Tables', 'IOBP2DeviceiLet.txt')
@@ -37,7 +37,7 @@ class IOBP2StudyData(StudyDataset):
         self.df['bolus'] = self.df['bolus'] + self.df['meal_bolus'] + self.df['basal_rate'] #basal delivery in iobp2 is delivered like a bolus, therefore it is added to the bolus column
 
     def _extract_bolus_event_history(self):
-        bolus_history = self.df[['patient_id', 'datetime', 'bolus', 'delivery_duration']]
+        bolus_history = self.df[['patient_id', 'datetime', 'bolus', 'delivery_duration']].copy()
         #insulin delivery is reported as the previous amount delivered. Therefore data is shifted to to align with algorithm announcement
         bolus_history['datetime'] = bolus_history['datetime'] - timedelta(minutes=5)
         bolus_history['datetime'] = bolus_history['datetime'].astype("datetime64[ns]")
@@ -45,25 +45,15 @@ class IOBP2StudyData(StudyDataset):
 
         return bolus_history.dropna()
 
-    # def _extract_basal_event_history(self):
-    #     basal_history = self.df[['patient_id', 'datetime', 'basal_rate']]
-        
-    #     #insulin delivery is reported as the previous amount delivered. Therefore data is shifted to to align with algorithm announcement
-    #     basal_history['datetime'] = basal_history['datetime'] - timedelta(minutes=5)
-    #     basal_history['datetime'] = basal_history['datetime'].astype("datetime64[ns]")
-    #     #convert 5 minute basal deliveries to a hourly basal rate
-    #     basal_history['basal_rate'] = basal_history['basal_rate'] * 12
-    #     basal_history['basal_rate'] = basal_history['basal_rate'].fillna(0)
-        
-    #     return basal_history.dropna()
-
     def _extract_cgm_history(self):
-        cgm_history = self.df[['patient_id', 'datetime', 'cgm']]
+        cgm_history = self.df[['patient_id', 'datetime', 'cgm']].copy()
         cgm_history['datetime'] = cgm_history['datetime'].astype("datetime64[ns]")
-
-        
-        # cgm_history['cgm'] = cgm_history['cgm'].replace(-1,np.nan, inplace=True)
         return cgm_history.dropna()
+    
+    def _extract_basal_event_history(self):
+        basals = pd.DataFrame(columns=['patient_id', 'datetime', 'basal_rate'])
+        basals = basals.astype({'patient_id': str, 'datetime': 'datetime64[ns]', 'basal_rate': float})
+        return basals
 
 
 
@@ -74,8 +64,6 @@ if __name__ == '__main__':
     study = IOBP2StudyData(study_name='IOBP2', study_path=path)
     study.load_data()
     bolus_history = study.extract_bolus_event_history()
-    # basal_history = study.extract_basal_event_history()
     cgm_history = study.extract_cgm_history()
     print(cgm_history.head())
-    # print(basal_history.head())
     print(bolus_history.head())
