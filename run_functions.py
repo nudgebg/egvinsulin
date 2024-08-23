@@ -17,7 +17,7 @@ logging.basicConfig(
 
 run_time = datetime.now().strftime("%Y%m%d%H%M%S")
 current_dir = os.getcwd()
-in_path = os.path.join(current_dir, 'data/test')
+in_path = os.path.join(current_dir, 'data/raw')
 out_path = os.path.join(current_dir, 'data/out')
 
 logging.info(f"Input path: {in_path}")
@@ -56,10 +56,12 @@ for folder in study_folders:
         os.makedirs(out_extracted, exist_ok=True)
     save_data_as(cgm_history, 'CSV', os.path.join(out_extracted, f"{run_time}-cgm_history"))
     save_data_as(bolus_history, 'CSV', os.path.join(out_extracted, f"{run_time}-bolus_history"))
+    save_data_as(basal_history, 'CSV', os.path.join(out_extracted, f"{run_time}-basal_history"))
 
     #transform
     cgm_history_transformed = cgm_history.groupby('patient_id').apply(pp.cgm_transform).reset_index(drop=True)
     bolus_history_transformed = bolus_history.groupby('patient_id').apply(pp.bolus_transform).reset_index(drop=True)
+    basal_history_transformed = basal_history.groupby('patient_id').apply(pp.basal_transform).reset_index(drop=True)
 
     #save
     out_transformed = os.path.join(out_path, folder, 'transformed')
@@ -67,3 +69,4 @@ for folder in study_folders:
         os.makedirs(out_transformed, exist_ok=True)
     save_data_as(cgm_history_transformed, 'CSV', os.path.join(out_transformed, f"{run_time}-cgm_history"))
     save_data_as(bolus_history_transformed, 'CSV', os.path.join(out_transformed, f"{run_time}-bolus_history"))
+    save_data_as(basal_history_transformed, 'CSV', os.path.join(out_transformed, f"{run_time}-basal_history"))
