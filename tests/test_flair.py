@@ -26,9 +26,6 @@ def store_data_to_files(base_dir, pump_data, cgm_data):
     cgm_data.to_csv(cgm_file, sep='|', index=False)
 
 @pytest.fixture
-def simple_basal_data():
-    
-@pytest.fixture
 def sample_data_dir_basal_simple(tmpdir):
     # Create sample basal rate data for two days, alternating between 0.5 and 1 unit every 4 hours
     times = pd.date_range(start='2023-01-01 00:00:00', end='2023-01-02 23:59:59', freq='4h')
@@ -119,11 +116,12 @@ def sample_data_closed_loop(tmpdir):
     # Add micro bolus deliveries
     micro_bolus_times = pd.date_range(auto_mode_start, auto_mode_end, freq='10min',inclusive='left')
     micro_bolus_times = list(micro_bolus_times.strftime('%m/%d/%Y %I:%M:%S %p'))
-    micro_bolus = [0.1 for i in range(len(micro_bolus_times))]
+    micro_bolus_p1 = [0.1 for i in range(len(micro_bolus_times))]
+    micro_bolus_p2 = [0.2 for i in range(len(micro_bolus_times))]
     micro_bolus_data = pd.DataFrame({
         'PtID': [1] * len(micro_bolus_times) + [2] * len(micro_bolus_times),
         'DataDtTm': list(micro_bolus_times) + list(micro_bolus_times),
-        'BolusDeliv': micro_bolus + micro_bolus
+        'BolusDeliv': micro_bolus_p1 + micro_bolus_p2
     })
     pump_data = pd.concat([pump_data, micro_bolus_data], ignore_index=True)
 
@@ -151,7 +149,7 @@ def test_sample_data_closed_loop(sample_data_closed_loop):
     flair.load_data()
 
     basal = flair.extract_basal_event_history()
-    tdd_basal = basal.groupby('patient_id').apply(tdd.calculate_daily_basal_dose).reset_index().astype({'date': 'datetime64[ns]'})
+    tdd_basal = basal.groupby('patient_id').apply(tdd.calculate_daily_basal_dose, include_groups=False).reset_index().astype({'date': 'datetime64[ns]'})
 
     expected_basal = pd.DataFrame({
         'patient_id': [1, 2],
@@ -163,11 +161,11 @@ def test_sample_data_closed_loop(sample_data_closed_loop):
     pd.testing.assert_frame_equal(tdd_basal, expected_basal)
 
     bolus = flair.extract_bolus_event_history()
-    tdd_bolus = bolus.groupby('patient_id').apply(tdd.calculate_daily_bolus_dose).reset_index().astype({'date': 'datetime64[ns]'})
+    tdd_bolus = bolus.groupby('patient_id').apply(tdd.calculate_daily_bolus_dose, include_groups=False).reset_index().astype({'date': 'datetime64[ns]'})
     expected_bolus = pd.DataFrame({
         'patient_id': [1, 2],
         'date': pd.to_datetime(['2023-01-01', '2023-01-01']),
-        'bolus': [7.2, 7.2]
+        'bolus': [7.2, 14.4]
     }).astype({'patient_id': str,'date': 'datetime64[ns]'})
     print(tdd_bolus)
     print(expected_bolus)

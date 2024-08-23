@@ -98,8 +98,8 @@ def disable_basal(df, periods, column):
     return adjusted_basals
 
 class Flair(StudyDataset):
-    def __init__(self, study_name: str, study_path: str):
-        super().__init__(study_path, study_name)
+    def __init__(self, study_path: str):
+        super().__init__(study_path, 'Flair')
         self.basals = None
         self.boluses = None
         self.cgms = None

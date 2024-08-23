@@ -1,9 +1,10 @@
 import os
 from studies.iobp2 import IOBP2StudyData
+from studies.flair import Flair
 import src.postprocessing as pp
-from save_data_as import save_data_as
+from src.save_data_as import save_data_as
 import logging
-
+from datetime import datetime
 
 logging.basicConfig(
     level=logging.INFO, 
@@ -14,14 +15,17 @@ logging.basicConfig(
     ]
 )
 
+run_time = datetime.now().strftime("%Y%m%d%H%M%S")
 current_dir = os.getcwd()
 in_path = os.path.join(current_dir, 'data/test')
-out_path = os.path.join(current_dir, 'data/cleaned')
+out_path = os.path.join(current_dir, 'data/out')
+
 logging.info(f"Input path: {in_path}")
 logging.info(f"Output path: {out_path}")
 
 #define how folders are identified and processed
-patterns = {'IOBP2 RCT Public Dataset': IOBP2StudyData}
+patterns = {'IOBP2 RCT Public Dataset': IOBP2StudyData,
+            'FLAIRPublicDataSet': Flair}
 study_folders = [f for f in os.listdir(in_path) if os.path.isdir(os.path.join(in_path, f))]
 
 for folder in study_folders:
@@ -46,10 +50,20 @@ for folder in study_folders:
     basal_history = study.extract_basal_event_history()
     cgm_history = study.extract_cgm_history()
 
-    #processing
-    cgm_data = cgm_history.groupby('patient_id').apply(pp.cgm_transform).reset_index(drop=True)
-    bolus_data = bolus_history.groupby('patient_id').apply(pp.bolus_transform).reset_index(drop=True)
+    #save
+    out_extracted = os.path.join(out_path, folder, 'extracted')
+    if not os.path.exists(out_extracted):
+        os.makedirs(out_extracted, exist_ok=True)
+    save_data_as(cgm_history, 'CSV', os.path.join(out_extracted, f"{run_time}-cgm_history"))
+    save_data_as(bolus_history, 'CSV', os.path.join(out_extracted, f"{run_time}-bolus_history"))
+
+    #transform
+    cgm_history_transformed = cgm_history.groupby('patient_id').apply(pp.cgm_transform).reset_index(drop=True)
+    bolus_history_transformed = bolus_history.groupby('patient_id').apply(pp.bolus_transform).reset_index(drop=True)
 
     #save
-    save_data_as(cgm_data, 'CSV', os.path.join(out_path, folder))
-    save_data_as(bolus_data, 'CSV', os.path.join(out_path, folder))
+    out_transformed = os.path.join(out_path, folder, 'transformed')
+    if not os.path.exists(out_transformed):
+        os.makedirs(out_transformed, exist_ok=True)
+    save_data_as(cgm_history_transformed, 'CSV', os.path.join(out_transformed, f"{run_time}-cgm_history"))
+    save_data_as(bolus_history_transformed, 'CSV', os.path.join(out_transformed, f"{run_time}-bolus_history"))
