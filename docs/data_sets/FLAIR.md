@@ -46,10 +46,8 @@ These are csv files ("|" separator) and host many columns related to the Medtron
 * **TempBasalDur**: Temp basal duration (h:mm:ss) - The length of time for the temporary basal insulin delivery
 * **Suspend**: State "Suspend" when the pump is suspended and "Resumed" when the pump is resumed 
 
-
-
 # Analysis of the Data
-The study data was analyzed to understand which data is relevant, how it must be manipulated and interpreted in order to obtain the true delivered insulin amounts. The results are mostly based on the analysis in the jupyter notebook `understand-flair-dataset.ipynb`
+The study data was analyzed to understand which data is relevant, how it must be manipulated and interpreted in order to obtain the true delivered insulin amounts. The results are mostly based on the analysis in the jupyter notebook `understand-flair-dataset.ipynb`. Later, a second notebook was added: `understand-flair-dataset/2024-08-12 - Modularize-Flair.ipynb` that added details to TDDs and closed loop modes focusing on improving the match between reported and calcualted TDDs.
 
 **Leading Questions**: 
 * Do we need to track DataDtTm_adjusted or can we rely on DataDtTm?
@@ -72,7 +70,6 @@ The study data was analyzed to understand which data is relevant, how it must be
 * Date Adjustments: We need to use the adjusted datetimes for cgm, when it exists.
 
 **Unknowns:**
-
 * We don't know the implications of NewDeviceDtTm. These should be clarified!
 
 ## Basal Rates
@@ -92,7 +89,6 @@ Medtronic allows setting temp basal percentages from 0 (shut off) to 200% (twice
 > Description: Histogram of temporary basal rates reported in the flair data.
 
 ### Processing Temp Basal Rates
-
 * We have no unknown basal rates, therefore this column can be ignored
 * Basal rates are reported every time they change
 * Standard basal rates do not reflect temporary basal rate changes
@@ -188,3 +184,26 @@ Suspend Before / At Low will suspend basal and cancel an extended bolus.
 
 **Unknowns**:
 * It remains unclear if pump suspend events impact the boluses, this should be clarified with the investigator or manufacturer
+
+
+## Bolus Duplicates
+Overall, we have 78088 duplicated bolus rows which makes 2.20% of all boluses. After the removing these, the reported and calculated TDDs move closer together. The tricky part here was that the bolus source names were different: For example some duplciated micro boluses use CLOSED_LOOP_MICRO_BOLUS while the other row uses CL_MICRO_BOLUS. Therefore, the bolus source is not used to find duplicates, only the datetime and bolus amount. After remving the duplciates, the calcualted and reported TDDs matched better:
+![TDD after Adjusting for Close Loop Modes](assets/flair_removing_bolus_duplicates.png)
+
+
+## Closed Loop Mode
+When closed loop mode is on , basal rates are replaced by micro-boluses.  To prevent incorrect forward filling of basal rates, closed loop modes must be respected. 
+![Basal Rates and Micor Boluses](assets/flair_basal_micro_boluses.png)
+
+Initially we set all basal rates to zero that occur during closed loop start (AutoModeStatus==True) and stop (AutoModeStatus==False) event. However, when patients transition from the 670G to the AHCL algorithm, the reported AutoModeStatus can be incorrect (e.g. auto mode on but no micro boluses) and correct basal rates would be ignored.
+![Wrong Closed Loop Mode during Algo transition](assets/flair_example_incorrect_closed_loop_mode.png)
+
+By only setting the basal rate to zero when a AutoModeStatus true event occurs solves this problem: 
+1. Basal rates are not forward filled with previous basal rates (e.g. also when suspend events occur)
+2. When basal rates are reported again, we trust them.
+
+![TDD after Adjusting for Close Loop Modes](assets/flair_tdd_after_auto_mode_adjustments.png)
+
+
+## TDDs 
+Reported TDDs are used to test our calcualted basals and boluses. However, we often see multiple TDDs reported on a single day including zero values. On these days, the reported and calculated TDDs don't match at all and taking the sum or the last or maxium value still results in a poor fit. Therefore, we can't trust that reported TDDs are 100% accurate, especially on days where multiple values are reported. For testing, days with multiple TDDs should not be trusted.
