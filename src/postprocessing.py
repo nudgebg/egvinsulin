@@ -49,7 +49,7 @@ def bolus_transform(bolus_data):
         #devide the bolus by the number of time steps it is extended by
         bolus_parts = extended_boluses.bolus[ext]/extended_boluses.Duration_steps[ext]
         #replace bolus info with extended data
-        bolus_data.bolus.loc[ext:ext+int(extended_boluses.Duration_steps[ext])-1] = bolus_parts
+        bolus_data.loc[ext:ext+int(extended_boluses.Duration_steps[ext])-1, 'bolus'] = bolus_parts
                         
     #fill nans with 0
     bolus_data.patient_id = bolus_data.patient_id.ffill()
@@ -125,7 +125,8 @@ def basal_transform(basal_data):
     #keep last basal rate if there is a duplicate time
     basal_data = basal_data.drop_duplicates(subset='UnixTime',keep='last')
     #merge new time with basal data
-    basal_merged = pd.merge_asof(basal_from_mid, basal_data, on="UnixTime",direction="nearest",tolerance=149)
+    basal_data = basal_data.sort_values(by='UnixTime')
+    basal_merged = pd.merge_asof(basal_from_mid, basal_data, on="UnixTime", direction="nearest", tolerance=149)
 
     basal_data = basal_merged.filter(items=['patient_id','datetime_adj','basal_rate'])
     basal_data = basal_data.rename(columns={"datetime_adj": "datetime",
