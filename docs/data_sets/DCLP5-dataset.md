@@ -11,8 +11,8 @@ as well as the reasoning behind how the data was cleaned and normalized.
 While there is a data glossary (DataGlossary_Dits.rtf) file, the file names within the glossary do not match the file names of the data. However, the column names do match and those definitions are listed below.
 
 * **DCLP5TandemBolus_Completed_Combined_b.txt**: List of pupm data downloaded (bolus data only)
-* **DCLP5TandemBASALRATECHG_b.txt**: List of pump data dowloaded (basal data only)
-* **DCLP5TandemCGMDATAGXB_b.txt**: List of cgm data dowloaded 
+* **DCLP5TandemBASALRATECHG_b.txt**: List of pump data downloaded (basal data only)
+* **DCLP5TandemCGMDATAGXB_b.txt**: List of cgm data downloaded 
 * **PtRoster.txt**: Patient Roster
 
 These are text files ("|" separator) and host many columns related to the iLet pump events and the Dexcom CGM Data. The glossary provides information about each column. Below are the relevant columns contained in each text file.
@@ -36,7 +36,7 @@ These are text files ("|" separator) and host many columns related to the iLet p
 **DCLP5TandemCGMDATAGXB_b.txt:**
 
 * **PtID**: Patient ID
-* **DataDtTm**: Datetime 
+* **DataDtTm**: Date-time of cgm value
 * **CGMValue**: 40-400 are legitimate glucose values. 0 is used when the reading is high or low
 * **DataDtTm_adjusted**: adjusted Datetime
 
