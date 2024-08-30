@@ -31,11 +31,12 @@ def bolus_transform(bolus_data):
     bolus_from_mid = bolus_from_mid.drop_duplicates(subset=['UnixTime']).sort_values(by='UnixTime')
     #sum boluses if there is a duplicate time (happens when two or more boluses are announces <5 minutes apart)
     #keep maximum duration of the bolus - in the rare case a standard and extended are announced int the same 5 minute window, it will be treated as an extended bolus
-    bolus_data = bolus_data.groupby('UnixTime').agg({'bolus':'sum','delivery_duration':'max','patient_id':'first'}).reset_index()
+    # bolus_data = bolus_data.groupby('UnixTime').agg({'bolus':'sum','delivery_duration':'max','patient_id':'first'}).reset_index()
+    bolus_data = bolus_data.groupby('UnixTime').agg({'bolus':'sum','delivery_duration':'max'}).reset_index()
    
     #merge new midnight aligned times with bolus data
     bolus_merged = pd.merge_asof(bolus_from_mid, bolus_data, on="UnixTime",direction="nearest",tolerance=149)
-    bolus_data = bolus_merged.filter(items=['patient_id','datetime_adj','bolus','delivery_duration'])
+    bolus_data = bolus_merged.filter(items=['datetime_adj','bolus','delivery_duration'])
     bolus_data = bolus_data.rename(columns={"datetime_adj": "datetime",
                                         }) 
     #extended bolus handling: duration must be a timedelta for this to work
@@ -52,9 +53,9 @@ def bolus_transform(bolus_data):
         bolus_data.loc[ext:ext+int(extended_boluses.Duration_steps[ext])-1, 'bolus'] = bolus_parts
                         
     #fill nans with 0
-    bolus_data.patient_id = bolus_data.patient_id.ffill()
-    bolus_data.patient_id = bolus_data.patient_id.bfill()
-    bolus_data = bolus_data.dropna(subset=['patient_id'])
+    # bolus_data.patient_id = bolus_data.patient_id.ffill()
+    # bolus_data.patient_id = bolus_data.patient_id.bfill()
+    # bolus_data = bolus_data.dropna(subset=['patient_id'])
     bolus_data.bolus = bolus_data.bolus.fillna(0)
 
     return bolus_data
@@ -87,11 +88,11 @@ def cgm_transform(cgm_data):
     #merge new time with cgm data
     cgm_merged = pd.merge_asof(cgm_from_mid, cgm_data, on="UnixTime",direction="nearest",tolerance=149)
 
-    cgm_data = cgm_merged.filter(items=['patient_id','datetime_adj','cgm'])
+    cgm_data = cgm_merged.filter(items=['datetime_adj','cgm'])
     cgm_data = cgm_data.rename(columns={"datetime_adj": "datetime",
                                         }) 
-    cgm_data.patient_id = cgm_data.patient_id.ffill()
-    cgm_data.patient_id = cgm_data.patient_id.bfill()
+    # cgm_data.patient_id = cgm_data.patient_id.ffill()
+    # cgm_data.patient_id = cgm_data.patient_id.bfill()
 
     #replace not null values outside of 40-400 range with 40 or 400
     cgm_data.loc[cgm_data['cgm'] < 40, 'cgm'] = 40
@@ -128,7 +129,7 @@ def basal_transform(basal_data):
     basal_data = basal_data.sort_values(by='UnixTime')
     basal_merged = pd.merge_asof(basal_from_mid, basal_data, on="UnixTime", direction="nearest", tolerance=149)
 
-    basal_data = basal_merged.filter(items=['patient_id','datetime_adj','basal_rate'])
+    basal_data = basal_merged.filter(items=['datetime_adj','basal_rate'])
     basal_data = basal_data.rename(columns={"datetime_adj": "datetime",
                                         }) 
 
@@ -166,7 +167,7 @@ def basal_transform(basal_data):
     
     # basal_data.basal_delivery = basal_data.basal_delivery.ffill()
     basal_data = combine_and_forward_fill(basal_data, gap=timedelta(hours=24))
-    basal_data.patient_id = basal_data.patient_id.ffill()
-    basal_data.patient_id = basal_data.patient_id.bfill()
+    # basal_data.patient_id = basal_data.patient_id.ffill()
+    # basal_data.patient_id = basal_data.patient_id.bfill()
 
     return basal_data
