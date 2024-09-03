@@ -87,9 +87,11 @@ def bolus_transform(bolus_data):
         bolus_parts = extended_boluses.bolus[ext]/extended_boluses.Duration_steps[ext]
         #replace bolus info with extended data
         bolus_data.loc[ext:ext+int(extended_boluses.Duration_steps[ext])-1, 'extended_bolus_parts'] = bolus_parts
+        #fill delivery durations to match the new extended bolus parts
+        bolus_data.loc[ext:ext+int(extended_boluses.Duration_steps[ext])-1, 'delivery_duration'] = timedelta(minutes=5)
         # replace original bolus with 0 - prevents non-extended bolus from being overwritten
         bolus_data.loc[ext, 'bolus'] = 0                
-    #fill nans with 0
+    #fill nans with 0 and combine bolus and extended bolus columns back together
     bolus_data.bolus = bolus_data.bolus.fillna(0)
     bolus_data.bolus = bolus_data.bolus + bolus_data.extended_bolus_parts.fillna(0)
     bolus_data = bolus_data.drop(columns=['extended_bolus_parts'])
