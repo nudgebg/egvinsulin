@@ -92,6 +92,7 @@ def bolus_transform(bolus_data):
     #fill nans with 0
     bolus_data.bolus = bolus_data.bolus.fillna(0)
     bolus_data.bolus = bolus_data.bolus + bolus_data.extended_bolus_parts.fillna(0)
+    bolus_data = bolus_data.drop(columns=['extended_bolus_parts'])
     return bolus_data
 
 def cgm_transform(cgm_data):
