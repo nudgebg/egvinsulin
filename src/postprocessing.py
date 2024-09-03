@@ -72,7 +72,8 @@ def bolus_transform(bolus_data):
     bolus_merged = pd.merge_asof(bolus_from_mid, bolus_data, on="UnixTime",direction="nearest",tolerance=149)
     bolus_data = bolus_merged.filter(items=['datetime_adj','bolus','delivery_duration'])
     bolus_data = bolus_data.rename(columns={"datetime_adj": "datetime"}) 
-    
+    #create empty column for extended bolus parts
+    bolus_data['extended_bolus_parts'] = np.nan
     #extended bolus handling: duration must be a timedelta for this to work
     extended_boluses = bolus_data[bolus_data.delivery_duration > timedelta(minutes=5)]
     #determine how many 5 minute steps the bolus is extended for and round to the nearst whole number step
@@ -85,11 +86,12 @@ def bolus_transform(bolus_data):
         #devide the bolus by the number of time steps it is extended by
         bolus_parts = extended_boluses.bolus[ext]/extended_boluses.Duration_steps[ext]
         #replace bolus info with extended data
-        bolus_data.loc[ext:ext+int(extended_boluses.Duration_steps[ext])-1, 'bolus'] = bolus_parts
-                        
+        bolus_data.loc[ext:ext+int(extended_boluses.Duration_steps[ext])-1, 'extended_bolus_parts'] = bolus_parts
+        # replace original bolus with 0 - prevents non-extended bolus from being overwritten
+        bolus_data.loc[ext, 'bolus'] = 0                
     #fill nans with 0
     bolus_data.bolus = bolus_data.bolus.fillna(0)
-
+    bolus_data.bolus = bolus_data.bolus + bolus_data.extended_bolus_parts.fillna(0)
     return bolus_data
 
 def cgm_transform(cgm_data):
