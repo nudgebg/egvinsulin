@@ -14,10 +14,11 @@ def cleaned_bolus():
     return pd.DataFrame({
         'patient_id': ['1', '1', '1', '2', '2', '2', '2', '3', '3', '3', '3'],
         'datetime': pd.to_datetime(['01/01/2023 10:03:30 AM', '01/01/2023 1:10:00 PM', '01/01/2023 11:58:00 PM',
-                                    '01/01/2023 9:58:15 AM', '01/01/2023 11:02:45 AM', '01/02/2023 12:07:00 PM', '01/02/2023 4:07:00 PM',
+                                    '01/01/2023 9:58:15 AM', '01/01/2023 11:02:45 AM', '01/01/2023 12:07:00 PM', '01/02/2023 4:07:00 PM',
                                     '01/01/2023 10:10:00 AM', '01/01/2023 2:19:50 PM', '01/02/2023 6:25:00 PM', '01/02/2023 8:05:00 PM']),
         'bolus': [10.5, 15.8, 10.1, 8.6, 11.4, 9.9, 8.2, 6.5, 7.3, 8.8, 7.3],
-        'delivery_duration': pd.to_timedelta(['5 minutes', '30 minutes', '115 minutes', '5 minutes', '75 minutes', '5 minutes', '15 minutes',
+        'delivery_duration': pd.to_timedelta(['5 minutes', '30 minutes', '115 minutes', 
+                                              '5 minutes', '75 minutes', '5 minutes', '15 minutes',
                                               '5 minutes', '8 minutes', '5 minutes', '6 minutes']),
     })
 
@@ -45,7 +46,7 @@ def cleaned_cgm():
 
 
 def test_cgm_transform(cleaned_cgm):
-    transformed_cgm_data = cleaned_cgm.groupby('patient_id').apply(cgm_transform).reset_index(drop=True)
+    transformed_cgm_data = cleaned_cgm.groupby('patient_id').apply(cgm_transform, include_groups=False).reset_index(level=0)
     #check if start and end date are correct for each patient
     for i in transformed_cgm_data['patient_id'].unique():
         patient_data = transformed_cgm_data[transformed_cgm_data['patient_id'] == i]
@@ -64,7 +65,8 @@ def test_cgm_transform(cleaned_cgm):
     assert cgm_not_null['datetime'].to_list() == expected_rounded.to_list()
 
 def test_bolus_transform(cleaned_bolus):
-    transformed_bolus_data = cleaned_bolus.groupby('patient_id').apply(bolus_transform).reset_index(drop=True)
+    transformed_bolus_data = cleaned_bolus.groupby('patient_id').apply(bolus_transform,include_groups=False).reset_index(level=0)
+    print(transformed_bolus_data)
     #check if start and end date are correct for each patient
     for i in transformed_bolus_data['patient_id'].unique():
         patient_data = transformed_bolus_data[transformed_bolus_data['patient_id'] == i]
@@ -74,7 +76,7 @@ def test_bolus_transform(cleaned_bolus):
     assert transformed_bolus_data['bolus'].sum().round(1) == cleaned_bolus['bolus'].sum().round(1)
 
 def test_basal_transform(cleaned_basal):
-    transformed_basal_data = cleaned_basal.groupby('patient_id').apply(basal_transform).reset_index(drop=True)
+    transformed_basal_data = cleaned_basal.groupby('patient_id').apply(basal_transform, include_groups=False).reset_index(level=0)
     transformed_basal_data.to_csv('basal.csv')
     print(transformed_basal_data)
     #check if basals sum correctly
