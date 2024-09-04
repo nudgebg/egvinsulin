@@ -1,7 +1,38 @@
 import pandas as pd
-import time 
+import time
 from datetime import timedelta
 import numpy as np
+
+def _durations_since_previous_valid_value(dates, values):
+    """
+    Calculate the durations between each date and the previous date with a valid value (non NaN).
+
+    Parameters:
+    dates (list): A list of dates.
+    values (list): A list of values.
+
+    Returns:
+    list: A list of durations between each date and the previous valid date. NaN if there is no previous valid date.
+    """
+    last_valid_date = None
+    durations = []
+    for (date, value) in zip(dates, values):
+        duration = np.NaN
+        if last_valid_date is not None:
+            duration = date - last_valid_date
+        if not np.isnan(value):
+            last_valid_date = date
+        durations.append(duration)
+    return durations
+
+def _combine_and_forward_fill(basal_df, gap=float('inf')):
+    # forward fill, but only if duration between basal values is smaller than the threshold
+    durations = _durations_since_previous_valid_value(basal_df['datetime'], basal_df['basal_delivery'])
+    bSignificantGap = [True if pd.notna(
+                        duration) and duration >= gap else False for duration in np.array(durations)]
+    basal_df['basal_delivery'] = basal_df['basal_delivery'].where(
+                        bSignificantGap, basal_df['basal_delivery'].ffill())
+    return basal_df
 
 #functions for time alignment and transformation of basal, bolus, and cgm event data. These functions can be used for any study dataset.
 def bolus_transform(bolus_data):
@@ -17,11 +48,14 @@ def bolus_transform(bolus_data):
 
     #start data from midnight
     bolus_data = bolus_data.sort_values(by='datetime').reset_index(drop=True)
+    
     #round to the nearest 5 minute value so timestamps that are close become duplicates (2:32:35 and 2:36:05 would both become 2:35:00)
     #this allows us to handle duplicates before needing to align data
     bolus_data['datetime'] = bolus_data['datetime'].dt.round("5min")
+    
     #data aligns on unix time
     bolus_data['UnixTime'] = [int(time.mktime(bolus_data.datetime[x].timetuple())) for x in bolus_data.index]
+    
     #create a new dataset of 5 minute time series data starting at midnight based on the data available
     start_date = bolus_data['datetime'].iloc[0].date()
     end_date = bolus_data['datetime'].iloc[-1].date() + timedelta(days=1)
@@ -29,34 +63,38 @@ def bolus_transform(bolus_data):
     bolus_from_mid['datetime_adj'] = pd.date_range(start = start_date, end = end_date, freq="5min").values
     bolus_from_mid['UnixTime'] = [int(time.mktime(bolus_from_mid.datetime_adj[x].timetuple())) for x in bolus_from_mid.index]
     bolus_from_mid = bolus_from_mid.drop_duplicates(subset=['UnixTime']).sort_values(by='UnixTime')
+    
     #sum boluses if there is a duplicate time (happens when two or more boluses are announces <5 minutes apart)
     #keep maximum duration of the bolus - in the rare case a standard and extended are announced int the same 5 minute window, it will be treated as an extended bolus
-    bolus_data = bolus_data.groupby('UnixTime').agg({'bolus':'sum','delivery_duration':'max','patient_id':'first'}).reset_index()
+    bolus_data = bolus_data.groupby('UnixTime').agg({'bolus':'sum','delivery_duration':'max'}).reset_index()
    
     #merge new midnight aligned times with bolus data
     bolus_merged = pd.merge_asof(bolus_from_mid, bolus_data, on="UnixTime",direction="nearest",tolerance=149)
-    bolus_data = bolus_merged.filter(items=['patient_id','datetime_adj','bolus','delivery_duration'])
-    bolus_data = bolus_data.rename(columns={"datetime_adj": "datetime",
-                                        }) 
+    bolus_data = bolus_merged.filter(items=['datetime_adj','bolus','delivery_duration'])
+    bolus_data = bolus_data.rename(columns={"datetime_adj": "datetime"}) 
+    #create empty column for extended bolus parts
+    bolus_data['extended_bolus_parts'] = np.nan
     #extended bolus handling: duration must be a timedelta for this to work
     extended_boluses = bolus_data[bolus_data.delivery_duration > timedelta(minutes=5)]
     #determine how many 5 minute steps the bolus is extended for and round to the nearst whole number step
     extended_boluses['Duration_minutes'] = extended_boluses['delivery_duration'].dt.total_seconds()/60
     extended_boluses['Duration_steps'] = extended_boluses['Duration_minutes']/5
     extended_boluses['Duration_steps'] = extended_boluses['Duration_steps'].round()
+    
     #extend the bolus out assumming an equal amount of delivery for each time step            
     for ext in extended_boluses.index:
         #devide the bolus by the number of time steps it is extended by
         bolus_parts = extended_boluses.bolus[ext]/extended_boluses.Duration_steps[ext]
         #replace bolus info with extended data
-        bolus_data.bolus.loc[ext:ext+int(extended_boluses.Duration_steps[ext])-1] = bolus_parts
-                        
-    #fill nans with 0
-    bolus_data.patient_id = bolus_data.patient_id.ffill()
-    bolus_data.patient_id = bolus_data.patient_id.bfill()
-    bolus_data = bolus_data.dropna(subset=['patient_id'])
+        bolus_data.loc[ext:ext+int(extended_boluses.Duration_steps[ext])-1, 'extended_bolus_parts'] = bolus_parts
+        #fill delivery durations to match the new extended bolus parts
+        bolus_data.loc[ext:ext+int(extended_boluses.Duration_steps[ext])-1, 'delivery_duration'] = timedelta(minutes=5)
+        # replace original bolus with 0 - prevents non-extended bolus from being overwritten
+        bolus_data.loc[ext, 'bolus'] = 0                
+    #fill nans with 0 and combine bolus and extended bolus columns back together
     bolus_data.bolus = bolus_data.bolus.fillna(0)
-
+    bolus_data.bolus = bolus_data.bolus + bolus_data.extended_bolus_parts.fillna(0)
+    bolus_data = bolus_data.drop(columns=['extended_bolus_parts'])
     return bolus_data
 
 def cgm_transform(cgm_data):
@@ -87,12 +125,9 @@ def cgm_transform(cgm_data):
     #merge new time with cgm data
     cgm_merged = pd.merge_asof(cgm_from_mid, cgm_data, on="UnixTime",direction="nearest",tolerance=149)
 
-    cgm_data = cgm_merged.filter(items=['patient_id','datetime_adj','cgm'])
-    cgm_data = cgm_data.rename(columns={"datetime_adj": "datetime",
-                                        }) 
-    cgm_data.patient_id = cgm_data.patient_id.ffill()
-    cgm_data.patient_id = cgm_data.patient_id.bfill()
-
+    cgm_data = cgm_merged.filter(items=['datetime_adj','cgm'])
+    cgm_data = cgm_data.rename(columns={"datetime_adj": "datetime"}) 
+    
     #replace not null values outside of 40-400 range with 40 or 400
     cgm_data.loc[cgm_data['cgm'] < 40, 'cgm'] = 40
     cgm_data.loc[cgm_data['cgm'] > 400, 'cgm'] = 400
@@ -125,47 +160,16 @@ def basal_transform(basal_data):
     #keep last basal rate if there is a duplicate time
     basal_data = basal_data.drop_duplicates(subset='UnixTime',keep='last')
     #merge new time with basal data
-    basal_merged = pd.merge_asof(basal_from_mid, basal_data, on="UnixTime",direction="nearest",tolerance=149)
+    basal_data = basal_data.sort_values(by='UnixTime')
+    basal_merged = pd.merge_asof(basal_from_mid, basal_data, on="UnixTime", direction="nearest", tolerance=149)
 
-    basal_data = basal_merged.filter(items=['patient_id','datetime_adj','basal_rate'])
-    basal_data = basal_data.rename(columns={"datetime_adj": "datetime",
-                                        }) 
+    basal_data = basal_merged.filter(items=['datetime_adj','basal_rate'])
+    basal_data = basal_data.rename(columns={"datetime_adj": "datetime"}) 
 
     #convert basal rate to 5 minute deliveries
     basal_data['basal_delivery'] = basal_data.basal_rate/12
-    #forward fill basal values until next new value
-    def durations_since_previous_valid_value(dates, values):
-        """
-        Calculate the durations between each date and the previous date with a valid value (non NaN).
-
-        Parameters:
-        dates (list): A list of dates.
-        values (list): A list of values.
-
-        Returns:
-        list: A list of durations between each date and the previous valid date. NaN if there is no previous valid date.
-        """
-        last_valid_date = None
-        durations = []
-        for (date, value) in zip(dates, values):
-            duration = np.NaN
-            if last_valid_date is not None:
-                duration = date - last_valid_date
-            if not np.isnan(value):
-                last_valid_date = date
-            durations.append(duration)
-        return durations
-
-    def combine_and_forward_fill(basal_df, gap=float('inf')):
-        #forward fill, but only if duration between basal values is smaller than the threshold
-        durations = durations_since_previous_valid_value(basal_df['datetime'], basal_df['basal_delivery'])    
-        bSignificantGap = [True if pd.notna(duration) and duration >= gap else False for duration in np.array(durations)]
-        basal_df['basal_delivery'] = basal_df['basal_delivery'].where(bSignificantGap, basal_df['basal_delivery'].ffill())
-        return basal_df
     
-    # basal_data.basal_delivery = basal_data.basal_delivery.ffill()
-    basal_data = combine_and_forward_fill(basal_data, gap=timedelta(hours=24))
-    basal_data.patient_id = basal_data.patient_id.ffill()
-    basal_data.patient_id = basal_data.patient_id.bfill()
-
+    # forward fill (only up to 24 hours)
+    basal_data = _combine_and_forward_fill(basal_data, gap=timedelta(hours=24))
+    
     return basal_data
