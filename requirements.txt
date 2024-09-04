@@ -1,5 +1,7 @@
 numpy==1.26.4
 pandas==2.2.2
+scipy==1.13.0
+pytest==8.2.2
 mkdocs==1.6.0
 mkdocs-material==9.5.27
 mkdocstrings-python==1.10.3
