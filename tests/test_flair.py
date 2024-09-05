@@ -145,7 +145,7 @@ def sample_data_closed_loop(tmpdir):
     return tmpdir
 
 def test_sample_data_closed_loop(sample_data_closed_loop):
-    flair = Flair(study_name="Test Study", study_path=str(sample_data_closed_loop))
+    flair = Flair(study_path=str(sample_data_closed_loop))
     flair.load_data()
 
     basal = flair.extract_basal_event_history()
@@ -173,7 +173,7 @@ def test_sample_data_closed_loop(sample_data_closed_loop):
     
 
 def test_load_data_basal_only(sample_data_dir_basal_simple):
-    flair = Flair(study_name="Test Study", study_path=str(sample_data_dir_basal_simple))
+    flair = Flair(study_path=str(sample_data_dir_basal_simple))
     flair.load_data()
 
     basal = flair.extract_basal_event_history()
