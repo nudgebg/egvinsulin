@@ -59,9 +59,9 @@ for folder in study_folders:
     save_data_as(basal_history, 'CSV', os.path.join(out_extracted, f"{run_time}-basal_history"))
 
     #transform
-    cgm_history_transformed = cgm_history.groupby('patient_id').apply(pp.cgm_transform).reset_index(drop=True)
-    bolus_history_transformed = bolus_history.groupby('patient_id').apply(pp.bolus_transform).reset_index(drop=True)
-    basal_history_transformed = basal_history.groupby('patient_id').apply(pp.basal_transform).reset_index(drop=True)
+    cgm_history_transformed = cgm_history.groupby('patient_id').apply(pp.cgm_transform, include_groups=False).reset_index(level=0)
+    bolus_history_transformed = bolus_history.groupby('patient_id').apply(pp.bolus_transform, include_groups=False).reset_index(level=0)
+    basal_history_transformed = basal_history.groupby('patient_id').apply(pp.basal_transform, include_groups=False).reset_index(level=0)
 
     #save
     out_transformed = os.path.join(out_path, folder, 'transformed')
