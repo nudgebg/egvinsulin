@@ -5,14 +5,17 @@ def validate_bolus_output_dataframe(func):
         df = func(*args, **kwargs)
         if not isinstance(df, pd.DataFrame):
             raise TypeError("Output should be a pandas DataFrame")
-        if 'datetime' not in df.columns or not pd.api.types.is_datetime64_dtype(df['datetime'].dtype):
-            raise ValueError("DataFrame should have a 'datetime' column of type pandas datetime")
-        if 'patient_id' not in df.columns or not pd.api.types.is_object_dtype(df['patient_id'].dtype) or not all(isinstance(item, str) for item in df['patient_id']):
+        required_columns = ['patient_id', 'datetime', 'bolus', 'delivery_duration']
+        if not all(col in df.columns for col in required_columns):
+            raise ValueError(f"DataFrame should have columns {required_columns} but has {df.columns}")
+        if not pd.api.types.is_datetime64_dtype(df['datetime'].dtype):
+            raise ValueError("DataFrame should have a 'datetime' column of type pandas datetime but is {df['datetime'].dtype}")
+        if not all(isinstance(item, str) for item in df['patient_id']):
             raise ValueError("DataFrame should have a 'patient_id' column of type string")
-        if 'bolus' not in df.columns or df['bolus'].dtype != 'float64':
-            raise ValueError("DataFrame should have a 'bolus' column of type float")
-        if 'delivery_duration' not in df.columns or not pd.api.types.is_timedelta64_dtype(df['delivery_duration'].dtype):
-            raise ValueError("DataFrame should have a 'delivery_duration' column of type timedelta")
+        if not pd.api.types.is_numeric_dtype(df['bolus'].dtype):
+            raise ValueError("DataFrame should have a 'bolus' column of type float but is {df['bolus'].dtype}")
+        if not pd.api.types.is_timedelta64_dtype(df['delivery_duration'].dtype):
+            raise ValueError(f"DataFrame should have a 'delivery_duration' column of type timedelta but is {df['delivery_duration'].dtype}")
         return df
     return wrapper
 
@@ -21,26 +24,30 @@ def validate_basal_output_dataframe(func):
         df = func(*args, **kwargs)
         if not isinstance(df, pd.DataFrame):
             raise TypeError("Output should be a pandas DataFrame")
-        if 'datetime' not in df.columns or not pd.api.types.is_datetime64_dtype(df['datetime'].dtype):
+        required_columns = ['patient_id', 'datetime', 'basal_rate']
+        if not all(col in df.columns for col in required_columns):
+            raise ValueError("DataFrame should have columns 'patient_id', 'datetime' and 'basal_rate'")
+        if not pd.api.types.is_datetime64_dtype(df['datetime'].dtype):
             raise ValueError("DataFrame should have a 'datetime' column of type pandas datetime")
-        if 'basal_rate' not in df.columns or df['basal_rate'].dtype != 'float64':
-            raise ValueError("DataFrame should have a 'basal_rate' column of type float")
+        if not all(isinstance(item, str) for item in df['patient_id']):
+            raise ValueError("DataFrame should have a 'patient_id' column of type string")
+        if not pd.api.types.is_numeric_dtype(df['basal_rate'].dtype):
+            raise ValueError(f"DataFrame should have a 'basal_rate' column of numeric type but is {df['basal_rate'].dtype}")
         return df
     return wrapper
 
 def validate_cgm_output_dataframe(func):
     def wrapper(*args, **kwargs):
         df = func(*args, **kwargs)
-
         if not isinstance(df, pd.DataFrame):
             raise TypeError("Output should be a pandas DataFrame")
-        if 'datetime' not in df.columns or not pd.api.types.is_datetime64_dtype(df['datetime'].dtype):
-            raise ValueError("DataFrame should have a 'datetime' column of type pandas datetime")
-        if 'patient_id' not in df.columns or not pd.api.types.is_object_dtype(df['patient_id'].dtype) or not all(isinstance(item, str) for item in df['patient_id']):
+        required_columns = ['patient_id', 'datetime', 'cgm']
+        if not all(col in df.columns for col in required_columns):
+            raise ValueError(f"DataFrame should have columns {required_columns} but has {df.columns}")
+        if not pd.api.types.is_object_dtype(df['patient_id'].dtype) or not all(isinstance(item, str) for item in df['patient_id']):
             raise ValueError("DataFrame should have a 'patient_id' column of type string")
-        if 'cgm' not in df.columns or df['cgm'].dtype != 'float64':
-            raise ValueError("DataFrame should have a 'cgm' column of type float")
-
+        if not pd.api.types.is_numeric_dtype(df['cgm'].dtype):
+            raise ValueError(f"DataFrame should have a 'cgm' column of numeric type but is {df['cgm'].dtype}")
         return df
     return wrapper
 
