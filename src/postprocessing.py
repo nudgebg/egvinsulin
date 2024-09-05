@@ -34,68 +34,55 @@ def _combine_and_forward_fill(basal_df, gap=float('inf')):
                         bSignificantGap, basal_df['basal_delivery'].ffill())
     return basal_df
 
+import pandas as pd
+import numpy as np
+from datetime import timedelta
+
+F = '1H'
+
+# Function to split the bolus into multiple deliveries
+def split_bolus(datetime, bolus, duration, sampling_frequency):
+    steps = max(1, np.ceil(duration / pd.to_timedelta(sampling_frequency)))
+    delivery_per_interval = bolus / steps
+    times = pd.date_range(start=datetime, end=datetime + duration, freq=sampling_frequency, inclusive='left')
+    deliveries = [delivery_per_interval] * len(times)
+    return {'datetime': times, 'delivery': deliveries}
+
+
 #functions for time alignment and transformation of basal, bolus, and cgm event data. These functions can be used for any study dataset.
-def bolus_transform(bolus_data):
+def bolus_transform(df):
     """
     Transform the bolus data by aligning timestamps, handling duplicates, and extending boluses based on durations.
 
     Parameters:
-    - bolus_data (DataFrame): The input is a bolus data dataframe containing columns 'patient_id, 'datetime', 'bolus', and 'delivery_duration'.
+    - bolus_data (DataFrame): The input is a bolus data dataframe containing columns 'datetime', 'bolus', and 'delivery_duration'.
 
     Returns:
-    - bolus_data (DataFrame): The transformed bolus data with aligned timestamps, duplicates removed, and extended bolus handling.
+    - bolus_data (DataFrame): 5 Minute resampled and time aligned at midnight bolus data with columns: datetime, delivery
     """
 
-    #start data from midnight
-    bolus_data = bolus_data.sort_values(by='datetime').reset_index(drop=True)
+    sampling_frequency = '5min'
+
+    expanded_rows = [split_bolus(row['datetime'], row['bolus'], row['delivery_duration'], sampling_frequency) for _, row in df.iterrows()]
     
-    #round to the nearest 5 minute value so timestamps that are close become duplicates (2:32:35 and 2:36:05 would both become 2:35:00)
-    #this allows us to handle duplicates before needing to align data
-    bolus_data['datetime'] = bolus_data['datetime'].dt.round("5min")
+    # Concatenate the lists of datetimes and deliveries
+    datetimes = np.concatenate([item['datetime'] for item in expanded_rows])
+    deliveries = np.concatenate([item['delivery'] for item in expanded_rows])
+    expanded_events = pd.DataFrame({'datetime': datetimes, 'bolus': deliveries})
     
-    #data aligns on unix time
-    bolus_data['UnixTime'] = [int(time.mktime(bolus_data.datetime[x].timetuple())) for x in bolus_data.index]
+    # Round down to the nearest floored interval
+    expanded_events['datetime'] = expanded_events['datetime'].dt.floor(sampling_frequency)
     
-    #create a new dataset of 5 minute time series data starting at midnight based on the data available
-    start_date = bolus_data['datetime'].iloc[0].date()
-    end_date = bolus_data['datetime'].iloc[-1].date() + timedelta(days=1)
-    bolus_from_mid = pd.DataFrame(columns=['datetime_adj'])
-    bolus_from_mid['datetime_adj'] = pd.date_range(start = start_date, end = end_date, freq="5min").values
-    bolus_from_mid['UnixTime'] = [int(time.mktime(bolus_from_mid.datetime_adj[x].timetuple())) for x in bolus_from_mid.index]
-    bolus_from_mid = bolus_from_mid.drop_duplicates(subset=['UnixTime']).sort_values(by='UnixTime')
+    # Sum up multiple entries for the same time
+    expanded_events = expanded_events.groupby('datetime').sum().reset_index()
     
-    #sum boluses if there is a duplicate time (happens when two or more boluses are announces <5 minutes apart)
-    #keep maximum duration of the bolus - in the rare case a standard and extended are announced int the same 5 minute window, it will be treated as an extended bolus
-    bolus_data = bolus_data.groupby('UnixTime').agg({'bolus':'sum','delivery_duration':'max'}).reset_index()
-   
-    #merge new midnight aligned times with bolus data
-    bolus_merged = pd.merge_asof(bolus_from_mid, bolus_data, on="UnixTime",direction="nearest",tolerance=149)
-    bolus_data = bolus_merged.filter(items=['datetime_adj','bolus','delivery_duration'])
-    bolus_data = bolus_data.rename(columns={"datetime_adj": "datetime"}) 
-    #create empty column for extended bolus parts
-    bolus_data['extended_bolus_parts'] = np.nan
-    #extended bolus handling: duration must be a timedelta for this to work
-    extended_boluses = bolus_data[bolus_data.delivery_duration > timedelta(minutes=5)]
-    #determine how many 5 minute steps the bolus is extended for and round to the nearst whole number step
-    extended_boluses['Duration_minutes'] = extended_boluses['delivery_duration'].dt.total_seconds()/60
-    extended_boluses['Duration_steps'] = extended_boluses['Duration_minutes']/5
-    extended_boluses['Duration_steps'] = extended_boluses['Duration_steps'].round()
+    # Resample to ensure all intervals are present
+    start_time = df['datetime'].min().floor('D')  # Starting midnight
+    end_time = (df['datetime'] + df['delivery_duration']).max().ceil('D')  # Ending at midnight next day
+    all_times = pd.date_range(start=start_time, end=end_time, freq=sampling_frequency, inclusive='left')
+    resampled_deliveries = expanded_events.set_index('datetime').reindex(all_times, fill_value=0).reset_index(drop=False, names =['datetime'])
     
-    #extend the bolus out assumming an equal amount of delivery for each time step            
-    for ext in extended_boluses.index:
-        #devide the bolus by the number of time steps it is extended by
-        bolus_parts = extended_boluses.bolus[ext]/extended_boluses.Duration_steps[ext]
-        #replace bolus info with extended data
-        bolus_data.loc[ext:ext+int(extended_boluses.Duration_steps[ext])-1, 'extended_bolus_parts'] = bolus_parts
-        #fill delivery durations to match the new extended bolus parts
-        bolus_data.loc[ext:ext+int(extended_boluses.Duration_steps[ext])-1, 'delivery_duration'] = timedelta(minutes=5)
-        # replace original bolus with 0 - prevents non-extended bolus from being overwritten
-        bolus_data.loc[ext, 'bolus'] = 0                
-    #fill nans with 0 and combine bolus and extended bolus columns back together
-    bolus_data.bolus = bolus_data.bolus.fillna(0)
-    bolus_data.bolus = bolus_data.bolus + bolus_data.extended_bolus_parts.fillna(0)
-    bolus_data = bolus_data.drop(columns=['extended_bolus_parts'])
-    return bolus_data
+    return resampled_deliveries
 
 def cgm_transform(cgm_data):
     """
