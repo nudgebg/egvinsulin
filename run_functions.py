@@ -68,15 +68,15 @@ for folder in study_folders:
     
     #data transformation: resampling to 5 minute intervals and time alignment at midnight
     cgm_history_transformed = cgm_history.groupby('patient_id').apply(pp.cgm_transform, include_groups=False).reset_index(level=0)
-    out_file = save_data_as(cgm_history_transformed, 'CSV', os.path.join(out_path_study, f"{run_time}-cgm_history"))
+    out_file = save_data_as(cgm_history_transformed, 'CSV', os.path.join(out_path_study, f"{run_time}-cgm_history-transformed"))
     logging.info(f"[x] CGM events transformed and saved to {out_file.split('/')[-1]}")
     
     bolus_history_transformed = bolus_history.groupby('patient_id').apply(pp.bolus_transform, include_groups=False).reset_index(level=0)
-    out_file = save_data_as(bolus_history_transformed, 'CSV', os.path.join(out_path_study, f"{run_time}-bolus_history"))
+    out_file = save_data_as(bolus_history_transformed, 'CSV', os.path.join(out_path_study, f"{run_time}-bolus_history-transformed"))
     logging.info(f"[x] Bolus events transformed and saved to {out_file.split('/')[-1]}")
 
     basal_history_transformed = basal_history.groupby('patient_id').apply(pp.basal_transform, include_groups=False).reset_index(level=0)
-    out_file = save_data_as(basal_history_transformed, 'CSV', os.path.join(out_path_study, f"{run_time}-basal_history"))
+    out_file = save_data_as(basal_history_transformed, 'CSV', os.path.join(out_path_study, f"{run_time}-basal_history-transformed"))
     logging.info(f"[x] Basal events transformed and saved to {out_file.split('/')[-1]}")
 
 logging.info("All studies processed.")
