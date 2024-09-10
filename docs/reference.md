@@ -3,4 +3,4 @@ an **information-oriented** approach. Use it as a
 reference for the technical implementation of the
 `bebelbetes` project code.
 
-::: cleaning_functions
+::: run_functions
