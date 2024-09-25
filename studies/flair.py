@@ -184,14 +184,17 @@ class Flair(StudyDataset):
     def get_reported_tdds(self, method='max'):
         """
         Retrieves reported total daily doses (TDDs) based on the specified method.
+        
         Parameters:
             method (str): The method to use for retrieving the TDDs. 
                 - 'max': Returns the TDD with the maximum reported value for each patient and date.
                 - 'sum': Returns the sum of all reported TDDs for each patient and date.
                 - 'latest': Returns the TDD with the latest reported datetime for each patient and date.
                 - 'all': Returns all TDDs without any grouping or filtering.
+        
         Returns:
             pandas.DataFrame: The DataFrame containing the retrieved TDDs based on the specified method.
+        
         Raises:
             ValueError: If the method is not one of: 'max', 'sum', 'latest', 'all'.
         """

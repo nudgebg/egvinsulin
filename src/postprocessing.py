@@ -3,16 +3,23 @@ import time
 from datetime import timedelta
 import numpy as np
 
+import pandas as pd
+import numpy as np
+from datetime import timedelta
+
+F = '1H'
+
+
 def _durations_since_previous_valid_value(dates, values):
     """
     Calculate the durations between each date and the previous date with a valid value (non NaN).
 
     Parameters:
-    dates (list): A list of dates.
-    values (list): A list of values.
+        dates (list): A list of dates.
+        values (list): A list of values.
 
     Returns:
-    list: A list of durations between each date and the previous valid date. NaN if there is no previous valid date.
+        list: A list of durations between each date and the previous valid date. NaN if there is no previous valid date.
     """
     last_valid_date = None
     durations = []
@@ -34,12 +41,6 @@ def _combine_and_forward_fill(basal_df, gap=float('inf')):
                         bSignificantGap, basal_df['basal_delivery'].ffill())
     return basal_df
 
-import pandas as pd
-import numpy as np
-from datetime import timedelta
-
-F = '1H'
-
 # Function to split the bolus into multiple deliveries
 def split_bolus(datetime, bolus, duration, sampling_frequency):
     steps = max(1, np.ceil(duration / pd.to_timedelta(sampling_frequency)))
@@ -55,10 +56,10 @@ def bolus_transform(df):
     Transform the bolus data by aligning timestamps, handling duplicates, and extending boluses based on durations.
 
     Parameters:
-    - bolus_data (DataFrame): The input is a bolus data dataframe containing columns 'datetime', 'bolus', and 'delivery_duration'.
+        bolus_data (DataFrame): The input is a bolus data dataframe containing columns 'datetime', 'bolus', and 'delivery_duration'.
 
     Returns:
-    - bolus_data (DataFrame): 5 Minute resampled and time aligned at midnight bolus data with columns: datetime, delivery
+        bolus_data (DataFrame): 5 Minute resampled and time aligned at midnight bolus data with columns: datetime, delivery
     """
 
     sampling_frequency = '5min'
@@ -86,13 +87,13 @@ def bolus_transform(df):
 
 def cgm_transform(cgm_data):
     """
-    time aligns the cgm data to midnight with a 5 minute sampling rate.
+    Time aligns the cgm data to midnight with a 5 minute sampling rate.
 
     Parameters:
-    - cgm_data (DataFrame): The input is a cgm data dataframe containing columns 'patient_id, 'datetime', and 'cgm'.
+        cgm_data (DataFrame): The input is a cgm data dataframe containing columns 'patient_id, 'datetime', and 'cgm'.
 
     Returns:
-    - cgm_data (DataFrame): The transformed cgm data with aligned timestamps.
+        cgm_data (DataFrame): The transformed cgm data with aligned timestamps.
     """
     #start data from midnight
     cgm_data = cgm_data.sort_values(by='datetime').reset_index(drop=True)
@@ -126,10 +127,10 @@ def basal_transform(basal_data):
     Transform the basal data by aligning timestamps and handling duplicates.
 
     Parameters:
-    - basal_data (DataFrame): The input is a basal data dataframe containing columns 'patient_id, 'datetime', and 'basal_rate'.
+        basal_data (DataFrame): The input is a basal data dataframe containing columns 'patient_id, 'datetime', and 'basal_rate'.
 
     Returns:
-    - basal_data (DataFrame): The transformed basal data with aligned timestamps and duplicates removed.
+        basal_data (DataFrame): The transformed basal equivalent deliveries with aligned timestamps and duplicates removed.
     """
     #start data from midnight
     basal_data = basal_data.sort_values(by='datetime').reset_index(drop=True)

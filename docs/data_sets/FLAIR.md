@@ -14,7 +14,7 @@ with a PID algorithm enhanced with a Fuzzy Logic algorithm.
 Fuzzy Logic) pump with the Guardian Sensor (3) continuous glucose
 monitoring sensor.
 
-## Data Description
+## Data Description:
 The study data folder is named **FLAIRPublicDataSet**
 From the DataGlossary.rtf file, the following relevant files were identified which are stored in the **Data Tables** subfolder.
 
@@ -46,32 +46,35 @@ These are csv files ("|" separator) and host many columns related to the Medtron
 * **TempBasalDur**: Temp basal duration (h:mm:ss) - The length of time for the temporary basal insulin delivery
 * **Suspend**: State "Suspend" when the pump is suspended and "Resumed" when the pump is resumed 
 
-
-**Leading Questions**: 
-* There are many adjusted datetime events `DataDtTm_adjusted` for CGM (none for Insulin). We need to understand how to factor them in.
-* How often do `NewDeviceDtTm` events happen and do we need to account fo these or is DataDtTm sufficient?
-* How often do `BasalRtUnKnown` events happen and how should we handle these?
-* Are `TempBasalAmt` reflected in the BasalRt? Is the value a rate (U/h) or depend on the `TempBasalType` (Percent/Rate)?
-* Do we have to keep track of temporary basal durations events (`TempBasalDur`) or do we get a normal basal rate at the end of the basal rate?
-* How do we know if the temp basal rate is ended earlier than programmed
-* How often does the pump suspend (`Suspend`)? Should we stop counting basal rates in this time?
-* Do suspend events stop bolus deliveries? Do we need to account for it?
-
-## Analysis of the Data
+# Analysis of the Data
 The study data was analyzed to understand which data is relevant, how it must be manipulated and interpreted in order to obtain the true delivered insulin amounts. The results are mostly based on the analysis in the jupyter notebook `understand-flair-dataset.ipynb`. Later, a second notebook was added: `understand-flair-dataset/2024-08-12 - Modularize-Flair.ipynb` that added details to TDDs and closed loop modes focusing on improving the match between reported and calcualted TDDs.
 
-## Datetimes
-* **Date time strings**: From manual inspection we know that are date time strings without time component. We treat those without as midnight (00AM). If we don't do this in two steps, the loading is extremely slow because python needs to dynamically adjust the formatter. 
-* **Adjusted CGM times:** From the analysis we know that `DataDtTm_adjusted` must be used, when it exists.
+**Leading Questions**: 
+* Do we need to track DataDtTm_adjusted or can we rely on DataDtTm?
+* How often do NewDeviceDtTm** events happen and do we need to account fo these or is DataDtTm sufficient?
+* How often do BasalRtUnKnown** events happen and how should we handle these?
+* Are TempBasalAmt reflected in the BasalRt? Is the value a rate (U/h) or depend on the TempBasalType (Percent/Rate)?
+* Do we have to keep track of temporary basal durations events (TempBasalDur) or do we get a normal basal rate at the end of the basal rate?
+* How do we know if the temp basal rate is ended earlier than programmed
+* How often does the pump suspend (Suspend)? Should we stop counting basal rates in this time?
+* Do suspend events stop bolus deliveries? Do we need to account for it?
 
-Unknowns:  
-* **Device time changes**: 684 `NewDeviceDtTm` instances. Unclear if these are reflected. These should be clarified!.
+## General Findings
+* **Temp Basal:** We have 1446 temp basal values. only 9 of these are set by insulin rate, the others are in percent. These need to be factored in.
+* **Suspend:** There are 72424 suspend events. These need to be factored in.
+* **Date Adjustments:** There are many adjusted datetime events for CGM (none for Insulin). We need to understand how to factor them in.
+* **There are 684** instances where the device time changes. Unclear if these are reflected
+
+### Datetimes
+* **Date time strings**: From manual inspection we know that are date time strings without time component. We treat those without as midnight (00AM). If we don't do this in two steps, the loading is extremely slow because python needs to dynamically adjust the formatter. 
+* Date Adjustments: We need to use the adjusted datetimes for cgm, when it exists.
+
+**Unknowns:**
+* We don't know the implications of NewDeviceDtTm. These should be clarified!
 
 ## Basal Rates
 ### Temp Basal Rates (Background)
 Medtronic allows setting temp basal percentages from 0 (shut off) to 200% (twice the basal rate)
-
-* **Temp Basal:** We have 1446 temp basal values (only 9 of these are set by insulin rate, the others are in percent). These need to be factored in.
 
 **Temp basal rates:** "The duration of the temp basal rate can range from 30 minutes to 24 hours. After the temp basal rate delivery is completed or canceled, the programmed basal pattern resumes. The temp basal rates and preset temp basal rates can be defined using either a **percentage** of the current basal pattern or by setting a *specific rate*, as described [...]"
 
@@ -114,8 +117,6 @@ To create the correct event history, we take advantage of the fact that basal ra
 
 
 ### Pump Suspends
-**Suspend:** There are 72424 suspend events. These need to be factored in.
-
 ![Suspend Events](assets/flair_suspends.png)
 * **End suspend without start:**  The very small difference is likely due to glucose suspend events that were started before the observation period. But this makes matching a little *more difficult*. We want to make sure we match the right pairs!
 * **Most users start with NORMAL_PUMPING:** For the majority of users we get a NORMAL_PUMPING event as the first Suspend event without a previous Suspend event. This could be because a) the pump was being set-up (e.g. catridge change etc.) and reported normal operation (to be verified) or b) there was a suspend event before the data collection started (unlikely because suspends are often short). 
@@ -157,13 +158,16 @@ Suspend Before / At Low will suspend basal and cancel an extended bolus.
 
 ### What we learned about SmartGuard
 * Extended bolus are not possible during closed loop mode
+* Boluses during closed loop mode are often reduced, this is likely a result of the smartguard feature.
 * pump suspsends stop basal rates
-* The analysis shows that boluses during closed loop mode are often reduced, this is likely a result of the smartguard feature (parital cancellation). So we trust the reported boluses as is. * One way to check this would be to identify boluses that overlap with a suspend event.
+* pump suspend *might* also cancel boluses (moving forward, we rely on the reported delivered bolus amounts)
 
-**Unknows**:  
- * It is yet not 100% if the reported "delivered" boluses already account for suspends (we assume the reported delivered amounts are correct)
+**Unknows**: 
+* It is yet unclear if suspend events are reflected in the "delivered" boluses (we assume the reported delivered amounts are correct)
+ * One way to check this would be to identify boluses that overlap with a suspend event.
 
-## Boluses
+
+# Boluses:
 * **Normal bolus**: provides a single immediate dose of insulin.
 * **Square Wave bolus**: delivers a single bolus evenly over an extended period of time from 30 minutes up to 8 hours.
 * **Dual Wave bolus**: delivers a combination of an immediate normal bo‐ lus followed by a Square Wave bolus.
@@ -178,12 +182,11 @@ Suspend Before / At Low will suspend basal and cancel an extended bolus.
 * When a bolus is stopped early, the shorter duration appears to be automatically reflected in the reported duration. (data based assumption)
 * We need to use the delivered over the selected bolus
 
-**Unknowns**:  
-
+**Unknowns**:
 * It remains unclear if pump suspend events impact the boluses, this should be clarified with the investigator or manufacturer
 
 
-### Bolus Duplicates
+## Bolus Duplicates
 Overall, we have 78088 duplicated bolus rows which makes 2.20% of all boluses. After the removing these, the reported and calculated TDDs move closer together. The tricky part here was that the bolus source names were different: For example some duplciated micro boluses use CLOSED_LOOP_MICRO_BOLUS while the other row uses CL_MICRO_BOLUS. Therefore, the bolus source is not used to find duplicates, only the datetime and bolus amount. After remving the duplciates, the calcualted and reported TDDs matched better:
 ![TDD after Adjusting for Close Loop Modes](assets/flair_removing_bolus_duplicates.png)
 
@@ -203,12 +206,4 @@ By only setting the basal rate to zero when a AutoModeStatus true event occurs s
 
 
 ## TDDs 
-Reported TDDs are used to test our calcualted basals and boluses. This is an excellent way to validate our approach. Other datasets don't report TDD which leaves the developer in doubt if their assumptions how to process boluses and basals are valid. Some of our initial assumptions were wrong or incomplete and TDD allowed us to fix these. In fact, some data (such as the suspends) were overlooked initially and poor TDD fits helped us locate these problems.
-
-However, reported TDDs also seem to be partially corrupt. Our analysis shows that often, multiple TDDs reported on a single day including zero values. On these days, the reported and calculated TDDs don't match at all and taking the sum or the last or maxium value still results in a poor fit. Therefore, we can't trust that reported TDDs are 100% accurate, especially on days where multiple values are reported. For testing, days with multiple TDDs should not be trusted.
-
-## Unknowns/Open Questions
- * How to handle device time changes
- * Unclear if a suspend also cancels an ongoing bolus and if this is already reflected in the data.
- * Remains unclear why some TDDs are split and show a poor fit. This also impacts trust in other reported TDDs.
-
+Reported TDDs are used to test our calcualted basals and boluses. However, we often see multiple TDDs reported on a single day including zero values. On these days, the reported and calculated TDDs don't match at all and taking the sum or the last or maxium value still results in a poor fit. Therefore, we can't trust that reported TDDs are 100% accurate, especially on days where multiple values are reported. For testing, days with multiple TDDs should not be trusted.
