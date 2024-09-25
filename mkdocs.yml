@@ -24,7 +24,6 @@ nav:
  - Babelbetes: index.md
  - How to Guides: how-to-guides.md
  - Code Reference: reference.md
- - Explanation: explanation.md
  - Data Sets: 
     - IOBP2: data_sets/IOBP2-dataset.md
     - DCLP3: data_sets/DCLP3-dataset.md
