@@ -1,5 +1,6 @@
 # The FLAIR study dataset
 
+
 ## Background information
 **Study Title**: A Crossover Study Comparing Two Automated Insulin Delivery System
 Algorithms (PID vs. PID + Fuzzy Logic) in Individuals with Type 1
@@ -20,7 +21,7 @@ From the DataGlossary.rtf file, the following relevant files were identified whi
 
 * **FLAIRDeviceCGM.txt**: List of CGM data downloaded
 * **FLAIRDevicePump.txt**: List of pump data dowloaded 
-* **PtRoster.txt**: Patient Roster
+* **PtRoster.txt***: Patient Roster
 
 These are csv files ("|" separator) and host many columns related to the Medtronic pump events and the guardian cgm. The glossary provides information about each column. While there are many columns, the following were identified as relevant.
 

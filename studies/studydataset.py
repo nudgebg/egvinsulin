@@ -103,55 +103,51 @@ class StudyDataset:
     def extract_bolus_event_history(self):
         """ Extract bolus event history from the dataset. This method does
         do type checking on the output data and should not be overriden
-        by subclasses. Instead, subclasses should implement the _extract_bolus_event_history method."""
-        return self._extract_bolus_event_history()
-
-    def _extract_bolus_event_history(self):
-        """ Extract bolus event history from the dataset.
+        by subclasses. Instead, subclasses should implement the _extract_bolus_event_history method.
+        
         Returns:
-            pd.DataFrame: A DataFrame containing the bolus event history. The DataFrame should have the following columns:
-                - patient_id: A string representing the patient ID
-                - datetime: A pandas datetime object representing the date and time of the bolus event
-                - bolus: A float representing the bolus amount in units
-                - delivery_duration: A pandas timedelta object representing the duration of the bolus delivery.
+            bolus_events (pd.DataFrame): A DataFrame containing the bolus event history. The DataFrame should have the following columns:
+
+                - `patient_id`: A string representing the patient ID
+                - `datetime`: A pandas datetime object representing the date and time of the bolus event
+                - `bolus`: A float representing the bolus amount in units
+                - `delivery_duration`: A pandas timedelta object representing the duration of the bolus delivery.
                 For standard boluses the delivery duration is 0 seconds, for extended boluses,
                 these are the duration of the extended delivery.
         """
-        pass
+        return self._extract_bolus_event_history()
+
 
     @validate_basal_output_dataframe
     def extract_basal_event_history(self):
-        """ Extract basal event history from the dataset. This method does
-                do type checking on the output data and should not be overriden
-                by subclasses. Instead, subclasses should implement
-                the _extract_basal_event_history method."""
+        """ Extract basal event history from the dataset. 
+        This method does do type checking on the output data and should not be overriden by subclasses. 
+        Instead, subclasses should implement the _extract_basal_event_history method.
+                
+        Returns:
+            basal_event_history (pd.DataFrame): A DataFrame containing the basal event history. The DataFrame should have the following columns:
+
+                - `patient_id`: A string representing the patient ID
+                - `datetime`: A pandas datetime object representing the date and time of the basal event
+                - `basal_rate`: A float representing the basal rate in units per hour
+        """
         return self._extract_basal_event_history()
         pass
 
-    def _extract_basal_event_history(self):
-        """ Extract basal event history from the dataset.
-        Returns:
-            pd.DataFrame: A DataFrame containing the basal event history. The DataFrame should have the following columns:
-                - patient_id: A string representing the patient ID
-                - datetime: A pandas datetime object representing the date and time of the basal event
-                - basal_rate: A float representing the basal rate in units per hour
-        """
-        pass
-
+    
     @validate_cgm_output_dataframe
     def extract_cgm_history(self):
         """ Extract cgm measurements from the dataset. This method does
         do type checking on the output data and should not be overriden
-        by subclasses. Instead, subclasses should implement the _extract_cgm_history method."""
-        return self._extract_cgm_history()
-        pass
-
-    def _extract_cgm_history(self):
-        """ Extract the cgm measurements from the dataset.
+        by subclasses. Instead, subclasses should implement the _extract_cgm_history method.
+        
         Returns:
-            pd.DataFrame: A DataFrame containing the cgm measurements. The DataFrame should have the following columns:
-                - patient_id: A string representing the patient ID
-                - datetime: A pandas datetime object representing the date and time of the cgm measurement
-                - cgm: A float representing the cgm value in mg/dL
+            cgm_measurements (pd.DataFrame): A DataFrame containing the cgm measurements. The DataFrame should have the following columns:
+
+                - `patient_id`: A string representing the patient ID
+                - `datetime`: A pandas datetime object representing the date and time of the cgm measurement
+                - `cgm`: A float representing the cgm value in mg/dL
+        
         """
+        return self._extract_cgm_history()
         pass

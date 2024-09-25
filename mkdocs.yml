@@ -1,27 +1,29 @@
 site_name: Babelbetes
 
 theme:
-  name: "material"
+  name: material
+
+markdown_extensions:
+  - pymdownx.snippets:
+      base_path: ["."]  # Relative to the current Markdown file
 
 plugins:
 - mkdocstrings:
     handlers:
       python:
         options:
-          heading_level: 2
+          show_source: true
+          heading_level: 3
           show_root_heading: true
-          show_root_toc_entry: true
           show_root_full_path: true
           show_symbol_type_heading: true
           show_symbol_type_toc: true
-
- 
+          show_submodules: true
+          
 nav:
  - Babelbetes: index.md
  - How to Guides: how-to-guides.md
- - Tutorials: tutorials.md
  - Code Reference: reference.md
- - Explanation: explanation.md
  - Data Sets: 
     - IOBP2: data_sets/IOBP2-dataset.md
     - DCLP3: data_sets/DCLP3-dataset.md
