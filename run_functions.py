@@ -75,6 +75,8 @@ For each study, the following files are saved in the `data/out/<study-name>/` fo
 import os
 from studies.iobp2 import IOBP2StudyData
 from studies.flair import Flair
+from studies.pedap import PEDAP
+
 import src.postprocessing as pp
 from src.save_data_as import save_data_as
 import logging
@@ -104,10 +106,11 @@ logging.info(f"Looking for study folders in {in_path} and saving results to {out
 
 #define how folders are identified and processed
 patterns = {'IOBP2 RCT Public Dataset': IOBP2StudyData,
-            'FLAIRPublicDataSet': Flair}
-study_folders = [f for f in os.listdir(in_path) if os.path.isdir(os.path.join(in_path, f))]
+            'FLAIRPublicDataSet': Flair,
+            'PEDAP Public Dataset - Release 3 - 2024-09-25': PEDAP}
 
 # Filter and log folders that cannot be matched
+study_folders = [f for f in os.listdir(in_path) if os.path.isdir(os.path.join(in_path, f))]
 unmatched_folders = []
 matched_folders = []
 
@@ -121,16 +124,14 @@ for folder in study_folders:
     if study_class is None:
         unmatched_folders.append(folder)
 
-# Log matched/unmatched folders
 if unmatched_folders:
     logging.warning(f"The folders '{unmatched_folders}' are not recognized as a supported studies. \n Did you accidentally rename them? \n Please check the documentation for supported studies.")
 if not matched_folders:
     logging.error("No supported studies found in the data/raw folder. Exiting.")
     exit()
 
-logging.info(f"Start processing supported study folders: {[folder for folder, _ in matched_folders]}")
-
 # Process matched folders with progress indicators
+logging.info(f"Start processing supported study folders: {[folder for folder, _ in matched_folders]}")
 with tqdm(total=len(matched_folders)*6, desc=f"{study_class.__name__}", bar_format='Step {n_fmt}/{total_fmt} [{desc}]:|{bar}', unit="step", leave=False) as progress:
   for folder, study_class in matched_folders:
       tqdm.write(f"[{current_time()}] Processing {folder} ...")
