@@ -168,7 +168,7 @@ class Flair(StudyDataset):
                 - 'all': Returns all TDDs without any grouping or filtering.
         
         Returns:
-            pandas.DataFrame: The DataFrame containing the retrieved TDDs based on the specified method.
+            (pd.DataFrame): The DataFrame containing the retrieved TDDs based on the specified method.
         
         Raises:
             ValueError: If the method is not one of: 'max', 'sum', 'latest', 'all'.
