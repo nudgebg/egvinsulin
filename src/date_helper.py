@@ -13,13 +13,13 @@ def parse_flair_dates(dates):
     dates_copy = dates.copy()
     dates_copy.loc[only_date] = pd.to_datetime(dates.loc[only_date], format='%m/%d/%Y')
     dates_copy.loc[~only_date] = pd.to_datetime(dates.loc[~only_date], format='%m/%d/%Y %I:%M:%S %p')
-    return dates_copy
+    return dates_copy.astype('datetime64[ns]')
 
 def convert_duration_to_timedelta(duration):
     """
     Parse a duration string in the format "hours:minutes:seconds" and return a timedelta object.
     Args:
-        duration_str (str): The duration string to parse.
+        duration_str (str): The duration string to parse in the form of "hours:minutes:seconds".
     Returns:
         timedelta: A timedelta object representing the parsed duration.
     """
