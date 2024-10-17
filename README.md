@@ -19,14 +19,14 @@ https://public.jaeb.org/datasets/diabetes
 
 ### Setup Python
 * Make sure you have python version > 3.X installed.
-* We recommend using a python virtual environment (see [Python setup instructions](/python-setup))
+* We recommend using a python virtual environment (see [Python setup instructions](python-setup.md))
 
 ### Install Bebelbetes
 1. **Clone the repository:**
     ```sh
     git clone git@github.com:nudgebg/egvinsulin.git
     ```
-2. Install all dependencies (we recommend using a python virtual environment (see [Python setup instructions](/python-setup))
+2. Install all dependencies (we recommend using a python virtual environment (see [Python setup instructions](python-setup.md))
 * In your terminal, navigate to the repository
 * (Optional) activate your python virtual environment 
 * Run this command to install all packages required by bebelbetes

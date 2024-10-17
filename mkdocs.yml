@@ -1,18 +1,54 @@
 site_name: Babelbetes
 
-theme:
-  name: material
+theme: material
 
 markdown_extensions:
   - pymdownx.snippets:
       base_path: ["."]  # Relative to the current Markdown file
 
 plugins:
+- with-pdf:
+    author: nudgebg
+    copyright: This software is dedicated to the public domain. You can freely copy, modify, publish, use, distribute, sell, and sublicense this software, either in source code or in binary form, without warranty or limitation of liability.
+      #cover_subtitle: Project Documentation 
+        #
+        #cover: false
+        #back_cover: true
+        #cover_title: TITLE TEXT
+        #custom_template_path: TEMPLATES PATH
+        #
+        #toc_title: TOC TITLE TEXT
+        #heading_shift: false
+        #toc_level: 3
+        #ordered_chapter_level: 2
+        #excludes_children:
+        #    - 'release-notes/:upgrading'
+        #    - 'release-notes/:changelog'
+        #
+        #exclude_pages:
+        #    - 'bugs/'
+        #    - 'appendix/contribute/'
+        #convert_iframe:
+        #    - src: IFRAME SRC
+        #      img: POSTER IMAGE URL
+        #      text: ALTERNATE TEXT
+        #    - src: ...
+        #two_columns_level: 3
+        #
+        #render_js: true
+        #headless_chrome_path: headless-chromium
+        #
+        #output_path: any-place/document.pdf
+        #enabled_if_env: ENABLE_PDF_EXPORT
+        #
+        #debug_html: true
+        #show_anchors: true
+        #verbose: true
 - mkdocstrings:
     handlers:
       python:
         options:
-          show_source: true
+          show_source: false
           heading_level: 3
           show_root_heading: true
           show_root_full_path: true
@@ -22,7 +58,9 @@ plugins:
           
 nav:
  - Babelbetes: index.md
- - How to Guides: how-to-guides.md
+ - How to Guides:
+    - README: how-to-guides.md
+    - Python Setup: python-setup.md
  - Code Reference: reference.md
  - Data Sets: 
     - IOBP2: data_sets/IOBP2-dataset.md

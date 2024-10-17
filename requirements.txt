@@ -7,3 +7,4 @@ mkdocs-material==9.5.36
 mkdocstrings-python==1.11.1
 pymdown-extensions==10.8.1
 tqdm==4.66.5
+mkdocs-with-pdf==0.9.3

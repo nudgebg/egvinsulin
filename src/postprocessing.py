@@ -56,7 +56,7 @@ def bolus_transform(df):
     Transform the bolus data by aligning timestamps, handling duplicates, and extending boluses based on durations.
 
     Parameters:
-        bolus_data (DataFrame): The input is a bolus data dataframe containing columns 'datetime', 'bolus', and 'delivery_duration'.
+        df (DataFrame): The input is a bolus data dataframe containing columns 'datetime', 'bolus', and 'delivery_duration'.
 
     Returns:
         bolus_data (DataFrame): 5 Minute resampled and time aligned at midnight bolus data with columns: datetime, delivery
