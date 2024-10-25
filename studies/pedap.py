@@ -53,13 +53,14 @@ class PEDAP(StudyDataset):
     def _extract_bolus_event_history(self):
         # keep only tandem patients (having data in all 3 datasets)
         temp = self.df_bolus[['PtID', 'DeviceDtTm', 'BolusAmount', 'Duration']].astype({'PtID':str}).copy()
+
+        #force datetime, needed for vectorized operations and to pass the data set validaiton
+        temp['DeviceDtTm'] = pd.to_datetime(temp.DeviceDtTm)
+
         # convert to adjust start delivery times (only affects extended boluses)
         temp['Duration'] = pd.to_timedelta(self.df_bolus.Duration, unit='m')
         temp['DeviceDtTm'] = temp.DeviceDtTm - temp.Duration
         
-        #to pass the data set validaiton
-        temp['DeviceDtTm'] = pd.to_datetime(temp.DeviceDtTm)
-
         temp = temp.rename(columns={'PtID': 'patient_id', 'DeviceDtTm': 'datetime',
                            'BolusAmount': 'bolus', 'Duration': 'delivery_duration'})
         return temp.copy()
