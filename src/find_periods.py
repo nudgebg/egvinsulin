@@ -43,7 +43,6 @@ def find_periods(df, value_col, time_col, start_trigger_fun, stop_trigger_fun,
     
     # Iterate through the DataFrame rows to find periods
     for index, row in df.iterrows():
-        print(index)
         if start_trigger_fun(row[value_col]) and ((start_index is None) or use_last_start_occurence):
             start_index = index
             start_time = row[time_col]

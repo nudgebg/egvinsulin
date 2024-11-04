@@ -76,6 +76,7 @@ import os
 from studies.iobp2 import IOBP2StudyData
 from studies.flair import Flair
 from studies.pedap import PEDAP
+from studies.dclp3 import DCLP3
 
 import src.postprocessing as pp
 from src.save_data_as import save_data_as
@@ -107,7 +108,8 @@ logging.info(f"Looking for study folders in {in_path} and saving results to {out
 #define how folders are identified and processed
 patterns = {'IOBP2 RCT Public Dataset': IOBP2StudyData,
             'FLAIRPublicDataSet': Flair,
-            'PEDAP Public Dataset - Release 3 - 2024-09-25': PEDAP}
+            'PEDAP Public Dataset - Release 3 - 2024-09-25': PEDAP,
+            'DCLP3 Public Dataset - Release 3 - 2022-08-04': DCLP3}
 
 # Filter and log folders that cannot be matched
 study_folders = [f for f in os.listdir(in_path) if os.path.isdir(os.path.join(in_path, f))]
