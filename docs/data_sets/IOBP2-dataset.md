@@ -22,6 +22,8 @@ These are text files ("|" separator) and host many columns related to the iLet p
 - **PtID**: Patient ID
 - **DeviceDtTm**: Local date and time on the device
 - **CGMVal**: CGM glucose value. Valid CGM values range from 39-401 mg/dl. Anything outside of this range or missing values are marked by a -1
+TODO: Confirm/Check for CGM Magic Numbers
+
 - **BasalDelivPrev**: Delivered basal dose (U) of the prior executed step 
 - **BolusDelivPrev**: Delivered bolus dose (U) of the prior executed step 
 - **MealBolusDelivPrev**: Delivered meal bolus dose (U) of the prior executed step 
