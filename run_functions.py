@@ -76,7 +76,7 @@ import os
 from studies.iobp2 import IOBP2StudyData
 from studies.flair import Flair
 from studies.pedap import PEDAP
-from studies.dclp3 import DCLP3
+from studies.dclp import DCLP3
 
 import src.postprocessing as pp
 from src.save_data_as import save_data_as

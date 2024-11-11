@@ -8,4 +8,5 @@ reference for the technical implementation of the
 ::: studies.studydataset
 ::: studies.iobp2.IOBP2StudyData
 ::: studies.flair.Flair
-    
+::: studies.dclp.DCLP3
+::: studies.pedap.PEDAP
