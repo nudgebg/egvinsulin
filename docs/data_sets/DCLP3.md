@@ -67,7 +67,7 @@ We see that
 
 As the data glossary mentions, record duplicates are expected and should be ignored (data comes from multiple sources). Further, we see that the number of duplicates is almost negligible (only CGM is of interest). On inspection we see that CGM duplicates are almost identical:  
 
-![alt text](image-4.png)
+![alt text](assets/dclp3-cgm-duplicates.png)
 
 We deal with duplicates as follows:  
 * Basal: Taking the maximum value (we see some zero values)
@@ -93,8 +93,8 @@ The glossary mentions that these changes are made by JAEB. We want to make sure 
 
 We verified this by taking samples and checking how the cgm data moved as well as analyzing summary statistics on the distance between datetimes which reduced when using the `DataDtTm_adjusted` over `DataDtTm` when available.
 
-![alt text](image.png)
-![alt text](image-1.png)
+![alt text](assets/dclp3-gaps-after-datetimeadjustments2.png)
+![alt text](assets/dclp3-gaps-after-datetimeadjustments.png)
 
 In conclusion this confirms that using `DataDtTm_adjusted` over `DataDtTm` when available moves the data in the right spot (see blue cgm traces compared to the red ones) and reduces the variation in time differences. 
 
@@ -104,7 +104,7 @@ We want to make sure that datetimes of all datasets are in the same datetime and
 
 The DCLP3 data glossary makes no mention of UTC, timezone or zone and all datetime variables are described as local times. We verified by checking the distribution of mean CGM, basal rates and bolus doses to verify we see postprandial peaks in the morning, afternoon and evening as well as more stable glucose during the night.
 
-![alt text](image-2.png)
+![alt text](assets/dclp3-daily-patterns.png)
 
 We see bolus peaks at around 7 oClock, noon and evening. Slightly delayed we see postprandial glucose peaks as expected. Bassal rates follow normal rhythm with the exception that due to Control IQ basal rates slowly degreade over night, to lower glucose after dinner as part of the closed loop control. From this we can safely assume that all datetimes are in local time. 
 
@@ -149,7 +149,7 @@ Comparing the CDFs we see that, while different, PEDPA and DCLP3 show similar tr
 
 | PEDAP | DCLP3 |
 |-|-|
-| ![PEDAP](image-7.png)|![DCLP3](image-5.png) |
+| ![PEDAP](assets/pedap-duration-cdf.png)|![DCLP3](assets/dclp3-duration-cdf.png) |
 
 
 ## Basal Rates
