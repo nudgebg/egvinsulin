@@ -154,6 +154,8 @@ class Flair(StudyDataset):
                                 'datetime': datetime,
                                 'cgm': self.df_cgm['CGM']})
             self.cgms = temp
+            #TODO: check for magic number cgms and out of range values
+            
         return self.cgms
 
     def get_reported_tdds(self, method='max'):

@@ -64,7 +64,7 @@ nav:
  - Code Reference: reference.md
  - Data Sets: 
     - IOBP2: data_sets/IOBP2-dataset.md
-    - DCLP3: data_sets/DCLP3-dataset.md
+    - DCLP3: data_sets/DCLP3.md
     - DCLP5: data_sets/DCLP5-dataset.md
     - PEDAP: data_sets/PEDAP-dataset.md
     - FLAIR: data_sets/FLAIR.md

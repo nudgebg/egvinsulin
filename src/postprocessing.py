@@ -155,7 +155,7 @@ def basal_transform(basal_data):
     basal_data = basal_data.rename(columns={"datetime_adj": "datetime"}) 
 
     #convert basal rate to 5 minute deliveries
-    basal_data['basal_delivery'] = basal_data.basal_rate/12
+    basal_data = basal_data.assign(basal_delivery = basal_data.basal_rate/12).drop(columns='basal_rate')
     
     # forward fill (only up to 24 hours)
     basal_data = _combine_and_forward_fill(basal_data, gap=timedelta(hours=24))
