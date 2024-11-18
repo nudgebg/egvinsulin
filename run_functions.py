@@ -76,7 +76,7 @@ import os
 from studies.iobp2 import IOBP2StudyData
 from studies.flair import Flair
 from studies.pedap import PEDAP
-from studies.dclp import DCLP3
+from studies.dclp import DCLP3, DCLP5
 
 import src.postprocessing as pp
 from src.save_data_as import save_data_as
@@ -109,7 +109,8 @@ logging.info(f"Looking for study folders in {in_path} and saving results to {out
 patterns = {'IOBP2 RCT Public Dataset': IOBP2StudyData,
             'FLAIRPublicDataSet': Flair,
             'PEDAP Public Dataset - Release 3 - 2024-09-25': PEDAP,
-            'DCLP3 Public Dataset - Release 3 - 2022-08-04': DCLP3}
+            'DCLP3 Public Dataset - Release 3 - 2022-08-04': DCLP3,
+            'DCLP5_Dataset_2022-01-20-5e0f3b16-c890-4ace-9e3b-531f3687cf53': DCLP5}
 
 # Filter and log folders that cannot be matched
 study_folders = [f for f in os.listdir(in_path) if os.path.isdir(os.path.join(in_path, f))]
@@ -134,7 +135,7 @@ if not matched_folders:
 
 # Process matched folders with progress indicators
 logging.info(f"Start processing supported study folders: {[folder for folder, _ in matched_folders]}")
-with tqdm(total=len(matched_folders)*6, desc=f"{study_class.__name__}", bar_format='Step {n_fmt}/{total_fmt} [{desc}]:|{bar}', unit="step", leave=False) as progress:
+with tqdm(total=len(matched_folders)*6, desc=f"", bar_format='Step {n_fmt}/{total_fmt} [{desc}]:|{bar}', unit="step", leave=False) as progress:
   for folder, study_class in matched_folders:
       tqdm.write(f"[{current_time()}] Processing {folder} ...")
 
@@ -158,10 +159,10 @@ with tqdm(total=len(matched_folders)*6, desc=f"{study_class.__name__}", bar_form
       tqdm.write(f"[{current_time()}] [x] Boluses extracted: {out_file_path.split('/')[-1]}")
       progress.update(1)
 
-      progress.set_description_str(f"{study_class.__name__}: Resampling boluses")
-      bolus_history_transformed = bolus_history.groupby('patient_id').apply(pp.bolus_transform, include_groups=False).reset_index(level=0)
-      out_file = save_data_as(bolus_history_transformed, 'CSV', os.path.join(out_path_study, f"bolus_history-transformed"))
-      tqdm.write(f"[{current_time()}] [x] Boluses resampled: {out_file.split('/')[-1]}")
+      #progress.set_description_str(f"{study_class.__name__}: Resampling boluses")
+      #bolus_history_transformed = bolus_history.groupby('patient_id').apply(pp.bolus_transform, include_groups=False).reset_index(level=0)
+      #out_file = save_data_as(bolus_history_transformed, 'CSV', os.path.join(out_path_study, f"bolus_history-transformed"))
+      #tqdm.write(f"[{current_time()}] [x] Boluses resampled: {out_file.split('/')[-1]}")
       progress.update(1)
 
       progress.set_description_str(f"{study_class.__name__}: Extracting basals")
@@ -170,10 +171,10 @@ with tqdm(total=len(matched_folders)*6, desc=f"{study_class.__name__}", bar_form
       tqdm.write(f"[{current_time()}] [x] Basal events extracted: {out_file_path.split('/')[-1]}")
       progress.update(1)
 
-      progress.set_description_str(f"{study_class.__name__}: Resampling basals")
-      basal_history_transformed = basal_history.groupby('patient_id').apply(pp.basal_transform, include_groups=False).reset_index(level=0)
-      out_file = save_data_as(basal_history_transformed, 'CSV', os.path.join(out_path_study, f"basal_history-transformed"))
-      tqdm.write(f"[{current_time()}] [x] Basal events resampled: {out_file.split('/')[-1]}")
+      #progress.set_description_str(f"{study_class.__name__}: Resampling basals")
+      #basal_history_transformed = basal_history.groupby('patient_id').apply(pp.basal_transform, include_groups=False).reset_index(level=0)
+      #out_file = save_data_as(basal_history_transformed, 'CSV', os.path.join(out_path_study, f"basal_history-transformed"))
+      #tqdm.write(f"[{current_time()}] [x] Basal events resampled: {out_file.split('/')[-1]}")
       progress.update(1)
 
       progress.set_description_str(f"{study_class.__name__}: Extracting glucose")
@@ -182,10 +183,10 @@ with tqdm(total=len(matched_folders)*6, desc=f"{study_class.__name__}", bar_form
       tqdm.write(f"[{current_time()}] [x] CGM extracted: {out_file_path.split('/')[-1]}")
       progress.update(1)
 
-      progress.set_description_str(f"{study_class.__name__}: Resampling glucose")
-      cgm_history_transformed = cgm_history.groupby('patient_id').apply(pp.cgm_transform, include_groups=False).reset_index(level=0)
-      out_file = save_data_as(cgm_history_transformed, 'CSV', os.path.join(out_path_study, f"cgm_history-transformed"))
-      tqdm.write(f"[{current_time()}] [x] CGM resampled: {out_file.split('/')[-1]}")
+      #progress.set_description_str(f"{study_class.__name__}: Resampling glucose")
+      #cgm_history_transformed = cgm_history.groupby('patient_id').apply(pp.cgm_transform, include_groups=False).reset_index(level=0)
+      #out_file = save_data_as(cgm_history_transformed, 'CSV', os.path.join(out_path_study, f"cgm_history-transformed"))
+      #tqdm.write(f"[{current_time()}] [x] CGM resampled: {out_file.split('/')[-1]}")
       progress.update(1)
       tqdm.write("")
 
