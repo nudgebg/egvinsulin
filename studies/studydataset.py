@@ -52,13 +52,6 @@ def validate_cgm_output_dataframe(func):
     return wrapper
 
 
-def validate_load_data(func):
-    def wrapper(self, *args, **kwargs):
-        func(self, *args, **kwargs)
-        if self.df is None:
-            raise ValueError(f"{func.__name__} did not assign a value to the 'df' member variable")
-    return wrapper
-
 class StudyDataset:
     """
     The `StudyDataset` class is designed to handle and validate data related to a medical study.
@@ -94,10 +87,24 @@ class StudyDataset:
     def __init__(self, study_path, study_name):
         self.study_path = study_path
         self.study_name = study_name
+        self.bolus_event_history = None
+        self.basal_event_history = None
+        self.cgm_history = None
+        self.data_loaded = False
 
-    @validate_load_data
+    def _load_data(self):
+        raise NotImplementedError("Subclasses should implement the _load_data method")
+    def _extract_bolus_event_history(self):
+        raise NotImplementedError("Subclasses should implement the _extract_bolus_event_history method")
+    def _extract_basal_event_history(self):
+        raise NotImplementedError("Subclasses should implement the _extract_basal_event_history method")
+    def _extract_cgm_history(self):
+        raise NotImplementedError("Subclasses should implement the _extract_cgm_history method")
+    
     def load_data(self):
-        raise NotImplementedError
+        if not self.data_loaded:
+            self._load_data()
+            self.data_loaded = True
 
     @validate_bolus_output_dataframe
     def extract_bolus_event_history(self):
@@ -115,8 +122,10 @@ class StudyDataset:
                 For standard boluses the delivery duration is 0 seconds, for extended boluses,
                 these are the duration of the extended delivery.
         """
-        return self._extract_bolus_event_history()
-
+        if self.bolus_event_history is None:
+            self.load_data()
+            self.bolus_event_history = self._extract_bolus_event_history()
+        return self.bolus_event_history
 
     @validate_basal_output_dataframe
     def extract_basal_event_history(self):
@@ -131,8 +140,10 @@ class StudyDataset:
                 - `datetime`: A pandas datetime object representing the date and time of the basal event
                 - `basal_rate`: A float representing the basal rate in units per hour
         """
-        return self._extract_basal_event_history()
-        pass
+        if self.basal_event_history is None:
+            self.load_data()
+            self.basal_event_history = self._extract_basal_event_history()
+        return self.basal_event_history
 
     
     @validate_cgm_output_dataframe
@@ -149,5 +160,7 @@ class StudyDataset:
                 - `cgm`: A float representing the cgm value in mg/dL
         
         """
-        return self._extract_cgm_history()
-        pass
+        if self.cgm_history is None:
+            self.load_data()
+            self.cgm_history = self._extract_cgm_history()
+        return self.cgm_history

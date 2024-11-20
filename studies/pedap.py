@@ -4,7 +4,7 @@ import pandas as pd
 from src.date_helper import parse_flair_dates
 
 class PEDAP(StudyDataset):
-    def load_data(self):
+    def _load_data(self):
         data_table_path = os.path.join(self.study_path, 'Data Files')
 
         df_bolus = pd.read_csv(os.path.join(data_table_path, 'PEDAPTandemBOLUSDELIVERED.txt'), sep="|", 
@@ -35,8 +35,6 @@ class PEDAP(StudyDataset):
         df_basal['DeviceDtTm'] = parse_flair_dates(df_basal['DeviceDtTm'])
         df_cgm['DeviceDtTm'] = parse_flair_dates(df_cgm['DeviceDtTm'])
 
-        #df_patient = pd.read_csv(os.path.join(data_table_path, 'PtRoster.txt'), sep="|")
-    
         self.df_bolus = df_bolus
         self.df_basal = df_basal
         self.df_cgm = df_cgm

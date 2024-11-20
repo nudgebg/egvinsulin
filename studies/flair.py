@@ -89,7 +89,7 @@ class Flair(StudyDataset):
         if not os.path.exists(self.cgm_file):
             raise FileNotFoundError(f"File not found: {self.study_path}")
 
-    def load_data(self) -> tuple[pd.DataFrame, pd.DataFrame]:
+    def _load_data(self) -> tuple[pd.DataFrame, pd.DataFrame]:
         if self.df_pump is None and self.df_cgm is None:
             df_cgm = pd.read_csv(self.cgm_file, sep="|", low_memory=False, usecols=['PtID', 'DataDtTm', 'DataDtTm_adjusted', 'CGM'])
             df_cgm['DateTime'] = df_cgm.loc[df_cgm.DataDtTm.notna(), 'DataDtTm'].transform(parse_flair_dates).astype('datetime64[ns]')
@@ -106,7 +106,6 @@ class Flair(StudyDataset):
             #to datetime required because otherwise pandas provides a Object type which will fail the studydataset validation
             df_pump['DateTime'] = pd.to_datetime(df_pump['DateTime'])
             self.df_pump = df_pump.sort_values('DateTime')
-        return self.df_cgm, self.df_pump
     
     def _extract_bolus_event_history(self):
         if self.boluses is None:

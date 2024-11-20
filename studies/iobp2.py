@@ -14,7 +14,7 @@ class IOBP2StudyData(StudyDataset):
         if not os.path.exists(self.iletFilePath):
             raise FileNotFoundError(f"File not found: {self.iletFilePath}")
     
-    def load_data(self) -> pd.DataFrame:
+    def _load_data(self) -> pd.DataFrame:
         
         self.df = pd.read_csv(self.iletFilePath, sep="|", low_memory=False,
                usecols=['PtID', 'DeviceDtTm', 'CGMVal', 'BasalDelivPrev',
