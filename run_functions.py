@@ -159,10 +159,10 @@ with tqdm(total=len(matched_folders)*6, desc=f"", bar_format='Step {n_fmt}/{tota
       tqdm.write(f"[{current_time()}] [x] Boluses extracted: {out_file_path.split('/')[-1]}")
       progress.update(1)
 
-      #progress.set_description_str(f"{study_class.__name__}: Resampling boluses")
-      #bolus_history_transformed = bolus_history.groupby('patient_id').apply(pp.bolus_transform, include_groups=False).reset_index(level=0)
-      #out_file = save_data_as(bolus_history_transformed, 'CSV', os.path.join(out_path_study, f"bolus_history-transformed"))
-      #tqdm.write(f"[{current_time()}] [x] Boluses resampled: {out_file.split('/')[-1]}")
+      progress.set_description_str(f"{study_class.__name__}: Resampling boluses")
+      bolus_history_transformed = bolus_history.groupby('patient_id').apply(pp.bolus_transform, include_groups=False).reset_index(level=0)
+      out_file = save_data_as(bolus_history_transformed, 'CSV', os.path.join(out_path_study, f"bolus_history-transformed"))
+      tqdm.write(f"[{current_time()}] [x] Boluses resampled: {out_file.split('/')[-1]}")
       progress.update(1)
 
       progress.set_description_str(f"{study_class.__name__}: Extracting basals")
@@ -171,10 +171,10 @@ with tqdm(total=len(matched_folders)*6, desc=f"", bar_format='Step {n_fmt}/{tota
       tqdm.write(f"[{current_time()}] [x] Basal events extracted: {out_file_path.split('/')[-1]}")
       progress.update(1)
 
-      #progress.set_description_str(f"{study_class.__name__}: Resampling basals")
-      #basal_history_transformed = basal_history.groupby('patient_id').apply(pp.basal_transform, include_groups=False).reset_index(level=0)
-      #out_file = save_data_as(basal_history_transformed, 'CSV', os.path.join(out_path_study, f"basal_history-transformed"))
-      #tqdm.write(f"[{current_time()}] [x] Basal events resampled: {out_file.split('/')[-1]}")
+      progress.set_description_str(f"{study_class.__name__}: Resampling basals")
+      basal_history_transformed = basal_history.groupby('patient_id').apply(pp.basal_transform, include_groups=False).reset_index(level=0)
+      out_file = save_data_as(basal_history_transformed, 'CSV', os.path.join(out_path_study, f"basal_history-transformed"))
+      tqdm.write(f"[{current_time()}] [x] Basal events resampled: {out_file.split('/')[-1]}")
       progress.update(1)
 
       progress.set_description_str(f"{study_class.__name__}: Extracting glucose")
@@ -183,10 +183,10 @@ with tqdm(total=len(matched_folders)*6, desc=f"", bar_format='Step {n_fmt}/{tota
       tqdm.write(f"[{current_time()}] [x] CGM extracted: {out_file_path.split('/')[-1]}")
       progress.update(1)
 
-      #progress.set_description_str(f"{study_class.__name__}: Resampling glucose")
-      #cgm_history_transformed = cgm_history.groupby('patient_id').apply(pp.cgm_transform, include_groups=False).reset_index(level=0)
-      #out_file = save_data_as(cgm_history_transformed, 'CSV', os.path.join(out_path_study, f"cgm_history-transformed"))
-      #tqdm.write(f"[{current_time()}] [x] CGM resampled: {out_file.split('/')[-1]}")
+      progress.set_description_str(f"{study_class.__name__}: Resampling glucose")
+      cgm_history_transformed = cgm_history.groupby('patient_id').apply(pp.cgm_transform, include_groups=False).reset_index(level=0)
+      out_file = save_data_as(cgm_history_transformed, 'CSV', os.path.join(out_path_study, f"cgm_history-transformed"))
+      tqdm.write(f"[{current_time()}] [x] CGM resampled: {out_file.split('/')[-1]}")
       progress.update(1)
       tqdm.write("")
 
