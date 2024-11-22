@@ -89,9 +89,11 @@ class Flair(StudyDataset):
         if not os.path.exists(self.cgm_file):
             raise FileNotFoundError(f"File not found: {self.study_path}")
 
-    def _load_data(self) -> tuple[pd.DataFrame, pd.DataFrame]:
+    def _load_data(self, subset) -> tuple[pd.DataFrame, pd.DataFrame]:
+        
         if self.df_pump is None and self.df_cgm is None:
-            df_cgm = pd.read_csv(self.cgm_file, sep="|", low_memory=False, usecols=['PtID', 'DataDtTm', 'DataDtTm_adjusted', 'CGM'])
+            df_cgm = pd.read_csv(self.cgm_file, sep="|", low_memory=False, usecols=['PtID', 'DataDtTm', 'DataDtTm_adjusted', 'CGM'],
+                                 skiprows=lambda x: (x % 10 != 0) & subset)
             df_cgm['DateTime'] = df_cgm.loc[df_cgm.DataDtTm.notna(), 'DataDtTm'].transform(parse_flair_dates).astype('datetime64[ns]')
             df_cgm['DateTimeAdjusted'] = df_cgm.loc[df_cgm.DataDtTm_adjusted.notna(), 'DataDtTm_adjusted'].transform(parse_flair_dates).astype('datetime64[ns]')
             self.df_cgm = df_cgm
@@ -100,7 +102,8 @@ class Flair(StudyDataset):
                                                                                     'BasalRt', 'TempBasalAmt', 'TempBasalType', 'TempBasalDur',
                                                                                     'BolusDeliv', 'ExtendBolusDuration',
                                                                                     'Suspend', 'AutoModeStatus', 
-                                                                                    'TDD'])
+                                                                                    'TDD'],
+                                                                                    skiprows=lambda x: (x % 10 != 0) & subset)
             
             df_pump['DateTime'] = df_pump.loc[df_pump.DataDtTm.notna(), 'DataDtTm'].transform(parse_flair_dates)
             #to datetime required because otherwise pandas provides a Object type which will fail the studydataset validation

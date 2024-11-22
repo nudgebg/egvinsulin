@@ -60,9 +60,9 @@ class StudyDataset:
 
     The class has several methods:
 
-    - `load_data`: This method is meant to be overridden by subclasses to load data into the `df` DataFrame.
-      It has a decorator `validate_load_data` which checks if the DataFrame `df` is not None after loading the data.
-
+    - `load_data`: This method is automatically called before extracting data. However, it can also be called up-front. After data was loaded 
+        the member variable `data_loaded` is set to True. It calls the `_load_data` method which should be implemented by subclasses.
+    
     - `extract_bolus_event_history`, `extract_basal_event_history`, and `extract_cgm_history`:
       These methods are designed to extract specific types of data from the DataFrame.
       They are decorated with `validate_bolus_output_dataframe`, `validate_basal_output_dataframe`,
@@ -92,7 +92,7 @@ class StudyDataset:
         self.cgm_history = None
         self.data_loaded = False
 
-    def _load_data(self):
+    def _load_data(self, subset: bool = False):
         raise NotImplementedError("Subclasses should implement the _load_data method")
     def _extract_bolus_event_history(self):
         raise NotImplementedError("Subclasses should implement the _extract_bolus_event_history method")
@@ -101,9 +101,17 @@ class StudyDataset:
     def _extract_cgm_history(self):
         raise NotImplementedError("Subclasses should implement the _extract_cgm_history method")
     
-    def load_data(self):
+    
+    def load_data(self, subset=False):
+        """Method to load the data from the study directory. This method should be called before extracting any data from the dataset. 
+        This method should not be overridden by subclasses. Instead, subclasses should implement the _load_data method.
+        Args:
+            subset (bool, optional): Should only load a small subset of the data for testing purposes. Defaults to False.
+        Raises:
+            NotImplementedError: _description_
+        """
         if not self.data_loaded:
-            self._load_data()
+            self._load_data(subset=subset)
             self.data_loaded = True
 
     @validate_bolus_output_dataframe

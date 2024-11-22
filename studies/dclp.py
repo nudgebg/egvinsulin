@@ -9,11 +9,17 @@ import numpy as np
 from src.date_helper import parse_flair_dates
 
 class DCLP3(StudyDataset):
-    def _load_data(self):
+    def _load_data(self, subset):
         data_table_path = os.path.join(self.study_path, 'Data Files')
-        df_bolus = pd.read_csv(os.path.join(data_table_path, 'Pump_BolusDelivered.txt'), sep='|', low_memory=False, usecols=['RecID', 'PtID', 'DataDtTm', 'BolusAmount', 'BolusType', 'DataDtTm_adjusted'])
-        df_basal = pd.read_csv(os.path.join(data_table_path, 'Pump_BasalRateChange.txt'), sep='|', low_memory=False, usecols=['RecID', 'PtID', 'DataDtTm', 'CommandedBasalRate', 'DataDtTm_adjusted'])
-        df_cgm = pd.read_csv(os.path.join(data_table_path, 'Pump_CGMGlucoseValue.txt'), sep='|', low_memory=False, usecols=['RecID', 'PtID', 'DataDtTm', 'CGMValue', 'DataDtTm_adjusted', 'HighLowIndicator'])
+        df_bolus = pd.read_csv(os.path.join(data_table_path, 'Pump_BolusDelivered.txt'), sep='|', low_memory=False, 
+                               usecols=['RecID', 'PtID', 'DataDtTm', 'BolusAmount', 'BolusType', 'DataDtTm_adjusted'],
+                               skiprows=lambda x: (x % 10 != 0) & subset)
+        df_basal = pd.read_csv(os.path.join(data_table_path, 'Pump_BasalRateChange.txt'), sep='|', low_memory=False, 
+                               usecols=['RecID', 'PtID', 'DataDtTm', 'CommandedBasalRate', 'DataDtTm_adjusted'],
+                               skiprows=lambda x: (x % 10 != 0) & subset)
+        df_cgm = pd.read_csv(os.path.join(data_table_path, 'Pump_CGMGlucoseValue.txt'), sep='|', low_memory=False, 
+                             usecols=['RecID', 'PtID', 'DataDtTm', 'CGMValue', 'DataDtTm_adjusted', 'HighLowIndicator'],
+                             skiprows=lambda x: (x % 10 != 0) & subset)
 
         # Handle duplicates
         # for cgm we just keep the first value
@@ -96,10 +102,16 @@ class DCLP5(DCLP3):
         super().__init__(study_path)
         self.study_name = 'DCLP5'
     
-    def _load_data(self):
-        df_bolus = pd.read_csv(os.path.join(self.study_path, 'DCLP5TandemBolus_Completed_Combined_b.txt'), sep='|', low_memory=False, usecols=['RecID', 'PtID', 'DataDtTm', 'BolusAmount', 'BolusType', 'DataDtTm_adjusted'])
-        df_basal = pd.read_csv(os.path.join(self.study_path, 'DCLP5TandemBASALRATECHG_b.txt'), sep='|', low_memory=False, usecols=['RecID', 'PtID', 'DataDtTm', 'CommandedBasalRate', 'DataDtTm_adjusted'])
-        df_cgm = pd.read_csv(os.path.join(self.study_path, 'DCLP5TandemCGMDATAGXB_b.txt'), sep='|', low_memory=False, usecols=['RecID', 'PtID', 'DataDtTm', 'CGMValue', 'DataDtTm_adjusted', 'HighLowIndicator'])
+    def _load_data(self, subset):
+        df_bolus = pd.read_csv(os.path.join(self.study_path, 'DCLP5TandemBolus_Completed_Combined_b.txt'), sep='|', low_memory=False, 
+                               usecols=['RecID', 'PtID', 'DataDtTm', 'BolusAmount', 'BolusType', 'DataDtTm_adjusted'],
+                               skiprows=lambda x: (x % 10 != 0) & subset)
+        df_basal = pd.read_csv(os.path.join(self.study_path, 'DCLP5TandemBASALRATECHG_b.txt'), sep='|', low_memory=False, 
+                               usecols=['RecID', 'PtID', 'DataDtTm', 'CommandedBasalRate', 'DataDtTm_adjusted'],
+                               skiprows=lambda x: (x % 10 != 0) & subset)
+        df_cgm = pd.read_csv(os.path.join(self.study_path, 'DCLP5TandemCGMDATAGXB_b.txt'), sep='|', low_memory=False, 
+                             usecols=['RecID', 'PtID', 'DataDtTm', 'CGMValue', 'DataDtTm_adjusted', 'HighLowIndicator'],
+                             skiprows=lambda x: (x % 10 != 0) & subset)
 
         # Handle duplicates
         # for cgm we just keep the first value
