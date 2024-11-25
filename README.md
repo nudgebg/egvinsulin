@@ -96,6 +96,7 @@ These are approximate execution times (without parallelization).
 |----|----|
 |Flair|12 min|
 |IOBP2|20 min|
+|DCLP5|7 min|
 
 ## Output Format
 ### Boluses
