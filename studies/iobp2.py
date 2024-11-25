@@ -14,12 +14,12 @@ class IOBP2StudyData(StudyDataset):
         if not os.path.exists(self.iletFilePath):
             raise FileNotFoundError(f"File not found: {self.iletFilePath}")
     
-    def load_data(self) -> pd.DataFrame:
+    def _load_data(self, subset) -> pd.DataFrame:
         
         self.df = pd.read_csv(self.iletFilePath, sep="|", low_memory=False,
-               usecols=['PtID', 'DeviceDtTm', 'CGMVal', 'BasalDelivPrev',
-                'BolusDelivPrev','MealBolusDelivPrev'],
-               dtype={'PtID': str, 'CGMVal': float})
+               usecols=['PtID', 'DeviceDtTm', 'CGMVal', 'BasalDelivPrev','BolusDelivPrev','MealBolusDelivPrev'],
+               dtype={'PtID': str, 'CGMVal': float},
+               skiprows=lambda x: (x % 10 != 0) & subset)
         
         self.df.rename(columns={'PtID': 'patient_id', 'DeviceDtTm': 'datetime', 'CGMVal': 'cgm', 
                         'BasalDelivPrev': 'basal_rate', 
