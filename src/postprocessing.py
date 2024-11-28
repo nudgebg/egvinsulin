@@ -90,44 +90,32 @@ def cgm_transform(cgm_data):
     Time aligns the cgm data to midnight with a 5 minute sampling rate.
 
     Parameters:
-        cgm_data (DataFrame): The input is a cgm data dataframe containing columns 'patient_id, 'datetime', and 'cgm'.
+        cgm_data (DataFrame): The input is a cgm data dataframe containing columns 'datetime', and 'cgm'.
 
     Returns:
         cgm_data (DataFrame): The transformed cgm data with aligned timestamps.
     """
-    #start data from midnight
-    cgm_data = cgm_data.sort_values(by='datetime').reset_index(drop=True)
-    cgm_data['datetime'] = cgm_data['datetime'].dt.round("5min")
-    cgm_data['UnixTime'] = [int(time.mktime(cgm_data.datetime[x].timetuple())) for x in cgm_data.index]
+    cgm_data= cgm_data.copy()
+    midnight_first_day = cgm_data.datetime.min().normalize()
+    midnight_last_day = cgm_data.datetime.max().normalize() + timedelta(days=1)
+    cgm_data = cgm_data.set_index('datetime')
 
-    start_date = cgm_data['datetime'].iloc[0].date()
-    end_date = cgm_data['datetime'].iloc[-1].date() + timedelta(days=1)
-    
-    cgm_from_mid = pd.DataFrame(columns=['datetime_adj'])
-    cgm_from_mid['datetime_adj'] = pd.date_range(start = start_date, end = end_date, freq="5min").values
+    if not midnight_first_day in cgm_data.index:
+        cgm_data.loc[pd.Timestamp(midnight_first_day)] = np.nan
+    if not midnight_last_day in cgm_data.index:
+        cgm_data.loc[pd.Timestamp(midnight_last_day)] = np.nan
 
-    cgm_from_mid['UnixTime'] = [int(time.mktime(cgm_from_mid.datetime_adj[x].timetuple())) for x in cgm_from_mid.index]
-    cgm_from_mid = cgm_from_mid.drop_duplicates(subset=['UnixTime']).sort_values(by='UnixTime')
-    cgm_data = cgm_data.drop_duplicates(subset=['UnixTime']).sort_values(by='UnixTime')
+    cgm_data = cgm_data.reset_index()
+    cgm_data = cgm_data.assign(datetime=cgm_data.datetime.dt.round('5min')).drop_duplicates(subset='datetime').set_index('datetime').resample('5min').asfreq()
 
-    #merge new time with cgm data
-    cgm_merged = pd.merge_asof(cgm_from_mid, cgm_data, on="UnixTime",direction="nearest",tolerance=149)
-
-    cgm_data = cgm_merged.filter(items=['datetime_adj','cgm'])
-    cgm_data = cgm_data.rename(columns={"datetime_adj": "datetime"}) 
-    
-    #replace not null values outside of 40-400 range with 40 or 400
-    cgm_data.loc[cgm_data['cgm'] < 40, 'cgm'] = 40
-    cgm_data.loc[cgm_data['cgm'] > 400, 'cgm'] = 400
-    
-    return cgm_data
+    return cgm_data.reset_index()
 
 def basal_transform(basal_data):
     """
     Transform the basal data by aligning timestamps and handling duplicates.
 
     Parameters:
-        basal_data (DataFrame): The input is a basal data dataframe containing columns 'patient_id, 'datetime', and 'basal_rate'.
+        basal_data (DataFrame): The input is a basal data dataframe containing columns 'datetime', and 'basal_rate'.
 
     Returns:
         basal_data (DataFrame): The transformed basal equivalent deliveries with aligned timestamps and duplicates removed.

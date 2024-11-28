@@ -40,10 +40,6 @@ def test_cgm_transform(cleaned_cgm):
         assert patient_data['datetime'].iloc[0] == pd.to_datetime('01/01/2023 00:00:00 AM')
         assert patient_data['datetime'].iloc[-1] == pd.to_datetime('01/03/2023 00:00:00 AM')
 
-    #check if cgm values are in the range of 40-400
-    assert transformed_cgm_data['cgm'].min() >= 40
-    assert transformed_cgm_data['cgm'].max() <= 400
-
     #check if timestamps were rounded correctly
     cgm_not_null = transformed_cgm_data.dropna()
     expected_rounded = pd.to_datetime(['01/01/2023 10:10:00 AM', '01/01/2023 1:15:00 PM', '01/02/2023 12:00:00 AM',
