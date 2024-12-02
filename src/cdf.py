@@ -53,7 +53,7 @@ def plot_cdf(data, title='CDF', xlabel='Value', ylabel='CDF', ax=None, **kwargs)
     ax.set_title(title)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
-    plt.grid(True)
+    ax.grid(True)
 
 # Example usage
 if __name__ == '__main__':

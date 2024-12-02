@@ -67,36 +67,37 @@ For each study, the basal, bolus and cgm event histories are extracted and saved
 Example output:
 ``` bash
 > python run_functions.py
-[19:00:14] Looking for study folders in /<...>/egvinsulin/data/raw and saving results to /<...>/egvinsulin/data/out
-[19:00:14] Start processing supported study folders: ['FLAIRPublicDataSet', 'IOBP2 RCT Public Dataset']
 
-[19:00:14] Processing FLAIRPublicDataSet ... 
-[19:01:10] [x] Data loaded 
-[19:01:49] [x] Boluses extracted: bolus_history.csv
-[19:07:07] [x] Boluses resampled: bolus_history-transformed.csv
-[19:07:37] [x] Basal events extracted: basal_history.csv 
-[19:09:46] [x] Basal events resampled: basal_history-transformed.csv
-[19:09:58] [x] CGM extracted: cgm_history.csv
-[19:12:36] [x] CGM resampled: cgm_history-transformed.csv
-
-[19:12:36] Processing IOBP2 RCT Public Dataset ... 
-[19:13:20] [x] Data loaded 
-[19:14:52] [x] Boluses extracted: bolus_history.csv
-[19:27:55] [x] Boluses resampled: bolus_history-transformed.csv
-[19:27:55] [x] Basal events extracted: basal_history.csv 
-[19:27:55] [x] Basal events resampled: basal_history-transformed.csv
-[19:28:10] [x] CGM extracted: cgm_history.csv
-[19:31:58] [x] CGM resampled: cgm_history-transformed.csv
-Processing complete. 
+[17:52:36] Looking for study folders in ./data/raw and saving results to ./data/out
+[17:52:36] Start processing supported study folders:
+[17:52:36] 0: DCLP3 Public Dataset - Release 3 - 2022-08-04 using DCLP3
+[17:52:36] 1: FLAIRPublicDataSet using Flair
+[17:52:36] 2: DCLP5_Dataset_2022-01-20-5e0f3b16-c890-4ace-9e3b-531f3687cf53 using DCLP5
+[17:52:36] 3: PEDAP Public Dataset - Release 3 - 2024-09-25 using PEDAP
+[17:52:36] 4: IOBP2 RCT Public Dataset using IOBP2StudyData
+[17:52:36] 
+[17:52:36] Processing DCLP3 Public Dataset - Release 3 - 2022-08-04 ...
+[17:52:51] [x] Data loaded                               
+[17:52:57] [x] Boluses extracted: bolus_history.csv
+[17:53:14] [x] Boluses resampled: bolus_history-transformed.csv
+[17:53:19] [x] Basal events extracted: basal_history.csv
+[17:53:33] [x] Basal events resampled: basal_history-transformed.csv
+[17:53:44] [x] CGM extracted: cgm_history.csv
+[17:54:00] [x] CGM resampled: cgm_history-transformed.csv
+[17:54:00] DCLP3 Public Dataset - Release 3 - 2022-08-04 completed in 83.98 seconds.
+...   
+Processing complete.                              
 ```
 
 ## Execution Times
-These are approximate execution times (without parallelization).
+These are approximate execution times (without parallelization). Note: So far, no optimization has been done to utilize parallel computing.
 ||MacBook Pro M3|
 |----|----|
-|Flair|12 min|
-|IOBP2|20 min|
-|DCLP5|7 min|
+|Flair|282 seconds|
+|IOBP2|468 seconds|
+|PEDAP|71 seconds|
+|DCLP3|84 seconds|
+|DCLP5|115 seconds|
 
 ## Output Format
 ### Boluses
