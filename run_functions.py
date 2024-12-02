@@ -104,20 +104,21 @@ def current_time():
 def main(test=False):
   """
   Main function to process study data folders.
+
   Args:
     test (bool): If True, use the test data directory. If False, use the raw data directory.
+  
   Logs:
     - Information about the current working directory and paths being used.
     - Warnings for folders that do not match any known study patterns.
     - Errors if no supported studies are found.
     - Progress of processing each matched study folder.
+  
   The function performs the following steps:
     1. Determines the input and output paths based on the `test` flag.
     2. Identifies study folders in the input path.
     3. Matches study folders to predefined patterns and logs unmatched folders.
     4. Processes each matched study folder and logs the progress using `tqdm`.
-  Raises:
-    SystemExit: If no supported studies are found in the input directory.
   """
 
   logging.info(f"Running main with test={test}")
@@ -189,14 +190,14 @@ def process_folder(study,  out_path_study, progress):
           progress (tqdm): A tqdm progress bar object to display the progress of the processing steps.
         
         Steps:
-        1. Loads the study data.
-        2. Extracts bolus event history and saves it as a CSV file.
-        3. Resamples the bolus event history and saves the transformed data as a CSV file.
-        4. Extracts basal event history and saves it as a CSV file.
-        5. Resamples the basal event history and saves the transformed data as a CSV file.
-        6. Extracts continuous glucose monitoring (CGM) history and saves it as a CSV file.
-        7. Resamples the CGM history and saves the transformed data as a CSV file.
-        Each step updates the progress bar and logs the current status.
+          1. Loads the study data.
+          2. Extracts bolus event history and saves it as a CSV file.
+          3. Resamples the bolus event history and saves the transformed data as a CSV file.
+          4. Extracts basal event history and saves it as a CSV file.
+          5. Resamples the basal event history and saves the transformed data as a CSV file.
+          6. Extracts continuous glucose monitoring (CGM) history and saves it as a CSV file.
+          7. Resamples the CGM history and saves the transformed data as a CSV file.
+          Each step updates the progress bar and logs the current status.
         """
       progress.set_description_str(f"{study.__class__.__name__}: (Loading data)")
       study.load_data()
