@@ -84,22 +84,43 @@ from src.save_data_as import save_data_as
 import logging
 from datetime import datetime
 from tqdm import tqdm
+import argparse
+from time import time
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(message)s',
+    datefmt='[%H:%M:%S]',  # Remove milliseconds
+    handlers=[
+        #logging.FileHandler("app.log"),  # Log to a file
+        logging.StreamHandler()  # Also log to console
+    ]
+)
 
 def current_time():
   return datetime.now().strftime("%H:%M:%S")
 
 
 def main(test=False):
-  logging.basicConfig(
-      level=logging.INFO,
-      format='%(asctime)s %(message)s',
-      datefmt='[%H:%M:%S]',  # Remove milliseconds
-      handlers=[
-          #logging.FileHandler("app.log"),  # Log to a file
-          logging.StreamHandler()  # Also log to console
-      ]
-  )
+  """
+  Main function to process study data folders.
+  Args:
+    test (bool): If True, use the test data directory. If False, use the raw data directory.
+  Logs:
+    - Information about the current working directory and paths being used.
+    - Warnings for folders that do not match any known study patterns.
+    - Errors if no supported studies are found.
+    - Progress of processing each matched study folder.
+  The function performs the following steps:
+    1. Determines the input and output paths based on the `test` flag.
+    2. Identifies study folders in the input path.
+    3. Matches study folders to predefined patterns and logs unmatched folders.
+    4. Processes each matched study folder and logs the progress using `tqdm`.
+  Raises:
+    SystemExit: If no supported studies are found in the input directory.
+  """
+
+  logging.info(f"Running main with test={test}")
 
   #run_time = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
   current_dir = os.getcwd()
@@ -152,12 +173,31 @@ def main(test=False):
       if not os.path.exists(study_output_path):
           os.makedirs(study_output_path)
       
+      start_time = time()
       study = study_class(study_path=os.path.join(in_path, folder))
       process_folder(study, out_path, progress)
+      tqdm.write(f"[{current_time()}] {folder} completed in {time() - start_time:.2f} seconds.")
+
     tqdm.write("Processing complete.")
 
 def process_folder(study,  out_path_study, progress):
-    
+      """Processes the data for a given study by loading, extracting, and resampling bolus, basal, and glucose events.
+
+        Args:
+          study (object): An instance of a study class that contains methods to load and extract data.
+          out_path_study (str): The output directory path where the processed data will be saved.
+          progress (tqdm): A tqdm progress bar object to display the progress of the processing steps.
+        
+        Steps:
+        1. Loads the study data.
+        2. Extracts bolus event history and saves it as a CSV file.
+        3. Resamples the bolus event history and saves the transformed data as a CSV file.
+        4. Extracts basal event history and saves it as a CSV file.
+        5. Resamples the basal event history and saves the transformed data as a CSV file.
+        6. Extracts continuous glucose monitoring (CGM) history and saves it as a CSV file.
+        7. Resamples the CGM history and saves the transformed data as a CSV file.
+        Each step updates the progress bar and logs the current status.
+        """
       progress.set_description_str(f"{study.__class__.__name__}: (Loading data)")
       study.load_data()
       tqdm.write(f"[{current_time()}] [x] Data loaded")
@@ -201,4 +241,7 @@ def process_folder(study,  out_path_study, progress):
 
 
 if __name__ == "__main__":
-    main()
+  parser = argparse.ArgumentParser(description="Run data normalization on raw study data.")
+  parser.add_argument('--test', action='store_true', help="Run the script in test mode using test data.")
+  args = parser.parse_args()
+  main(test=args.test)

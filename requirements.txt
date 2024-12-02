@@ -8,5 +8,8 @@ mkdocstrings-python==1.11.1
 pymdown-extensions==10.8.1
 tqdm==4.66.5
 mkdocs-with-pdf==0.9.3
-ipykernel==6.29.5
-matplotlib==3.9.2
+ipykernel>=6.29.5
+matplotlib>=3.9.2
+ipywidgets==8.1.5
+notebook==7.2.2
+ipympl==0.9.4

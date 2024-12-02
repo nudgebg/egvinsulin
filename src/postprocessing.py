@@ -7,48 +7,14 @@ import pandas as pd
 import numpy as np
 from datetime import timedelta
 
-F = '1H'
-
-
-def _durations_since_previous_valid_value(dates, values):
-    """
-    Calculate the durations between each date and the previous date with a valid value (non NaN).
-
-    Parameters:
-        dates (list): A list of dates.
-        values (list): A list of values.
-
-    Returns:
-        list: A list of durations between each date and the previous valid date. NaN if there is no previous valid date.
-    """
-    last_valid_date = None
-    durations = []
-    for (date, value) in zip(dates, values):
-        duration = np.NaN
-        if last_valid_date is not None:
-            duration = date - last_valid_date
-        if not np.isnan(value):
-            last_valid_date = date
-        durations.append(duration)
-    return durations
-
-def _combine_and_forward_fill(basal_df, gap=float('inf')):
-    # forward fill, but only if duration between basal values is smaller than the threshold
-    durations = _durations_since_previous_valid_value(basal_df['datetime'], basal_df['basal_delivery'])
-    bSignificantGap = [True if pd.notna(
-                        duration) and duration >= gap else False for duration in np.array(durations)]
-    basal_df['basal_delivery'] = basal_df['basal_delivery'].where(
-                        bSignificantGap, basal_df['basal_delivery'].ffill())
-    return basal_df
 
 # Function to split the bolus into multiple deliveries
 def split_bolus(datetime, bolus, duration, sampling_frequency):
-    steps = max(1, np.ceil(duration / pd.to_timedelta(sampling_frequency)))
+    steps = max(1, np.ceil(duration / sampling_frequency))
     delivery_per_interval = bolus / steps
-    times = pd.date_range(start=datetime, end=datetime + duration, freq=sampling_frequency, inclusive='left')
+    times = datetime+np.arange(steps)*sampling_frequency
     deliveries = [delivery_per_interval] * len(times)
     return {'datetime': times, 'delivery': deliveries}
-
 
 #functions for time alignment and transformation of basal, bolus, and cgm event data. These functions can be used for any study dataset.
 def bolus_transform(df):
@@ -63,6 +29,7 @@ def bolus_transform(df):
     """
 
     sampling_frequency = '5min'
+    sampling_frequency = pd.to_timedelta(sampling_frequency)
 
     expanded_rows = [split_bolus(row['datetime'], row['bolus'], row['delivery_duration'], sampling_frequency) for _, row in df.iterrows()]
     
@@ -85,6 +52,20 @@ def bolus_transform(df):
     
     return resampled_deliveries
 
+def resample_closest(series, freq='5min'):
+    
+    #add midnight supports
+    # midnight_first_day = series.index.min().normalize()
+    # midnight_last_day = series.index.max().normalize() + timedelta(days=1)
+    # if not midnight_first_day in series.index:
+    #     series.loc[pd.Timestamp(midnight_first_day)] = np.nan
+    # if not midnight_last_day in series.index:
+    #     series.loc[pd.Timestamp(midnight_last_day)] = np.nan
+
+    series = series.reset_index()
+    resampled = series.assign(datetime=series.datetime.dt.round(freq)).drop_duplicates(subset='datetime').set_index('datetime').resample(freq)
+    return resampled
+
 def cgm_transform(cgm_data):
     """
     Time aligns the cgm data to midnight with a 5 minute sampling rate.
@@ -95,20 +76,9 @@ def cgm_transform(cgm_data):
     Returns:
         cgm_data (DataFrame): The transformed cgm data with aligned timestamps.
     """
-    cgm_data= cgm_data.copy()
-    midnight_first_day = cgm_data.datetime.min().normalize()
-    midnight_last_day = cgm_data.datetime.max().normalize() + timedelta(days=1)
-    cgm_data = cgm_data.set_index('datetime')
-
-    if not midnight_first_day in cgm_data.index:
-        cgm_data.loc[pd.Timestamp(midnight_first_day)] = np.nan
-    if not midnight_last_day in cgm_data.index:
-        cgm_data.loc[pd.Timestamp(midnight_last_day)] = np.nan
-
-    cgm_data = cgm_data.reset_index()
-    cgm_data = cgm_data.assign(datetime=cgm_data.datetime.dt.round('5min')).drop_duplicates(subset='datetime').set_index('datetime').resample('5min').asfreq()
-
-    return cgm_data.reset_index()
+    series = cgm_data = cgm_data.copy().set_index('datetime')
+    resampled = resample_closest(series, '5min')
+    return resampled.asfreq().reset_index()
 
 def basal_transform(basal_data):
     """
@@ -120,32 +90,8 @@ def basal_transform(basal_data):
     Returns:
         basal_data (DataFrame): The transformed basal equivalent deliveries with aligned timestamps and duplicates removed.
     """
-    #start data from midnight
-    basal_data = basal_data.sort_values(by='datetime').reset_index(drop=True)
-    basal_data['datetime'] = basal_data['datetime'].dt.round("5min")
-    basal_data['UnixTime'] = [int(time.mktime(basal_data.datetime[x].timetuple())) for x in basal_data.index]
-
-    start_date = basal_data['datetime'].iloc[0].date()
-    end_date = basal_data['datetime'].iloc[-1].date() + timedelta(days=1)
+    series = basal_data.set_index('datetime').basal_rate
+    resampled = resample_closest(series)
     
-    basal_from_mid = pd.DataFrame(columns=['datetime_adj'])
-    basal_from_mid['datetime_adj'] = pd.date_range(start = start_date, end = end_date, freq="5min").values
-
-    basal_from_mid['UnixTime'] = [int(time.mktime(basal_from_mid.datetime_adj[x].timetuple())) for x in basal_from_mid.index]
-    basal_from_mid = basal_from_mid.drop_duplicates(subset=['UnixTime']).sort_values(by='UnixTime')
-    #keep last basal rate if there is a duplicate time
-    basal_data = basal_data.drop_duplicates(subset='UnixTime',keep='last')
-    #merge new time with basal data
-    basal_data = basal_data.sort_values(by='UnixTime')
-    basal_merged = pd.merge_asof(basal_from_mid, basal_data, on="UnixTime", direction="nearest", tolerance=149)
-
-    basal_data = basal_merged.filter(items=['datetime_adj','basal_rate'])
-    basal_data = basal_data.rename(columns={"datetime_adj": "datetime"}) 
-
-    #convert basal rate to 5 minute deliveries
-    basal_data = basal_data.assign(basal_delivery = basal_data.basal_rate/12).drop(columns='basal_rate')
-    
-    # forward fill (only up to 24 hours)
-    basal_data = _combine_and_forward_fill(basal_data, gap=timedelta(hours=24))
-    
-    return basal_data
+    resampled = resampled.ffill(limit=24*12-1).rename(columns={'basal_rate':'basal_delivery'}) / 12.0
+    return resampled.reset_index()
