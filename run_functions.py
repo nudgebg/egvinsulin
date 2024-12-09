@@ -78,6 +78,7 @@ from studies.flair import Flair
 from studies.pedap import PEDAP
 from studies.dclp import DCLP3
 from studies.dclp import DCLP3, DCLP5
+from studies.studydataset import StudyDataset
 
 import src.postprocessing as pp
 from src.save_data_as import save_data_as
@@ -101,7 +102,7 @@ def current_time():
   return datetime.now().strftime("%H:%M:%S")
 
 
-def main(test=False):
+def main(load_subset=False):
   """
   Main function to process study data folders.
 
@@ -121,15 +122,14 @@ def main(test=False):
     4. Processes each matched study folder and logs the progress using `tqdm`.
   """
 
-  logging.info(f"Running main with test={test}")
-
   #run_time = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
   current_dir = os.getcwd()
-  if test:
-      in_path = os.path.join(current_dir, 'data/test')
-  else:
-     in_path = os.path.join(current_dir, 'data/raw')
+  in_path = os.path.join(current_dir, 'data/raw')
   out_path = os.path.join(current_dir, 'data/out')
+
+  if load_subset:
+     logging.warning(f"ATTENTION: --test was provided: Running in test mode using a subset of the data.")
+
   logging.info(f"Looking for study folders in {in_path} and saving results to {out_path}")
 
   #define how folders are identified and processed
@@ -169,19 +169,19 @@ def main(test=False):
   with tqdm(total=len(matched_folders)*7, desc=f"Processing studies", bar_format='Step {n_fmt}/{total_fmt} [{desc}]:|{bar}', unit="step", leave=False) as progress:
     for folder, study_class in matched_folders:
       tqdm.write(f"[{current_time()}] Processing {folder} ...")
-
+      
       study_output_path = os.path.join(out_path, folder)
       if not os.path.exists(study_output_path):
           os.makedirs(study_output_path)
       
       start_time = time()
       study = study_class(study_path=os.path.join(in_path, folder))
-      process_folder(study, out_path, progress)
+      process_folder(study, study_output_path, progress, load_subset=load_subset)
       tqdm.write(f"[{current_time()}] {folder} completed in {time() - start_time:.2f} seconds.")
 
     tqdm.write("Processing complete.")
 
-def process_folder(study,  out_path_study, progress):
+def process_folder(study: StudyDataset, out_path_study, progress, load_subset):
       """Processes the data for a given study by loading, extracting, and resampling bolus, basal, and glucose events.
 
         Args:
@@ -200,7 +200,8 @@ def process_folder(study,  out_path_study, progress):
           Each step updates the progress bar and logs the current status.
         """
       progress.set_description_str(f"{study.__class__.__name__}: (Loading data)")
-      study.load_data()
+      study.load_data(subset=load_subset)
+
       tqdm.write(f"[{current_time()}] [x] Data loaded")
       progress.update(1)
 
@@ -245,4 +246,4 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Run data normalization on raw study data.")
   parser.add_argument('--test', action='store_true', help="Run the script in test mode using test data.")
   args = parser.parse_args()
-  main(test=args.test)
+  main(load_subset=args.test)
