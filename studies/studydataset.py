@@ -114,12 +114,13 @@ class StudyDataset:
     
     
     def load_data(self, subset=False):
-        """Method to load the data from the study directory. This method should be called before extracting any data from the dataset. 
+        """Method to load the data from the study directory. 
+        
+        This method should be called before extracting any data from the dataset. 
         This method should not be overridden by subclasses. Instead, subclasses should implement the _load_data method.
+        
         Args:
             subset (bool, optional): Should only load a small subset of the data for testing purposes. Defaults to False.
-        Raises:
-            NotImplementedError: _description_
         """
         if not self.data_loaded:
             self._load_data(subset=subset)
@@ -127,8 +128,9 @@ class StudyDataset:
 
     @validate_bolus_output_dataframe
     def extract_bolus_event_history(self):
-        """ Extract bolus event history from the dataset. This method does
-        do type checking on the output data and should not be overriden
+        """ Extract bolus event history from the dataset. 
+        
+        This method does do type checking on the output data and should not be overriden
         by subclasses. Instead, subclasses should implement the _extract_bolus_event_history method.
         
         Returns:
@@ -164,7 +166,6 @@ class StudyDataset:
             self.basal_event_history = self._extract_basal_event_history()
         return self.basal_event_history
 
-    
     @validate_cgm_output_dataframe
     def extract_cgm_history(self):
         """ Extract cgm measurements from the dataset. This method does
