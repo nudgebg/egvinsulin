@@ -95,7 +95,9 @@ class DCLP3(StudyDataset):
         df_cgm.loc[b_zero, 'CGMValue'] = df_cgm.HighLowIndicator.loc[b_zero].replace({ 2: 40, 1: 400 })
         
         #reduce, rename, return
-        return df_cgm.rename(columns={'PtID': 'patient_id', 'CGMValue': 'cgm'})
+        df_cgm = df_cgm[['PtID',self.datetime_col,'CGMValue']]
+        df_cgm = df_cgm.rename(columns={'PtID': 'patient_id', 'CGMValue': 'cgm'})
+        return df_cgm
 
 class DCLP5(DCLP3):
     def __init__(self, study_path):
