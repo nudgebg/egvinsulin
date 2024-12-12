@@ -1,13 +1,14 @@
 import pandas as pd
 
+
 def validate_bolus_output_dataframe(func):
     def wrapper(*args, **kwargs):
         df = func(*args, **kwargs)
         if not isinstance(df, pd.DataFrame):
             raise TypeError("Output should be a pandas DataFrame")
         required_columns = ['patient_id', 'datetime', 'bolus', 'delivery_duration']
-        if not all(col in df.columns for col in required_columns):
-            raise ValueError(f"DataFrame should have columns {required_columns} but has {df.columns}")
+        if set(df.columns) != set(required_columns):
+            raise ValueError(f"DataFrame should have columns 'patient_id', 'datetime' and 'basal_rate' but has {df.columns}")
         if not pd.api.types.is_datetime64_dtype(df['datetime'].dtype):
             raise ValueError("DataFrame should have a 'datetime' column of type pandas datetime but is {df['datetime'].dtype}")
         if not all(isinstance(item, str) for item in df['patient_id']):
@@ -25,8 +26,8 @@ def validate_basal_output_dataframe(func):
         if not isinstance(df, pd.DataFrame):
             raise TypeError("Output should be a pandas DataFrame")
         required_columns = ['patient_id', 'datetime', 'basal_rate']
-        if not all(col in df.columns for col in required_columns):
-            raise ValueError("DataFrame should have columns 'patient_id', 'datetime' and 'basal_rate'")
+        if set(df.columns) != set(required_columns):
+            raise ValueError(f"DataFrame should have columns 'patient_id', 'datetime' and 'basal_rate' but has {df.columns}")
         if not pd.api.types.is_datetime64_dtype(df['datetime'].dtype):
             raise ValueError("DataFrame should have a 'datetime' column of type pandas datetime")
         if not all(isinstance(item, str) for item in df['patient_id']):
@@ -42,8 +43,10 @@ def validate_cgm_output_dataframe(func):
         if not isinstance(df, pd.DataFrame):
             raise TypeError("Output should be a pandas DataFrame")
         required_columns = ['patient_id', 'datetime', 'cgm']
-        if not all(col in df.columns for col in required_columns):
-            raise ValueError(f"DataFrame should have columns {required_columns} but has {df.columns}")
+        if set(df.columns) != set(required_columns):
+            raise ValueError(f"DataFrame should have columns 'patient_id', 'datetime' and 'cgm' but has {df.columns}")
+        if not pd.api.types.is_datetime64_dtype(df['datetime'].dtype):
+            raise ValueError("DataFrame should have a 'datetime' column of type pandas datetime")
         if not pd.api.types.is_object_dtype(df['patient_id'].dtype) or not all(isinstance(item, str) for item in df['patient_id']):
             raise ValueError("DataFrame should have a 'patient_id' column of type string")
         if not pd.api.types.is_numeric_dtype(df['cgm'].dtype):
@@ -83,6 +86,14 @@ class StudyDataset:
     - For cgm history: The DataFrame should have the columns 'patient_id' (string),
       'datetime' (pandas datetime), and 'cgm' (float).
     """
+
+    COL_NAME_PATIENT_ID = 'patient_id'
+    COL_NAME_DATETIME = 'datetime'
+    COL_NAME_BOLUS = 'bolus'
+    COL_NAME_BASAL_RATE = 'basal_rate'
+    COL_NAME_BOLUS_DELIVERY_DURATION = 'delivery_duration'
+    COL_NAME_CGM = 'cgm'
+
 
     def __init__(self, study_path, study_name):
         self.study_path = study_path
