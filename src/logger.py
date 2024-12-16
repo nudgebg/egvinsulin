@@ -1,8 +1,8 @@
 import logging
 
-class LoggerFactory:
+class Logger:
     @staticmethod
-    def get_logger(name: str, level=logging.INFO) -> logging.Logger:
+    def get_logger(name: str, level=logging.DEBUG) -> logging.Logger:
         """
         Returns a configured logger instance with the specified name and log level.
 
