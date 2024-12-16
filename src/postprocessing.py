@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 import numpy as np
 from datetime import timedelta
-
+from src.logger import Logger
+logger = Logger.get_logger(__name__)
 
 # Function to split the bolus into multiple deliveries
 def split_bolus(datetime, bolus, duration, sampling_frequency):
@@ -44,15 +45,16 @@ def bolus_transform(df):
     # Sum up multiple entries for the same time
     expanded_events = expanded_events.groupby('datetime').sum().reset_index()
     
-    # Resample to ensure all intervals are present
-    start_time = df['datetime'].min().floor('D')  # Starting midnight
-    end_time = (df['datetime'] + df['delivery_duration']).max().ceil('D')  # Ending at midnight next day
+    # Resample to ensure all intervals are present (Start/End midnight of the first/last day)
+    expanded_events = expanded_events.sort_values('datetime')
+    start_time = df['datetime'].min().floor('D')  
+    end_time = (df['datetime'] + df['delivery_duration']).max().ceil('D') 
     all_times = pd.date_range(start=start_time, end=end_time, freq=sampling_frequency, inclusive='left')
     resampled_deliveries = expanded_events.set_index('datetime').reindex(all_times, fill_value=0).reset_index(drop=False, names =['datetime'])
     
     return resampled_deliveries
 
-def resample_closest(series, freq='5min'):
+def resample_closest(series: pd.Series, freq='5min'):
     
     #add midnight supports
     # midnight_first_day = series.index.min().normalize()
@@ -61,6 +63,8 @@ def resample_closest(series, freq='5min'):
     #     series.loc[pd.Timestamp(midnight_first_day)] = np.nan
     # if not midnight_last_day in series.index:
     #     series.loc[pd.Timestamp(midnight_last_day)] = np.nan
+
+    assert series.index.is_monotonic_increasing, "The datetime index must be sorted"
 
     series = series.reset_index()
     resampled = series.assign(datetime=series.datetime.dt.round(freq)).drop_duplicates(subset='datetime').set_index('datetime').resample(freq)
@@ -77,6 +81,10 @@ def cgm_transform(cgm_data):
         cgm_data (DataFrame): The transformed cgm data with aligned timestamps.
     """
     series = cgm_data = cgm_data.copy().set_index('datetime')
+    if not series.index.is_monotonic_increasing:
+        logger.warning('The index is not sorted. Sorting the index.')
+        series = series.sort_index()
+    
     resampled = resample_closest(series, '5min')
     return resampled.asfreq().reset_index()
 
@@ -91,7 +99,10 @@ def basal_transform(basal_data):
         basal_data (DataFrame): The transformed basal equivalent deliveries with aligned timestamps and duplicates removed.
     """
     series = basal_data.set_index('datetime').basal_rate
-    resampled = resample_closest(series)
+    if not series.index.is_monotonic_increasing:
+        logger.warning('The index is not sorted. Sorting the index.')
+        series = series.sort_index()
     
+    resampled = resample_closest(series)
     resampled = resampled.ffill(limit=24*12-1).rename(columns={'basal_rate':'basal_delivery'}) / 12.0
     return resampled.reset_index()
