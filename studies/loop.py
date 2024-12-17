@@ -1,6 +1,6 @@
 import pandas as pd
 from dask import dataframe as dd
-from studydataset import StudyDataset
+from studies.studydataset import StudyDataset
 import tempfile
 import shutil
 from src.logger import Logger
