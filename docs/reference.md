@@ -4,12 +4,14 @@ reference for the technical implementation of the
 `bebelbetes` project code.
 
 ::: run_functions
+
 ::: studies.studydataset
 ::: studies.iobp2.IOBP2StudyData
 ::: studies.flair.Flair
 ::: studies.pedap.PEDAP
 ::: studies.dclp.DCLP3
 ::: studies.dclp.DCLP5
+::: studies.loop.Loop
 
 ::: src.postprocessing
 ::: src.drawing
