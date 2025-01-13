@@ -7,10 +7,10 @@ markdown_extensions:
       base_path: ["."]  # Relative to the current Markdown file
 
 plugins:
-- with-pdf:
-    author: nudgebg
-    copyright: This software is dedicated to the public domain. You can freely copy, modify, publish, use, distribute, sell, and sublicense this software, either in source code or in binary form, without warranty or limitation of liability.
-    cover_subtitle: Project Documentation
+# - with-pdf:
+#     author: nudgebg
+#     copyright: This software is dedicated to the public domain. You can freely copy, modify, publish, use, distribute, sell, and sublicense this software, either in source code or in binary form, without warranty or limitation of liability.
+#     cover_subtitle: Project Documentation
         #
         #cover: false
         #back_cover: true
@@ -68,4 +68,5 @@ nav:
     - DCLP5: data_sets/DCLP5.md
     - PEDAP: data_sets/PEDAP-dataset.md
     - FLAIR: data_sets/FLAIR.md
+    - LOOP: data_sets/LOOP.md
     
