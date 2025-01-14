@@ -21,7 +21,7 @@ def parse_duration(duration_str):
     hours, minutes, seconds = map(int, duration_str.split(":"))
     return timedelta(hours=hours, minutes=minutes, seconds=seconds)
 
-def drawBasal(ax, datetimes, rates, color=colors['Basal']):
+def drawBasal(ax, datetimes, rates, color=colors['Basal'], **kwargs):
     """Draws the basal rates on the given axes.
     
     Args:
@@ -29,12 +29,18 @@ def drawBasal(ax, datetimes, rates, color=colors['Basal']):
         datetimes (list of datetime): List of datetime objects representing the time points.
         rates (list of float): List of basal rates corresponding to the datetime points.
         color (str, optional): Color for the basal rates plot. Defaults to colors['Basal'].
+        **kwargs: Additional keyword arguments to customize the plot.
     """
-    ax.stairs(rates[:-1],datetimes, label='basal rates', color=color, fill=True, alpha=0.5, edgecolor='blue')
-    #add stems for the rates without marker,
-    ax.stem(datetimes,rates,markerfmt=' ',basefmt=' ')
+    defaults = {'color': color, 'fill': True, 'alpha': 0.5, 'edgecolor': 'blue'}
+    defaults.update(kwargs)
+    ax.stairs(rates[:-1], datetimes, **defaults)
+    
+    # add stems for the rates without marker
+    defaults = {'markerfmt': ' ', 'basefmt':' '}
+    defaults.update(kwargs)
+    ax.stem(datetimes, rates, **defaults)
 
-def drawBoluses(ax, datetimes, boluses, color=colors['Bolus'], **kwargs):
+def drawBoluses(ax, datetimes, boluses, **kwargs):
     """ Draws insulin boluses events on a given matplotlib axis.
 
     Args:
@@ -45,7 +51,9 @@ def drawBoluses(ax, datetimes, boluses, color=colors['Bolus'], **kwargs):
         **kwargs: Additional keyword arguments passed to the ax.bar() method.
     """
     if len(boluses) > 0:
-        ax.bar(datetimes, boluses, width=timedelta(minutes=15), color=color, label='boluses', align='center', **kwargs)
+        defaults= {'width': timedelta(minutes=15), 'color': colors['Bolus'], 'label': 'boluses', 'align': 'center'}
+        defaults.update(kwargs)
+        ax.bar(datetimes, boluses, **defaults)
 
 def drawExtendedBoluses(ax, datetimes, boluses_units, duration, color=colors['Bolus'], **kwargs):
     """Draws extended boluses on the given axes.
