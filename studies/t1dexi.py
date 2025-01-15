@@ -4,42 +4,34 @@ from studies.studydataset import StudyDataset
 from src.logger import Logger
 import os 
 import numpy as np
+from datetime import datetime, timedelta
+import isodate
 
+def load_facm(path):
+        facm = pd.read_sas(path,encoding='latin-1').replace('', np.nan).drop(columns=['STUDYID','DOMAIN','FASEQ'])
+        #datetimes
+        facm['FADTC'] = facm['FADTC'].apply(lambda x: datetime(1960, 1, 1) + timedelta(seconds=x) if pd.notnull(x) else pd.NaT)
+        #durations
+        facm['FADUR'] = facm.FADUR.dropna().apply(isodate.parse_duration, as_timedelta_if_possible=True)
+        
+        return facm
 
-def convert_timestamp(timestamps_col):
-    """
-    Converts timestamp columns in the input DataFrame from seconds since 1960-01-01
-    to the format 'YYYY-MM-DD HH:MM:SS'
-
-    Args:
-    timestamps_col : timestamp column(s) to be converted
-    
-    Returns:
-    converted_timestamp: (Datetime) timestamp column(s) converted to 'YYYY-MM-DD HH:MM:SS' format.
-    """
-    # Check the type of timestamps_col (If it's a Series and not of type pd.Timestamp)
-    if isinstance(timestamps_col, pd.Series) and timestamps_col.dtype != pd.Timestamp:
-        # Error handling
-        try:
-            # Convert timestamp to datetime format if not null or NaT
-            timestamps_col = timestamps_col.apply(lambda x: datetime(1960, 1, 1) + timedelta(seconds=x) if pd.notnull(x) else pd.NaT)
-        except TypeError:
-            timestamps_col = pd.to_datetime(timestamps_col)
-    
-    # Otherwise if timestamps_col is in float format
-    elif isinstance(timestamps_col, float):
-        timestamps_col = datetime(1960, 1, 1) + timedelta(seconds=timestamps_col)
-
-    return timestamps_col
+def load_dx(path):
+        dx = pd.read_sas(path,encoding='latin-1').replace('', np.nan)
+        dx = dx.drop(columns=['DXSCAT','DXPRESP','STUDYID','DOMAIN','SPDEVID','DXSEQ','DXCAT','DXSCAT','DXSTRTPT','DXDTC','DXENRTPT','DXEVINTX','VISIT'])
+        return dx
 
 class T1DEXI(StudyDataset):
     def __init__(self, study_path):
         super().__init__(study_path, 'T1DEXI')
     
-    def _load_data(self, subset: bool = False):
-        self.dx = pd.read_sas(os.path.join(self.study_path,'DX.xpt'),encoding='latin-1').replace('', np.nan)
-        self.facm = pd.read_sas(os.path.join(self.study_path,'FACM.xpt'),encoding='latin-1').replace('', np.nan)
+    
 
+    
+    
+    def _load_data(self, subset: bool = False):
+        self.facm = load_facm(os.path.join(self.study_path,'FACM.xpt'))
+        self.dx = load_dx(os.path.join(self.study_path,'DX.xpt'))
         self.data_loaded = True
 
     def _extract_bolus_event_history(self):
