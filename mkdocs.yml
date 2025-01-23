@@ -69,4 +69,5 @@ nav:
     - PEDAP: data_sets/PEDAP-dataset.md
     - FLAIR: data_sets/FLAIR.md
     - LOOP: data_sets/LOOP.md
+    - T1DExi: data_sets/T1DEXI.md
     
