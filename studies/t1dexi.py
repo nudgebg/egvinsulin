@@ -29,7 +29,7 @@ def load_facm(path):
         return facm.sort_values('FADTC')
 
 def load_dx(path):
-        dx = pd.read_sas(path,encoding='latin-1').replace('', np.nan)
+        dx = pd.read_sas(path, encoding='latin-1').replace('', np.nan)
         dx = dx.drop(columns=['DXSCAT','DXPRESP','STUDYID','DOMAIN','SPDEVID','DXSEQ','DXCAT','DXSCAT','DXSTRTPT','DXDTC','DXENRTPT','DXEVINTX','VISIT'])
         return dx
 
@@ -119,7 +119,7 @@ class T1DEXI(StudyDataset):
         basal_rows = basal_rows.drop(i_drop)
 
         #fill NaN basal rates with zeros (in some cases, these are suspends, in others we don't know)
-        print(f'Dropping {basal_rows.FAORRES.isna().sum()} rows with NaN basal rates')
+        #print(f'Dropping {basal_rows.FAORRES.isna().sum()} rows with NaN basal rates')
         basal_rows.loc[:,'FAORRES'] = basal_rows.FAORRES.fillna(0)
         
         ## correct for overlaps

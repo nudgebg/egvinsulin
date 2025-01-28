@@ -11,8 +11,8 @@ class IOBP2StudyData(StudyDataset):
         #in place for testing purposes
         self.iletFilePath = self.study_path
         self.iletFilePath = os.path.join(self.study_path, 'Data Tables', 'IOBP2DeviceiLet.txt')
-        if not os.path.exists(self.iletFilePath):
-            raise FileNotFoundError(f"File not found: {self.iletFilePath}")
+        #if not os.path.exists(self.iletFilePath):
+        #    raise FileNotFoundError(f"File not found: {self.iletFilePath}")
     
     def _load_data(self, subset) -> pd.DataFrame:
         

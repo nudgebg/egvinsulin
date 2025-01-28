@@ -84,10 +84,10 @@ class Flair(StudyDataset):
             self.study_path, 'Data Tables', 'FLAIRDevicePump.txt')
         
         self.cgm_file = os.path.join(self.study_path, 'Data Tables', 'FLAIRDeviceCGM.txt')
-        if not os.path.exists(self.pump_file):
-            raise FileNotFoundError(f"File not found: {self.study_path}")
-        if not os.path.exists(self.cgm_file):
-            raise FileNotFoundError(f"File not found: {self.study_path}")
+        #if not os.path.exists(self.pump_file):
+        #    raise FileNotFoundError(f"File not found: {self.study_path}")
+        #if not os.path.exists(self.cgm_file):
+        #    raise FileNotFoundError(f"File not found: {self.study_path}")
 
     def _load_data(self, subset) -> tuple[pd.DataFrame, pd.DataFrame]:
         
