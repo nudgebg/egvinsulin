@@ -68,7 +68,7 @@ Notes on other Columns
 |------------------|-----------------|-----------|
 | `FACAT`          | Insulin Category | Distinguishes between *BASAL* and *BOLUS* deliveries. Not needed, as it is consistent with `FATEST`. |
 | `FAORRES`, `FASTRESC`, `FASTRESN` |Insulin Amount|`FAORRES`: Result or finding in original units. <br> `FASTRESC`: Character result/finding in standard format. <br> `FASTRESN`: Numeric result/finding in standard unit (0 values appear as `5.397605e-79`). <br> **We use `FAORRES`.** |
-| `FAORRESU`, `FASTRESU` | Unit (Not needed)|Refer to the unit of the result. <br> `FAORRESU`: Original unit (`U` for basal deliveries or `U/hr` for basal flow rates). <br> `FASTRESU`: Standard unit (does not support `U/hr`, so it is NaN for basal flow rates).|
+| `FAORRESU`, `FASTRESU` | Unit (Not needed)| `FAORRESU`: Original unit (`U` for basal deliveries or `U/hr` for basal flow rates). <br> `FASTRESU`: Standard unit (does not support `U/hr`, so it is NaN for basal flow rates).|
 | `INSDVSRC`       | Insulin Source | Source of insulin delivery (Injections or Pump). Not needed for extraction. |
 | `FAOBJ`          | Always "INSULIN". | Can be ignored. |
 | `FATESTCD`       | Abbreviated version of `FATEST`. | We use `FATEST` because it is more explicit. |
@@ -111,10 +111,28 @@ We did a quick check to see if Basal and Pump deliveries are in fact different i
 ![](assets/t1dexi_mdi_vs_pump_bolus_doses.png)
 Bolus and Basal doses in MDI are of much larger value indicating injections which confirms that the data is consistent and flow rates can be discarded.
 
-However, we found some MDI patients with BASAL FLOW RATE rows:  
-- All these flow rates (16% of the MDI data) are NaN
-- It is unclear where these come from
-- Values in all other insulin relevant columns are also NaN
+However, we found that in MULTIPLE DAILY INJECTIONS
+ - BASAL INSULIN have NaN duration (probably because nobody wanted to make an assumption about the duration of insulin action)
+ - All BASAL FLOW RATE are NaN valued (the basal injection couldn;t be converted to a flow rate due to missing duraiton)
+- All these flow rates (16% of the MDI data) are compltely NaN valued
+
+The time between injections could be taken as insulin action times.
+![](assets/t1dexi_mdi_basal_durations.png)]
+
+As we can see there are several groups:
+ 1. around 0 hours (could be priming doses)
+ 2. <102h (half day insulin like levimir)
+ 3. around 24h (1 time injections like glargine)
+ 4. some around 48 hours (degludec) and possibly missed doses 
+
+This seems reasonable. While we might miss some doses (either no injection happened or not logged), this seems to be a fair approximation. Further investigation could be done to correlate these fundings based on the basal insulin type.
+
+We also see some priming doses and double injections (either looged twice or injected twice)
+
+Taking the duration between basal injections as estimate for insulin action times, this causes problems when bolus injections are missing (e.g. not logged). For Patient 981, this problem looks severe (assuming that boluses were forgot to be logged). 
+
+![](assets/t1dexi_mdi_basal_rate_vs._injections.png)
+
 
 #### Duplicated Basal Rates
 - We see temporal Boluses and Basal duplicates, what should we do?
@@ -267,24 +285,29 @@ However, other dates and patients show similar trends
 
 
 ### Summary
-**General**
- - 
-**Bolus**
+#### Bolus
 - two duplicated rows should be dropped
 - FAORRESS must be assigned to INSMBOL if  INSMBOL is empty
+- We see ~1k rows where FAORRES< INSEXBOL or INSMBOL is very small (5.397605e-79) and should be replaced with zero
+-split extended and normal boluses
 
-**Basal**
-- We should work with flow rates only
-- overlapping basal rates need to be corrected
-- suspends don't need to be factored in
-- extremely long durations should probably be removed (after overlaps are corrected)
 
-- NaN Flow rates should be replaced with 0s as they seem to mark suspensions
-- MDI basal flow rates (all NaN) need to be dropped
-- duplicated basal rows should be dealt with by taking the row with the maximum dose
-- insstype should not be used to select basal rows (this misses many basal rows with NaN insulin subtype)
+#### Basal  
+##### Pump  
+    - We should work with flow rates only
+    - overlapping basal rates need to be corrected
+    - suspends don't need to be factored in
+    - extremely long durations should probably be removed (after overlaps are corrected)
+    - NaN Flow rates should be replaced with 0s as they seem to mark suspensions
+    - duplicated basal rows should be dealt with by taking the row with the maximum dose
+    - insstype should not be used to select basal rows (this misses many basal rows with NaN insulin subtype)
 
-**unclear** 
+##### MDI  
+    - MDI basal flow rates (all NaN) need to be dropped
+    - MDI basal injections miss duration which should be guessed from the insulin action profile (if available or by taking the time until the next injection). Alternatively, we could use the median duration as an estimate for the acting time. Or check if there is a table with basal insulin type information.
+    - there are priming doses and double injections but we keeo these for now
+
+#### Open Questions
  - Some patient pumps are potentially incorrectly assigned to AID or CSII
      - However, this does not impact out analysis at the moment.
  - Some patients and dates were removed in the netiob script but 
@@ -292,6 +315,7 @@ However, other dates and patients show similar trends
     - While some show as outliers (e.g. very little data), not other patients show similar trends 
     - 
 - Users with very little data might need to be removed 
+- How to deal with mdi basal injections and conversion to flow rates. The current solution seems sub-optimal.
 
 ## Sources
 Files that explain columns and data files:  

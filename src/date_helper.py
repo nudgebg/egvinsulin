@@ -1,6 +1,9 @@
 import pandas as pd
 from datetime import timedelta
 
+def get_hour_of_day(datetime_series):
+        return datetime_series.dt.hour + datetime_series.dt.minute/60 + datetime_series.dt.second/3600
+
 def parse_flair_dates(dates, format_date = '%m/%d/%Y', format_time = '%I:%M:%S %p'):
     """Parse date strings separately for those with/without time component, interpret those without as midnight (00AM)
     Args:

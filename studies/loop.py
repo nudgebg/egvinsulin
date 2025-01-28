@@ -1,10 +1,7 @@
 import pandas as pd
 from dask import dataframe as dd
 from studies.studydataset import StudyDataset
-import tempfile
-import shutil
 from src.logger import Logger
-import time 
 import os 
 
 class Loop(StudyDataset):

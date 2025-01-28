@@ -4,10 +4,18 @@ import numpy as np
 import importlib 
 from src import pandas_helper
 importlib.reload(pandas_helper)   
-from src.pandas_helper import split_groups
-from tqdm import tqdm
-
+from src.pandas_helper import get_hour_of_day
+    
 colors = {'Bolus': 'red', 'Basal': 'blue', 'CGM': 'darkgray'}
+
+def create_axis():
+    """Creates a new figure and axis for plotting.
+    
+    Returns:
+        matplotlib.axes.Axes: The created axis.
+    """
+    fig, ax = plt.figure(figsize=(10, 2)), plt.gca()
+    return fig, ax
 
 def parse_duration(duration_str):
     """
@@ -119,3 +127,21 @@ def drawSuspendTimes(ax, start_date, duration):
     """
 
     ax.bar(start_date, 10, width=duration, alpha=0.2, edgecolor='red', color='red', label='Suspend',align='edge')
+
+def drawMovingAverage(ax, df, datetime_col, value_col, aggregator='mean', **kwargs):
+    assert df[value_col].isna().sum() == 0, f'{value_col} contains NaN values'
+
+    df = df.copy()
+    
+    df['hod'] = get_hour_of_day(df[datetime_col])
+    ma  = df[['hod',value_col]].sort_values('hod').rolling(window=len(df)//48, 
+                                                                          min_periods=len(df)//48, 
+                                                                          on='hod', center=True).agg(aggregator)    
+    ma = ma.sample(len(df)//10)
+
+    args =  {'color':'darkgray', 'marker':'o', 's':10}
+    args.update(kwargs)
+    #if not ax:
+    #    f,ax = create_axis()
+    ax.scatter(ma.hod, ma[value_col], label=f'MA of {value_col}',**args)
+    ax.legend()
