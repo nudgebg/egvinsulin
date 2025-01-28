@@ -33,6 +33,15 @@ def load_dx(path):
         dx = dx.drop(columns=['DXSCAT','DXPRESP','STUDYID','DOMAIN','SPDEVID','DXSEQ','DXCAT','DXSCAT','DXSTRTPT','DXDTC','DXENRTPT','DXEVINTX','VISIT'])
         return dx
 
+def load_lb(path):
+    lb = pd.read_sas(os.path.join(path), encoding='latin-1')[['USUBJID','LBCAT','LBORRES','LBDTC']]
+    #drop hab1c readings and keep only CGM readings
+    lb = lb.loc[lb.LBCAT=='CGM']
+    #date conversion
+    lb['LBDTC'] = lb['LBDTC'].apply(lambda x: datetime(1960, 1, 1) + timedelta(seconds=x) if pd.notnull(x) else pd.NaT)
+    lb.drop(columns='LBCAT',inplace=True)
+    return lb
+     
 def overlaps(df):
     assert df.FADTC.is_monotonic_increasing
     end = df.FADTC + df.FADUR  
@@ -48,7 +57,8 @@ class T1DEXI(StudyDataset):
     def _load_data(self, subset: bool = False):
         dx = load_dx(os.path.join(self.study_path,'DX.xpt'))
         facm = load_facm(os.path.join(self.study_path,'FACM.xpt'))
-        
+        lb = load_lb(os.path.join(self.study_path,'LB.xpt'))
+
         # merge device data (DXTRT) to facm
         facm = pd.merge(facm, dx.loc[~dx.DXTRT.isin(['INSULIN PUMP','CLOSED LOOP INSULIN PUMP'])], on='USUBJID',how='left')
         #ensure string
@@ -56,6 +66,7 @@ class T1DEXI(StudyDataset):
 
         self.facm = facm
         self.dx = dx
+        self.lb = lb
         self.data_loaded = True
 
     def _extract_bolus_event_history(self):
@@ -74,29 +85,18 @@ class T1DEXI(StudyDataset):
                 
         #split extended and normal bolus rows
         normal   = bolus_rows.loc[bolus_rows.INSNMBOL>0][['USUBJID','FADTC','FADUR','INSNMBOL']].copy()
-        normal = normal.rename(columns={'INSNMBOL':'bolus'})
+        normal = normal.rename(columns={'INSNMBOL':self.COL_NAME_BOLUS})
         normal['FADUR'] = timedelta(0) #when there was a normal bolus, it would still carry the extended bolus duration
         extended = bolus_rows.loc[bolus_rows.INSEXBOL>0][['USUBJID','FADTC','FADUR','INSEXBOL']].copy()
-        extended = extended.rename(columns={'INSEXBOL':'bolus'})
-
+        extended = extended.rename(columns={'INSEXBOL': self.COL_NAME_BOLUS})
         #merge back into single dataframe
         bolus_rows = pd.concat([normal,extended],ignore_index=True)
-        
-        #the last one should be NaT
-        return pd.DataFrame({
-            self.COL_NAME_PATIENT_ID: pd.Series(dtype='str'),
-            self.COL_NAME_DATETIME: pd.Series(dtype='datetime64[ns]'),
-            self.COL_NAME_BOLUS: pd.Series(dtype='float'),
-            self.COL_NAME_BOLUS_DELIVERY_DURATION: pd.Series(dtype='timedelta64[as]')
-        })
     
-
         # Reduce, Rename
-        bolus_rows = basal_rows[['USUBJID','FADTC','FAORRES']]
-        bolus_rows = basal_rows.rename(columns={'USUBJID': self.COL_NAME_PATIENT_ID, 
+        bolus_rows = bolus_rows.rename(columns={'USUBJID': self.COL_NAME_PATIENT_ID, 
                                                 'FADTC': self.COL_NAME_DATETIME,
-                                                'FAORRES': self.COL_NAME_BASAL_RATE})
-        return basal_rows
+                                                'FADUR': self.COL_NAME_BOLUS_DELIVERY_DURATION})
+        return bolus_rows
 
     def _extract_basal_event_history(self):
         basal_rows = self.facm.loc[self.facm.FATEST.isin(['BASAL INSULIN','BASAL FLOW RATE'])].copy()
@@ -141,12 +141,13 @@ class T1DEXI(StudyDataset):
         return basal_rows
 
     def _extract_cgm_history(self):
-        # Return an empty DataFrame with the required columns
-        return pd.DataFrame({
-            self.COL_NAME_PATIENT_ID: pd.Series(dtype='str'),
-            self.COL_NAME_DATETIME: pd.Series(dtype='datetime64[ns]'),
-            self.COL_NAME_CGM: pd.Series(dtype='float')
+        lb = self.lb.drop_duplicates(subset=['USUBJID','LBDTC'],keep='first')
+        return lb.rename(columns={
+            'USUBJID': self.COL_NAME_PATIENT_ID,
+            'LBDTC': self.COL_NAME_DATETIME,
+            'LBORRES': self.COL_NAME_CGM
         })
+        
 
 # Example usage
 if __name__ == "__main__":

@@ -133,6 +133,9 @@ Taking the duration between basal injections as estimate for insulin action time
 
 ![](assets/t1dexi_mdi_basal_rate_vs._injections.png)
 
+We also see some patients (1149, 1386, 255,475,987) that have the same MDI basal injection reported within 30 seconds. These are likely duplicated recordings.
+![](assets/t1dexi_mdi_double_basal_injections.png)
+
 
 #### Duplicated Basal Rates
 - We see temporal Boluses and Basal duplicates, what should we do?
@@ -283,14 +286,25 @@ However, other dates and patients show similar trends
  - Extremely long durations might need to be removed
  - Some might be automatically resolved by using the overlap-removal discussed earlier
 
+### Glucose Data
+LB.xpt is a very simple dataframe:  
+It contains CGM and Hba1c without any nan values.
+- Glucose is in local time
+- all in mg/dl
+- No nan values 
+- Hb1A1c must be dropped: `lb = lb.loc[lb.LBCAT=='CGM']`
+- only a couple temporal duplicates which are dropped (using first) as they correlate perfectly
 
 ### Summary
+#### Glucose
+- drop Hb1A1c rows 
+- drop temporal duplicates ['USUBJID','LBDTC'] using first  
+
 #### Bolus
 - two duplicated rows should be dropped
 - FAORRESS must be assigned to INSMBOL if  INSMBOL is empty
 - We see ~1k rows where FAORRES< INSEXBOL or INSMBOL is very small (5.397605e-79) and should be replaced with zero
 -split extended and normal boluses
-
 
 #### Basal  
 ##### Pump  
@@ -316,6 +330,7 @@ However, other dates and patients show similar trends
     - 
 - Users with very little data might need to be removed 
 - How to deal with mdi basal injections and conversion to flow rates. The current solution seems sub-optimal.
+
 
 ## Sources
 Files that explain columns and data files:  

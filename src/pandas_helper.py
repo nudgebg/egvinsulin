@@ -147,3 +147,9 @@ def head_tail(df,n=2):
             - The last n rows of the DataFrame.
     """
     return pd.concat([df.head(n), df.tail(n)])
+
+
+def get_min_max_duplicates(df,dup_cols,val_col):
+    dups = df[df.duplicated(subset=dup_cols, keep=False)]
+    results = dups.groupby(dup_cols)[val_col].agg(['min','max'])
+    return results
