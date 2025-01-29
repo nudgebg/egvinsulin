@@ -4,10 +4,18 @@ import numpy as np
 import importlib 
 from src import pandas_helper
 importlib.reload(pandas_helper)   
-from src.pandas_helper import split_groups
-from tqdm import tqdm
-
+from src.pandas_helper import get_hour_of_day
+    
 colors = {'Bolus': 'red', 'Basal': 'blue', 'CGM': 'darkgray'}
+
+def create_axis():
+    """Creates a new figure and axis for plotting.
+    
+    Returns:
+        matplotlib.axes.Axes: The created axis.
+    """
+    fig, ax = plt.figure(figsize=(10, 2)), plt.gca()
+    return fig, ax
 
 def parse_duration(duration_str):
     """
@@ -21,7 +29,7 @@ def parse_duration(duration_str):
     hours, minutes, seconds = map(int, duration_str.split(":"))
     return timedelta(hours=hours, minutes=minutes, seconds=seconds)
 
-def drawBasal(ax, datetimes, rates, color=colors['Basal']):
+def drawBasal(ax, datetimes, rates, color=colors['Basal'], **kwargs):
     """Draws the basal rates on the given axes.
     
     Args:
@@ -29,12 +37,18 @@ def drawBasal(ax, datetimes, rates, color=colors['Basal']):
         datetimes (list of datetime): List of datetime objects representing the time points.
         rates (list of float): List of basal rates corresponding to the datetime points.
         color (str, optional): Color for the basal rates plot. Defaults to colors['Basal'].
+        **kwargs: Additional keyword arguments to customize the plot.
     """
-    ax.stairs(rates[:-1],datetimes, label='basal rates', color=color, fill=True, alpha=0.5, edgecolor='blue')
-    #add stems for the rates without marker,
-    ax.stem(datetimes,rates,markerfmt=' ',basefmt=' ')
+    defaults = {'color': color, 'fill': True, 'alpha': 0.5, 'edgecolor': 'blue'}
+    defaults.update(kwargs)
+    ax.stairs(rates[:-1], datetimes, **defaults)
+    
+    # add stems for the rates without marker
+    defaults = {'markerfmt': ' ', 'basefmt':' '}
+    defaults.update(kwargs)
+    ax.stem(datetimes, rates, **defaults)
 
-def drawBoluses(ax, datetimes, boluses, color=colors['Bolus'], **kwargs):
+def drawBoluses(ax, datetimes, boluses, **kwargs):
     """ Draws insulin boluses events on a given matplotlib axis.
 
     Args:
@@ -45,7 +59,9 @@ def drawBoluses(ax, datetimes, boluses, color=colors['Bolus'], **kwargs):
         **kwargs: Additional keyword arguments passed to the ax.bar() method.
     """
     if len(boluses) > 0:
-        ax.bar(datetimes, boluses, width=timedelta(minutes=15), color=color, label='boluses', align='center', **kwargs)
+        defaults= {'width': timedelta(minutes=15), 'color': colors['Bolus'], 'label': 'boluses', 'align': 'center'}
+        defaults.update(kwargs)
+        ax.bar(datetimes, boluses, **defaults)
 
 def drawExtendedBoluses(ax, datetimes, boluses_units, duration, color=colors['Bolus'], **kwargs):
     """Draws extended boluses on the given axes.
@@ -111,3 +127,24 @@ def drawSuspendTimes(ax, start_date, duration):
     """
 
     ax.bar(start_date, 10, width=duration, alpha=0.2, edgecolor='red', color='red', label='Suspend',align='edge')
+
+def drawMovingAverage(ax, df, datetime_col, value_col, aggregator='mean', **kwargs):
+    assert df[value_col].isna().sum() == 0, f'{value_col} contains NaN values'
+
+    df = df.copy()
+    
+    df['hod'] = get_hour_of_day(df[datetime_col])
+    ma  = df[['hod',value_col]].sort_values('hod').rolling(window=len(df)//48, 
+                                                                          min_periods=len(df)//48, 
+                                                                          on='hod', center=True).agg(aggregator)    
+    ma = ma.sample(len(df)//10)
+
+    args =  {'color':'darkgray', 'marker':'o', 's':10, 'label': f'MA of {value_col}'}
+    args.update(kwargs)
+    #if not ax:
+    #    f,ax = create_axis()
+    ax.scatter(ma.hod, ma[value_col], **args)
+    ax.set_xlabel('Hour of Day')
+    ax.set_xticks(np.arange(0,24,4))
+    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x):02d}:00'))
+    ax.legend()

@@ -1,5 +1,5 @@
 import pandas as pd
-from studies.iobp2 import IOBP2StudyData    
+from studies import IOBP2    
 
 def test_extract_event_history(tmp_path):
     # create test data using temporary tmp_path fixture directory providede by pytest
@@ -54,7 +54,7 @@ def test_extract_event_history(tmp_path):
     mock_data.to_csv(tmp_path / "Data Tables" / "IOBP2DeviceiLet.txt", sep='|', index=False)
 
     #load the data
-    study = IOBP2StudyData(study_path=tmp_path)
+    study = IOBP2(study_path=tmp_path)
     study.load_data()
 
     #extract

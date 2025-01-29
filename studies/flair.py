@@ -1,8 +1,9 @@
-from studies.studydataset import StudyDataset
 import pandas as pd
 import os
 import numpy as np
 from datetime import timedelta
+
+from .studydataset import StudyDataset
 from src.find_periods import find_periods
 from src.date_helper import parse_flair_dates, convert_duration_to_timedelta
 
@@ -84,10 +85,10 @@ class Flair(StudyDataset):
             self.study_path, 'Data Tables', 'FLAIRDevicePump.txt')
         
         self.cgm_file = os.path.join(self.study_path, 'Data Tables', 'FLAIRDeviceCGM.txt')
-        if not os.path.exists(self.pump_file):
-            raise FileNotFoundError(f"File not found: {self.study_path}")
-        if not os.path.exists(self.cgm_file):
-            raise FileNotFoundError(f"File not found: {self.study_path}")
+        #if not os.path.exists(self.pump_file):
+        #    raise FileNotFoundError(f"File not found: {self.study_path}")
+        #if not os.path.exists(self.cgm_file):
+        #    raise FileNotFoundError(f"File not found: {self.study_path}")
 
     def _load_data(self, subset) -> tuple[pd.DataFrame, pd.DataFrame]:
         

@@ -1,5 +1,7 @@
 import pandas as pd
-
+import os
+from src.logger import Logger
+logger = Logger.get_logger(__name__)
 
 def validate_bolus_output_dataframe(func):
     def wrapper(*args, **kwargs):
@@ -54,6 +56,9 @@ def validate_cgm_output_dataframe(func):
         return df
     return wrapper
 
+def save_to_csv(df, file_path, compressed):
+    df.to_csv(file_path + (".csv.gz" if compressed else '.csv'), index=False, 
+                compression='gzip' if compressed else None)
 
 class StudyDataset:
     """
@@ -184,3 +189,39 @@ class StudyDataset:
             self.load_data()
             self.cgm_history = self._extract_cgm_history()
         return self.cgm_history
+    
+    
+    def save_cgm_to_file(self, out_path,  compressed=False):
+        if not os.path.exists(out_path):
+            logger.warning(f"Output directory {out_path} does not exist. Creating it now.")
+            os.makedirs(out_path)
+        file_path = os.path.join(out_path, f"{self.study_name}_cgm_history")
+        df_cgm = self.extract_cgm_history().copy()
+        #reduce file size
+        df_cgm[self.COL_NAME_DATETIME] = df_cgm[self.COL_NAME_DATETIME].astype('int64')//10**9
+        df_cgm[self.COL_NAME_CGM] = df_cgm[self.COL_NAME_CGM].astype('int')
+        save_to_csv(df_cgm, file_path, compressed)    
+        
+    def save_bolus_event_history_to_file(self, out_path, compressed=False):
+        if not os.path.exists(out_path):
+            logger.warning(f"Output directory {out_path} does not exist. Creating it now.")
+            os.makedirs(out_path)
+        file_path = os.path.join(out_path, f"{self.study_name}_bolus_event_history")
+        df_bolus = self.extract_bolus_event_history().copy()
+        # Reduce file size
+        df_bolus[self.COL_NAME_DATETIME] = df_bolus[self.COL_NAME_DATETIME].astype('int64') // 10**9
+        df_bolus[self.COL_NAME_BOLUS_DELIVERY_DURATION] = df_bolus[self.COL_NAME_BOLUS_DELIVERY_DURATION].dt.total_seconds().astype('int')
+        df_bolus[self.COL_NAME_BOLUS] = df_bolus[self.COL_NAME_BOLUS].round(4)
+        save_to_csv(df_bolus, file_path, compressed)
+
+    def save_basal_event_history_to_file(self, out_path, compressed=False):
+        if not os.path.exists(out_path):
+            logger.warning(f"Output directory {out_path} does not exist. Creating it now.")
+            os.makedirs(out_path)
+        file_path = os.path.join(out_path, f"{self.study_name}_basal_event_history")
+        df_basal = self.extract_basal_event_history().copy()
+        # Reduce file size
+        df_basal[self.COL_NAME_DATETIME] = df_basal[self.COL_NAME_DATETIME].astype('int64') // 10**9
+        df_basal[self.COL_NAME_BASAL_RATE] = df_basal[self.COL_NAME_BASAL_RATE].round(4)
+
+        save_to_csv(df_basal, file_path, compressed)

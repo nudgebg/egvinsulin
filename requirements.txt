@@ -17,3 +17,5 @@ bokeh==3.4.3
 graphviz==0.20.3
 dask==2024.8.0
 dask-expr==1.1.10
+isodate==0.7.2
+## for netiob (t1dexi) scripts

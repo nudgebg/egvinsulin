@@ -61,7 +61,6 @@ def split_sequences(df, label_col):
     # Create a column to identify consecutive sequences
     return (df[label_col] != df[label_col].shift()).cumsum()
 
-
 def split_groups(x: pd.Series, threshold) -> pd.Series:
    """Assigns unique group IDs based on the distance between consecutive values.
 
@@ -80,8 +79,6 @@ def split_groups(x: pd.Series, threshold) -> pd.Series:
    """
    
    return (x.diff()>threshold).cumsum()
-
-
 
 def _durations_since_previous_valid_value(dates, values):
     """
@@ -105,6 +102,8 @@ def _durations_since_previous_valid_value(dates, values):
         durations.append(duration)
     return durations
 
+def get_hour_of_day(datetime_series):
+        return datetime_series.dt.hour + datetime_series.dt.minute/60 + datetime_series.dt.second/3600
 
 def _combine_and_forward_fill(basal_df, gap=float('inf')):
     # forward fill, but only if duration between basal values is smaller than the threshold
@@ -122,3 +121,35 @@ def _combine_and_backward_fill(df, date_column, value_column, gap=float('inf')):
     bSignificantGap = [True if pd.notna(duration) and duration <= gap else False for duration in np.array(durations)]
     filled = df[value_column].where(bSignificantGap, df[value_column].bfill())
     return filled
+
+
+if __name__ == '__main__':
+    df = pd.DataFrame({
+            'PtID':     [1, 1, 1,  2, 2, 2,  3, 3, 3,  1],
+            'DataDtTm': [1, 2, 3,  1, 2, 2,  1, 1, 1,  2],
+            'CGMValue': [1, 2, 3,  1, 2, 3,  4, 2, 3,  3]
+        })
+    dup_indexes, max_indexes, drop_indexes = get_duplicated_max_indexes(df, ['PtID', 'DataDtTm'], 'CGMValue')
+    print(df.drop(drop_indexes).sort_values(['PtID', 'DataDtTm']))
+
+
+def head_tail(df,n=2):
+    """
+    Returns the first n rows and the last n rows of a DataFrame.
+
+    Args:
+        df (pd.DataFrame): The DataFrame to get the head and tail of.
+        n (int): The number of rows to return from the head and tail of the DataFrame.
+
+    Returns:
+        tuple: A tuple containing two DataFrames:
+            - The first n rows of the DataFrame.
+            - The last n rows of the DataFrame.
+    """
+    return pd.concat([df.head(n), df.tail(n)])
+
+
+def get_min_max_duplicates(df,dup_cols,val_col):
+    dups = df[df.duplicated(subset=dup_cols, keep=False)]
+    results = dups.groupby(dup_cols)[val_col].agg(['min','max'])
+    return results
