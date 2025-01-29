@@ -1,14 +1,24 @@
 import pandas as pd
-from studies.studydataset import StudyDataset
-from src.logger import Logger
 import os 
 import numpy as np
 from datetime import datetime, timedelta
 import isodate
+
+from .studydataset import StudyDataset
+from src.logger import Logger
 from src.pandas_helper import get_duplicated_max_indexes
-def load_facm(path):
-        facm = pd.read_sas(path,encoding='latin-1').replace('', np.nan).astype({'USUBJID': 'str',
-                            'FAORRES': 'float'})
+
+def load_facm(path, subset):
+        
+        #if subset, read only the first 25k Rows
+        if subset:
+            chunk_size = 25000 
+            facm_iter = pd.read_sas(path, encoding='latin-1', chunksize=chunk_size)
+            facm = next(facm_iter)
+        else:
+            facm = pd.read_sas(path,encoding='latin-1',)
+        facm = facm.replace('', np.nan).astype({'USUBJID': 'str', 'FAORRES': 'float'})
+
         #drop columns with no additional, duplicated or corrupt information
         facm = facm.drop(columns=['STUDYID','DOMAIN','FASEQ',# not informative
                                   'FAOBJ', #Always INSULIN, can be ignored.
@@ -33,8 +43,16 @@ def load_dx(path):
         dx = dx.drop(columns=['DXSCAT','DXPRESP','STUDYID','DOMAIN','SPDEVID','DXSEQ','DXCAT','DXSCAT','DXSTRTPT','DXDTC','DXENRTPT','DXEVINTX','VISIT'])
         return dx
 
-def load_lb(path):
-    lb = pd.read_sas(os.path.join(path), encoding='latin-1')[['USUBJID','LBCAT','LBORRES','LBDTC']]
+def load_lb(path, subset):
+    #if subset, read only the first 25k Rows
+    if subset:
+        chunk_size = 25000 
+        lb_iter = pd.read_sas(path, encoding='latin-1', chunksize=chunk_size)
+        lb = next(lb_iter)
+    else:
+        lb = pd.read_sas(path,encoding='latin-1',)
+    
+    lb = lb.replace('', np.nan).astype({'USUBJID': 'str'})[['USUBJID','LBCAT','LBORRES','LBDTC']]
     #drop hab1c readings and keep only CGM readings
     lb = lb.loc[lb.LBCAT=='CGM']
     #date conversion
@@ -56,8 +74,8 @@ class T1DEXI(StudyDataset):
     
     def _load_data(self, subset: bool = False):
         dx = load_dx(os.path.join(self.study_path,'DX.xpt'))
-        facm = load_facm(os.path.join(self.study_path,'FACM.xpt'))
-        lb = load_lb(os.path.join(self.study_path,'LB.xpt'))
+        facm = load_facm(os.path.join(self.study_path,'FACM.xpt'),subset)
+        lb = load_lb(os.path.join(self.study_path,'LB.xpt'),subset)
 
         # merge device data (DXTRT) to facm
         facm = pd.merge(facm, dx.loc[~dx.DXTRT.isin(['INSULIN PUMP','CLOSED LOOP INSULIN PUMP'])], on='USUBJID',how='left')

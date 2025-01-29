@@ -1,8 +1,9 @@
-from studies.studydataset import StudyDataset
 import pandas as pd
 import os
 import numpy as np
 from datetime import timedelta
+
+from .studydataset import StudyDataset
 from src.find_periods import find_periods
 from src.date_helper import parse_flair_dates, convert_duration_to_timedelta
 

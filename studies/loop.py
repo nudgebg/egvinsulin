@@ -1,8 +1,9 @@
 import pandas as pd
 from dask import dataframe as dd
-from studies.studydataset import StudyDataset
 from src.logger import Logger
 import os 
+
+from .studydataset import StudyDataset
 
 class Loop(StudyDataset):
 

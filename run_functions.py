@@ -14,7 +14,6 @@ Process Overview:
 
 ## Output format:
 The outptut format is standardized across all studies and follows the definitions of the studydataset base class.
-For each study, the following files are saved in the `data/out/<study-name>/` folder:
 
 ### Boluses
 
@@ -49,19 +48,18 @@ For each study, the following files are saved in the `data/out/<study-name>/` fo
   | datetime          | pd.Timestamp   | Datetime of the CGM measurement           |
   | cgm               | float          | CGM value in mg/dL                        |
 
+### Output Files:
+For each study, the dataframes are saved in the `data/out/<study-name>/` folder:
+ - To reduce file size, the data is saved in a compressed format using the `gzip`
+ - datetimes and timedeltas are saved as unix timestamps (seconds) and integers (seconds) respectively.
+ - boluses and basals are rounded to 4 decimal places
+ - cgm values are converted to integers
 
 """
 import os
-from studies.iobp2 import IOBP2StudyData
-from studies.flair import Flair
-from studies.pedap import PEDAP
-from studies.dclp import DCLP3, DCLP5
-from studies.loop import Loop
-from studies.studydataset import StudyDataset
-from studies.t1dexi import T1DEXI
+from studies import IOBP2,Flair,PEDAP,DCLP3,DCLP5,Loop,StudyDataset,T1DEXI
 
 import src.postprocessing as pp
-from src.save_data_as import save_data_as
 from src.logger import Logger
 from datetime import datetime
 from tqdm import tqdm
@@ -105,7 +103,7 @@ def main(load_subset=False):
   logger.info(f"Looking for study folders in {in_path} and saving results to {out_path}")
 
   #define how folders are identified and processed
-  patterns = {'IOBP2 RCT Public Dataset': IOBP2StudyData,
+  patterns = {'IOBP2 RCT Public Dataset': IOBP2,
               'FLAIRPublicDataSet': Flair,
               'PEDAP Public Dataset - Release 3 - 2024-09-25': PEDAP,
               'DCLP3 Public Dataset - Release 3 - 2022-08-04': DCLP3,
@@ -173,30 +171,22 @@ def process_folder(study: StudyDataset, out_path_study, progress, load_subset):
         """
       progress.set_description_str(f"{study.__class__.__name__}: (Loading data)")
       study.load_data(subset=load_subset)
-
-      tqdm.write(f"[{current_time()}] [x] Data loaded")
-      progress.update(1)
+      tqdm.write(f"[{current_time()}] [x] Data loaded"); progress.update(1)
 
       #boluses
       progress.set_description_str(f"{study.__class__.__name__}: Extracting boluses")
-      bolus_history = study.extract_bolus_event_history()
-      out_file_path = save_data_as(bolus_history, 'CSV', os.path.join(out_path_study, f"bolus_history"))
-      tqdm.write(f"[{current_time()}] [x] Boluses extracted: {out_file_path.split('/')[-1]}")
-      progress.update(1)
+      study.save_bolus_event_history_to_file(out_path_study,True)
+      tqdm.write(f"[{current_time()}] [x] Boluses extracted"); progress.update(1)
 
       #basals
       progress.set_description_str(f"{study.__class__.__name__}: Extracting basals")
-      basal_history = study.extract_basal_event_history()
-      out_file_path = save_data_as(basal_history, 'CSV', os.path.join(out_path_study, f"basal_history"))
-      tqdm.write(f"[{current_time()}] [x] Basal events extracted: {out_file_path.split('/')[-1]}")
-      progress.update(1)
+      study.save_basal_event_history_to_file(out_path_study, True)
+      tqdm.write(f"[{current_time()}] [x] Basal extracted"); progress.update(1)
 
       #cgm
       progress.set_description_str(f"{study.__class__.__name__}: Extracting glucose")
-      cgm_history = study.extract_cgm_history()
-      out_file_path = save_data_as(cgm_history, 'CSV', os.path.join(out_path_study, f"cgm_history"))
-      tqdm.write(f"[{current_time()}] [x] CGM extracted: {out_file_path.split('/')[-1]}")
-      progress.update(1)
+      study.save_cgm_to_file(out_path_study, True)
+      tqdm.write(f"[{current_time()}] [x] CGM extracted"); progress.update(1)
       
 
 if __name__ == "__main__":

@@ -1,7 +1,8 @@
-from studies.studydataset import StudyDataset
+from .studydataset import StudyDataset
 import os
 import pandas as pd
 from src.date_helper import parse_flair_dates
+
 
 class PEDAP(StudyDataset):
     def _load_data(self, subset):

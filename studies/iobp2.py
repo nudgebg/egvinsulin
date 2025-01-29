@@ -2,9 +2,10 @@ import pandas as pd
 import numpy as np
 from datetime import timedelta
 import os 
-from studies.studydataset import StudyDataset
 
-class IOBP2StudyData(StudyDataset):
+from .studydataset import StudyDataset
+
+class IOBP2(StudyDataset):
 
     def __init__(self, study_path: str):
         super().__init__(study_path, "IOBP2")
