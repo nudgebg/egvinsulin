@@ -172,22 +172,25 @@ def process_folder(study: StudyDataset, out_path_study, progress, load_subset):
         """
       progress.set_description_str(f"{study.__class__.__name__}: (Loading data)")
       study.load_data(subset=load_subset)
-      tqdm.write(f"[{current_time()}] [x] Data loaded"); progress.update(1)
+      progress.update(1)
+      tqdm.write(f"[{current_time()}] [x] Data loaded"); 
 
       #boluses
       progress.set_description_str(f"{study.__class__.__name__}: Extracting boluses")
       study.save_bolus_event_history_to_file(out_path_study,True)
-      tqdm.write(f"[{current_time()}] [x] Boluses extracted"); progress.update(1)
+      progress.update(1)
+      tqdm.write(f"[{current_time()}] [x] Boluses extracted"); 
 
       #basals
       progress.set_description_str(f"{study.__class__.__name__}: Extracting basals")
       study.save_basal_event_history_to_file(out_path_study, True)
-      tqdm.write(f"[{current_time()}] [x] Basal extracted"); progress.update(1)
+      progress.update(1)
+      tqdm.write(f"[{current_time()}] [x] Basal extracted"); 
 
       #cgm
       progress.set_description_str(f"{study.__class__.__name__}: Extracting glucose")
       study.save_cgm_to_file(out_path_study, True)
-      tqdm.write(f"[{current_time()}] [x] CGM extracted"); progress.update(1)
+      progress.update(1); tqdm.write(f"[{current_time()}] [x] CGM extracted"); 
       
 
 if __name__ == "__main__":
