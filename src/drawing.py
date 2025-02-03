@@ -62,6 +62,9 @@ def drawBoluses(ax, datetimes, boluses, **kwargs):
         defaults= {'width': timedelta(minutes=15), 'color': colors['Bolus'], 'label': 'boluses', 'align': 'center'}
         defaults.update(kwargs)
         ax.bar(datetimes, boluses, **defaults)
+        
+        # Add end caps to the boluses
+        ax.scatter(datetimes, boluses, marker='^', color=colors['Bolus'], s=20, zorder=3)
 
 def drawExtendedBoluses(ax, datetimes, boluses_units, duration, color=colors['Bolus'], **kwargs):
     """Draws extended boluses on the given axes.

@@ -68,18 +68,24 @@ def overlaps(df):
     return overlap
 
 class T1DEXI(StudyDataset):
-    def __init__(self, study_path):
+    def __init__(self, study_path, drop_mdi=True):
         super().__init__(study_path, 'T1DEXI')
+        self.drop_mdi = drop_mdi
     
     
     def _load_data(self, subset: bool = False):
         dx = load_dx(os.path.join(self.study_path,'DX.xpt'))
         facm = load_facm(os.path.join(self.study_path,'FACM.xpt'),subset)
         lb = load_lb(os.path.join(self.study_path,'LB.xpt'),subset)
+        
+        #drop all mdi patients (we have reasons to believe the recordings contain a lot of duplicates)
+        if self.drop_mdi:
+            mdi_patients = dx.loc[dx.DXTRT=='MULTIPLE DAILY INJECTIONS'].USUBJID.unique()
+            facm = facm.loc[~facm.USUBJID.isin(mdi_patients)]
+            lb = lb.loc[~lb.USUBJID.isin(mdi_patients)]
 
-        # merge device data (DXTRT) to facm
+        # merge device data (DXTRT) to facm (we need this later to distinguish between pump and mdi patients)
         facm = pd.merge(facm, dx.loc[~dx.DXTRT.isin(['INSULIN PUMP','CLOSED LOOP INSULIN PUMP'])], on='USUBJID',how='left')
-        #ensure string
         facm = facm.astype({'USUBJID': 'str'})
 
         self.facm = facm
@@ -149,7 +155,7 @@ class T1DEXI(StudyDataset):
         basal_rows['FADUR'] = basal_rows.groupby('USUBJID', group_keys=False).apply(correct_overlap)
         basal_rows.drop(columns='overlaps', inplace=True)
         
-        #TODO: remove delivery durations greater than x days
+        #TODO: Decide how to treat extremely large delivery durations (happening often at the very end)
 
         # Reduce, Rename
         basal_rows = basal_rows[['USUBJID','FADTC','FAORRES']]
@@ -166,6 +172,15 @@ class T1DEXI(StudyDataset):
             'LBORRES': self.COL_NAME_CGM
         })
         
+class T1DEXIP(T1DEXI):
+    def __init__(self, study_path, drop_mdi=True):
+        super().__init__(study_path, 'T1DEXIP')
+        self.drop_mdi = drop_mdi
+    
+    def _extract_cgm_history(self):
+        glucose = super()._extract_cgm_history()
+        #there is one row with values > 401, we remove it
+        return glucose.loc[glucose[self.COL_NAME_CGM] <= 401]
 
 # Example usage
 if __name__ == "__main__":
