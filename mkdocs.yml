@@ -63,11 +63,12 @@ nav:
     - Python Setup: python-setup.md
  - Code Reference: reference.md
  - Data Sets: 
-    - IOBP2: data_sets/IOBP2-dataset.md
+    - IOBP2: data_sets/IOBP2.md
     - DCLP3: data_sets/DCLP3.md
     - DCLP5: data_sets/DCLP5.md
-    - PEDAP: data_sets/PEDAP-dataset.md
+    - PEDAP: data_sets/PEDAP.md
     - FLAIR: data_sets/FLAIR.md
     - LOOP: data_sets/LOOP.md
     - T1DExi: data_sets/T1DEXI.md
+    - T1DEXIP: data_sets/T1DEXIP.md
     

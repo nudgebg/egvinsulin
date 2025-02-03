@@ -27,9 +27,9 @@
 |MEDTRONIC 770G IN AUTO MODE |AID|2|
 |MEDTRONIC 770G |AID|1|
 
-- A total of 502 patients are in the dataset. 
-- Total number of days with data 13235
-- Average of 26.79 days per patient
+- A total of 493 patients are in the dataset (with both bolus and cgm data) 
+- Total number of days with data 13413
+- Average of ~27 days per patient
 
 
 ## Data
