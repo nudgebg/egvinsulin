@@ -192,6 +192,15 @@ class StudyDataset:
     
     
     def save_cgm_to_file(self, out_path,  compressed=False):
+        """Save the cgm history to a file.
+        This method extracts the cgm history, processes it to reduce file size,
+        and saves it to a specified output directory. If the directory does not exist,
+        it will be created. The filenames follow the pattern <study_name>_cgm_history.csv(.gz)
+
+        Args:
+            out_path (str): The path to the output directory where the file will be saved.
+            compressed (bool, optional): If True, the output file will be compressed. Defaults to False.
+        """
         if not os.path.exists(out_path):
             logger.warning(f"Output directory {out_path} does not exist. Creating it now.")
             os.makedirs(out_path)
@@ -203,6 +212,19 @@ class StudyDataset:
         save_to_csv(df_cgm, file_path, compressed)    
         
     def save_bolus_event_history_to_file(self, out_path, compressed=False):
+        """
+        Save the bolus event history to a file.
+        This method extracts the bolus event history, processes it to reduce file size,
+        and saves it to a specified output directory. If the directory does not exist,
+        it will be created. The filenames follow the pattern <study_name>_bolus_event_history.csv(.gz)
+
+        Parameters:
+            out_path (str): The path to the output directory where the file will be saved.
+            compressed (bool): If True, the output file will be compressed. Default is False.
+        Returns:
+            None
+        """
+
         if not os.path.exists(out_path):
             logger.warning(f"Output directory {out_path} does not exist. Creating it now.")
             os.makedirs(out_path)
@@ -215,6 +237,19 @@ class StudyDataset:
         save_to_csv(df_bolus, file_path, compressed)
 
     def save_basal_event_history_to_file(self, out_path, compressed=False):
+        """
+        Save the basal event history to a file.
+        This method extracts the basal event history, processes it to reduce file size,
+        and saves it to a specified output directory. If the directory does not exist,
+        it will be created. The filenames follow the pattern <study_name>_basal_event_history.csv(.gz) 
+
+        Parameters:
+            out_path (str): The path to the output directory where the file will be saved.
+            compressed (bool): If True, the output file will be compressed. Default is False.
+        Returns:
+            None
+        """
+
         if not os.path.exists(out_path):
             logger.warning(f"Output directory {out_path} does not exist. Creating it now.")
             os.makedirs(out_path)

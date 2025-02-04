@@ -68,18 +68,24 @@ def overlaps(df):
     return overlap
 
 class T1DEXI(StudyDataset):
-    def __init__(self, study_path):
+    def __init__(self, study_path, drop_mdi=False):
         super().__init__(study_path, 'T1DEXI')
+        self.drop_mdi = drop_mdi
     
     
     def _load_data(self, subset: bool = False):
         dx = load_dx(os.path.join(self.study_path,'DX.xpt'))
         facm = load_facm(os.path.join(self.study_path,'FACM.xpt'),subset)
         lb = load_lb(os.path.join(self.study_path,'LB.xpt'),subset)
+        
+        #drop all mdi patients (we have reasons to believe the recordings contain a lot of duplicates)
+        if self.drop_mdi:
+            mdi_patients = dx.loc[dx.DXTRT=='MULTIPLE DAILY INJECTIONS'].USUBJID.unique()
+            facm = facm.loc[~facm.USUBJID.isin(mdi_patients)]
+            lb = lb.loc[~lb.USUBJID.isin(mdi_patients)]
 
-        # merge device data (DXTRT) to facm
+        # merge device data (DXTRT) to facm (we need this later to distinguish between pump and mdi patients)
         facm = pd.merge(facm, dx.loc[~dx.DXTRT.isin(['INSULIN PUMP','CLOSED LOOP INSULIN PUMP'])], on='USUBJID',how='left')
-        #ensure string
         facm = facm.astype({'USUBJID': 'str'})
 
         self.facm = facm
@@ -124,10 +130,11 @@ class T1DEXI(StudyDataset):
         
         ## convert to flow rates: approximate duration using time between the basal injections
         mdi_basal_injections = basal_rows.loc[(basal_rows.DXTRT == 'MULTIPLE DAILY INJECTIONS') & (basal_rows.FATEST=='BASAL INSULIN')]
-        mdi_basal_injections.loc[:,'FADUR'] = mdi_basal_injections.groupby('USUBJID',group_keys=False).FADTC.apply(lambda x: x.sort_values().diff().shift(-1))
-        basal_rows.loc[mdi_basal_injections.index, 'FADUR'] = mdi_basal_injections.FADUR
-        basal_rows.loc[mdi_basal_injections.index, 'FAORRES'] = mdi_basal_injections.FAORRES/(mdi_basal_injections.FADUR.dt.total_seconds()/3600)
-        basal_rows.loc[mdi_basal_injections.index, 'FATEST'] = 'BASAL FLOW RATE'
+        if not mdi_basal_injections.empty:
+            mdi_basal_injections.loc[:,'FADUR'] = mdi_basal_injections.groupby('USUBJID',group_keys=False).FADTC.apply(lambda x: x.sort_values().diff().shift(-1))
+            basal_rows.loc[mdi_basal_injections.index, 'FADUR'] = mdi_basal_injections.FADUR
+            basal_rows.loc[mdi_basal_injections.index, 'FAORRES'] = mdi_basal_injections.FAORRES/(mdi_basal_injections.FADUR.dt.total_seconds()/3600)
+            basal_rows.loc[mdi_basal_injections.index, 'FATEST'] = 'BASAL FLOW RATE'
 
         ## only keep flow rates
         basal_rows = basal_rows.loc[basal_rows.FATEST=='BASAL FLOW RATE']
@@ -149,7 +156,7 @@ class T1DEXI(StudyDataset):
         basal_rows['FADUR'] = basal_rows.groupby('USUBJID', group_keys=False).apply(correct_overlap)
         basal_rows.drop(columns='overlaps', inplace=True)
         
-        #TODO: remove delivery durations greater than x days
+        #TODO: Decide how to treat extremely large delivery durations (happening often at the very end)
 
         # Reduce, Rename
         basal_rows = basal_rows[['USUBJID','FADTC','FAORRES']]
@@ -166,17 +173,24 @@ class T1DEXI(StudyDataset):
             'LBORRES': self.COL_NAME_CGM
         })
         
+class T1DEXIP(T1DEXI):
+    def __init__(self, study_path, drop_mdi=False):
+        super().__init__(study_path, 'T1DEXIP')
+        self.drop_mdi = drop_mdi
+    
+    def _extract_cgm_history(self):
+        glucose = super()._extract_cgm_history()
+        #there is one row with values > 401, we remove it
+        return glucose.loc[glucose[self.COL_NAME_CGM] <= 401]
 
 # Example usage
 if __name__ == "__main__":
     logger = Logger.get_logger(__file__)
     logger.info(os.getcwd())
     study = T1DEXI(study_path=os.path.join(os.getcwd(),'data', 'raw', 'T1DEXI'))
+    out_path = os.path.join(os.getcwd(),'data', 'out', 'T1DEXI')
     study.load_data()
     study.extract_basal_event_history()
-    # print("Bolus Event History:")
-    # print(study.extract_bolus_event_history())
-    # print("\nBasal Event History:")
-    # print(study.extract_basal_event_history())
-    # print("\nCGM History:")
-    # print(study.extract_cgm_history())
+    study.extract_bolus_event_history()
+    study.extract_cgm_history()
+    study.save_basal_event_history_to_file(out_path)

@@ -57,7 +57,7 @@ For each study, the dataframes are saved in the `data/out/<study-name>/` folder:
 
 """
 import os
-from studies import IOBP2,Flair,PEDAP,DCLP3,DCLP5,Loop,StudyDataset,T1DEXI
+from studies import IOBP2,Flair,PEDAP,DCLP3,DCLP5,Loop,StudyDataset,T1DEXI,T1DEXIP
 
 import src.postprocessing as pp
 from src.logger import Logger
@@ -109,7 +109,8 @@ def main(load_subset=False):
               'DCLP3 Public Dataset - Release 3 - 2022-08-04': DCLP3,
               'DCLP5_Dataset_2022-01-20-5e0f3b16-c890-4ace-9e3b-531f3687cf53': DCLP5,
               'Loop study public dataset 2023-01-31': Loop,
-              'T1DEXI': T1DEXI}
+              'T1DEXI': T1DEXI,
+              'T1DEXIP': T1DEXIP}
 
   # Filter and log folders that cannot be matched
   study_folder_names = [f for f in os.listdir(in_path) if os.path.isdir(os.path.join(in_path, f))]
@@ -135,7 +136,7 @@ def main(load_subset=False):
   # Process matched folders with progress indicators
   logger.info(f"Start processing supported study folders:")
   for i,(folder, study_class) in enumerate(matched_folders):
-      logger.info(f'{i}: {folder} using {study_class.__name__}')
+      logger.info(f'\'{folder}\' using {study_class.__name__} class')
   logger.info("")
 
   num_steps_per_folder = 4
@@ -171,22 +172,25 @@ def process_folder(study: StudyDataset, out_path_study, progress, load_subset):
         """
       progress.set_description_str(f"{study.__class__.__name__}: (Loading data)")
       study.load_data(subset=load_subset)
-      tqdm.write(f"[{current_time()}] [x] Data loaded"); progress.update(1)
+      progress.update(1)
+      tqdm.write(f"[{current_time()}] [x] Data loaded"); 
 
       #boluses
       progress.set_description_str(f"{study.__class__.__name__}: Extracting boluses")
       study.save_bolus_event_history_to_file(out_path_study,True)
-      tqdm.write(f"[{current_time()}] [x] Boluses extracted"); progress.update(1)
+      progress.update(1)
+      tqdm.write(f"[{current_time()}] [x] Boluses extracted"); 
 
       #basals
       progress.set_description_str(f"{study.__class__.__name__}: Extracting basals")
       study.save_basal_event_history_to_file(out_path_study, True)
-      tqdm.write(f"[{current_time()}] [x] Basal extracted"); progress.update(1)
+      progress.update(1)
+      tqdm.write(f"[{current_time()}] [x] Basal extracted"); 
 
       #cgm
       progress.set_description_str(f"{study.__class__.__name__}: Extracting glucose")
       study.save_cgm_to_file(out_path_study, True)
-      tqdm.write(f"[{current_time()}] [x] CGM extracted"); progress.update(1)
+      progress.update(1); tqdm.write(f"[{current_time()}] [x] CGM extracted"); 
       
 
 if __name__ == "__main__":
