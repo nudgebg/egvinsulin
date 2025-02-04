@@ -71,4 +71,5 @@ nav:
     - LOOP: data_sets/LOOP.md
     - T1DExi: data_sets/T1DEXI.md
     - T1DEXIP: data_sets/T1DEXIP.md
+    - Replace BG: data_sets/REPLACE_BG.md
     
