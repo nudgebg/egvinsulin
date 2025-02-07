@@ -37,7 +37,7 @@ def plot_cdf(data, title='CDF', xlabel='Value', ylabel='CDF', ax=None, **kwargs)
     
     # Plot the CDF
     if ax is None:
-        plt.figure(figsize=(8, 5))
+        plt.figure(figsize=(8, 2))
         ax = plt.gca()
 
     presets = {

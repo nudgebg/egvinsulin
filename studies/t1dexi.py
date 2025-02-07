@@ -78,12 +78,23 @@ class T1DEXI(StudyDataset):
         facm = load_facm(os.path.join(self.study_path,'FACM.xpt'),subset)
         lb = load_lb(os.path.join(self.study_path,'LB.xpt'),subset)
         
+        #only keep patients that have data in all three datasets
+        facm_patients = facm.USUBJID.unique()
+        dx_patients = dx.USUBJID.unique()
+        lb_patients = lb.USUBJID.unique()
+        shared_patients = set(facm_patients) & set(dx_patients) & set(lb_patients)
+        
+        facm = facm[facm['USUBJID'].isin(shared_patients)]
+        dx = dx[dx['USUBJID'].isin(shared_patients)]
+        lb = lb[lb['USUBJID'].isin(shared_patients)]
+        
         #drop all mdi patients (we have reasons to believe the recordings contain a lot of duplicates)
         if self.drop_mdi:
             mdi_patients = dx.loc[dx.DXTRT=='MULTIPLE DAILY INJECTIONS'].USUBJID.unique()
             facm = facm.loc[~facm.USUBJID.isin(mdi_patients)]
             lb = lb.loc[~lb.USUBJID.isin(mdi_patients)]
 
+        
         # merge device data (DXTRT) to facm (we need this later to distinguish between pump and mdi patients)
         facm = pd.merge(facm, dx.loc[~dx.DXTRT.isin(['INSULIN PUMP','CLOSED LOOP INSULIN PUMP'])], on='USUBJID',how='left')
         facm = facm.astype({'USUBJID': 'str'})
