@@ -219,3 +219,21 @@ def extract_surrounding_rows(df, index, n, sort_by):
     end = min(i_loc + n + 1, len(sorted_df))
     
     return sorted_df.iloc[start:end]
+
+def grouped_nan_counts(df, group_cols, value_cols):
+    """
+    Count the number of NaN values in each group of a DataFrame.
+    
+    Parameters:
+        df (pd.DataFrame): The input DataFrame.
+        group_cols (str or list): The column(s) to group by.
+        value_cols (str or list): The column(s) to count NaN values for.
+    
+    Returns:
+        pd.DataFrame: A DataFrame containing the count of NaN values for each group.
+    """
+    if isinstance(group_cols, str):
+        group_cols = [group_cols]
+    if isinstance(value_cols, str):
+        value_cols = [value_cols]
+    return df.groupby(group_cols).apply(lambda x: x[value_cols].count())
