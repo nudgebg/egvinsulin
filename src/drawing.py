@@ -137,8 +137,8 @@ def drawMovingAverage(ax, df, datetime_col, value_col, aggregator='mean', **kwar
     df = df.copy()
     
     df['hod'] = get_hour_of_day(df[datetime_col])
-    ma  = df[['hod',value_col]].sort_values('hod').rolling(window=len(df)//48, 
-                                                                          min_periods=len(df)//48, 
+    ma  = df[['hod',value_col]].sort_values('hod').rolling(window=len(df)//24, 
+                                                                          min_periods=len(df)//24, 
                                                                           on='hod', center=True).agg(aggregator)    
     ma = ma.sample(len(df)//10)
 
@@ -146,7 +146,7 @@ def drawMovingAverage(ax, df, datetime_col, value_col, aggregator='mean', **kwar
     args.update(kwargs)
     #if not ax:
     #    f,ax = create_axis()
-    ax.scatter(ma.hod, ma[value_col], **args)
+    ax.scatter(ma['hod'], ma[value_col], **args)
     ax.set_xlabel('Hour of Day')
     ax.set_xticks(np.arange(0,24,4))
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x):02d}:00'))
