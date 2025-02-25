@@ -60,7 +60,10 @@ nav:
  - Babelbetes: index.md
  - How to Guides:
     - README: how-to-guides.md
+    - Best Pracitces: best-practices.md
     - Python Setup: python-setup.md
+ - Better Dataset Recommendations: recommendations.md
+ - Checklist for Data Analysis: checklist.md
  - Code Reference: reference.md
  - Data Sets: 
     - IOBP2: data_sets/IOBP2.md
