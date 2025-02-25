@@ -129,9 +129,10 @@ class ReplaceBG(StudyDataset):
         return df_basal
 
     def _extract_cgm_history(self):
-
         df_cgm = self.df_cgm.copy()
         df_cgm = df_cgm.drop_duplicates(subset=['PtID', 'datetime','RecordType','GlucoseValue'])
+        df_cgm = df_cgm['GlucoseValue'].replace({39:40, 401:400})
+        
         # Return an empty DataFrame with the required columns
         return pd.DataFrame({
             self.COL_NAME_PATIENT_ID: pd.Series(dtype='str'),

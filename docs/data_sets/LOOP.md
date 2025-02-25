@@ -156,7 +156,7 @@ Local datetimes can be obtained with a small estimated error (<2 hours for >96% 
 - there are also blood calibration 
 
 ### Special Values
-0 and 400 CGM values are capped (as expected) but no special values (e.g. 0) values exist.
+CGM values are capped (as expected) but no special values (e.g. 0) values exist.
 ![](assets/loop-cgm-dist.png)
 
 #### CGM Duplicates

@@ -29,6 +29,28 @@ def parse_duration(duration_str):
     hours, minutes, seconds = map(int, duration_str.split(":"))
     return timedelta(hours=hours, minutes=minutes, seconds=seconds)
 
+def drawCGM(ax, datetimes, values, color=colors['CGM'], unit='mg/dL', **kwargs):
+    """Draws CGM (Continuous Glucose Monitoring) data on the given axes.
+
+    Args:
+        ax (matplotlib.axes.Axes): The axes on which to draw the CGM data.
+        datetimes (list of datetime): List of datetime objects representing the time points.
+        values (list of float): List of glucose values corresponding to the datetime points.
+        color (str, optional): Color for the CGM plot. Defaults to colors['CGM'].
+        **kwargs: Additional keyword arguments to customize the plot.
+    """
+    defaults = {'color': color, 'label': 'CGM', 's': 10}
+    defaults.update(kwargs)
+    
+    if unit == 'mmol/L':
+        values = values * 18.01559
+    elif unit != 'mg/dL':
+        raise ValueError(f'Unknown unit: {unit}')
+    
+    ax.scatter(datetimes, values, **defaults)
+    ax.set_ylabel('Glucose (mg/dL)')
+    ax.legend()
+
 def drawBasal(ax, datetimes, rates, color=colors['Basal'], **kwargs):
     """Draws the basal rates on the given axes.
     
