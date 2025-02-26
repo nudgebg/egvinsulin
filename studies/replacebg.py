@@ -92,7 +92,10 @@ class ReplaceBG(StudyDataset):
         df_bolus.loc[combination_boluses.index, 'Extended'] = np.NaN
 
         #we have a lot of 0 values, we replace these with NaN so they are dropped in the next step
-        df_bolus = df_bolus.replace({'Normal':0, 'Extended':0, 'Duration':timedelta(0)}, np.nan)
+        #for example there are extended boluses with zero extended part
+        #zero durations in extended parts were always linked to zero extended parts
+        #these would just create larger output files and we want to obmit them
+        df_bolus = df_bolus.replace({'Normal':0, 'Extended':0}, np.nan)
                 
         #Split rows with normal and extended part in two rows and recombine
         #the dropna makes sure we remove rows that had 0 deliveries in the previous step

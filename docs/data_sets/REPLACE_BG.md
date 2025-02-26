@@ -90,51 +90,67 @@ Differences:
  - ...
  - ...
 
- 
-## Checklist Template
-1. [X] Data Glossary
-1. [X] List all relevant files and columns
-    1. [X] Check if exist
-    2. [X] Check if there are more column names
-    3. [X] Are there other files, not mentioned?
-
-[ ] Data amounts: How much data do we have?
-    [ ] Dealing with data out of study bounds?
-
-
-2. [X] Missing data
-1. [X] Check for null values
-3. [X] Handle Duplicated Rows (overall)
-1. [X] Duplicates on special columns (e.g. patient id, datetime)
-    1. [X] How often?
-        1. [X] If often investigate?  Check for correlation (e.g. CGM dups)
-        2. [X] Drop (keep max (`test_get_duplicated_max_indexes`), sum, first?)
-4. [X] Incomplete Patients
-1. [X] Keep only patients with data in all datasets
-2. [X] Datetime Strings
-1. [X] Datetestrings consistent?
-3. [X] Timestamps
-1. [X] All in local time?
-1. [X] Glossary mentions UTC, timezones?
-2. [X] Check distributions
-1. [X] brekfast, lunch dinner peaks? 
-4. [X] CGMS
-1. [X] Special Numbers
-5. [X] Boluses
-1. [X] Requested vs. Delivered (check what timestamp means)
-2. [ ] Extended bolus part duration
-6. [ ] Basals
-1. [ ] Suspends?
-2. [ ] Temporary Basals
-
-
-
 ## Data Integrity
 
 ### Missing Data
     - Check for null values across columns.
 
-### Duplicate Rows
+### Incomplete Patients
+There are 226 unique patients in the patient roster
+There are 224 unique patients in the bolus table
+There are 208 unique patients in the basal table
+There are 226 unique patients in the cgm table
+
+There are 208 patients with data in all datasets. We exclude all other patients.
+
+## Datetimes
+Datetimes are provided relative to enrollment start by day (`DeviceDtTmDaysFromEnroll`) and time (`DeviceTm`). To keep data anonymous, the enrollment date is not provided. Therefore, we chose an arbitrary enrollment date for all patients `enrollment_start = datetime(2015,1,1)`
+
+From the glossary we know that the run in phase is at max 10 weeks before enrollment while study duration is maximum of 26 weeks. However, we see significant amounts of data exists beyond especially for pump data. 
+![](assets/replacebg_DeviceDtTmDaysFromEnroll.png)
+
+A quick check on cgm data shows that the reconstructed datetimes result in a continuous trace. 
+![](assets/replacebg_CGM_example.png)
+
+### Local time
+By glossary all datetimes are in local time and the moving average analysis shows charcteristic daily patterns showing post prandial peaks (bolus,cgm). However, basal profiles do not show this trend, likely because we are dealing with a CSII and not a AID system here. 
+![](assets/replacebg_moving_averages.png)
+
+## Diasend vs. Tidepool data source
+From the glossary we know that diasend durations are given in minutes instead of ms as in Tidepool. The cdf below confirms this.
+![](assets/replacebg_Bolus_Duration_Diasend.png)
+
+Our analysis shows that Diasend durations are in fact in minutes and need to be converted to milliseconds. 
+
+- there are no Diasend Basals (all Tidepool) 
+ - There are only 1060 Diasend boluses with BolusType `Combination` or `Normal`
+ - all Combination boluses have a duration, this is given (**in minutes**)
+ - But only 4 out of 1060 have an extended part
+
+Given that some of them have an extended part it seems more logical that the extended part is missing for the others. Therefore we treat Diasend imports by    
+
+**1.** Adjust from minutes to milliseconds and   
+**2.** Set Duration to 0 when extended part is missing.
+
+## Data distributions
+![](assets/replacebg_CDFs.png)
+
+The data distributions look as expected. Basal rates range from 0-~5.175 U/hr, boluses from 0-35 Units and glucose data from 39-401 mg/dl.
+
+## Basal
+See note on [discarded columns](#discarded-columns)
+
+### Suspends & Temp Basals
+Temp and Suspend basals are reported as normal basal rates meaning that they are already integrated. (In Flair for example, the suspends needed to be converted into new basal events and we had to use the temp basal rates to change standard basal rates.)
+
+However:
+- Suspends are reported as NaN basal rates and therefore need to be fileld with zeros so that they are not discarded
+
+```df_basal.fillna({'Rate':0}, inplace=True)```
+
+### Temporary Basals
+
+### Basal Duplicates
 
  - Some duplicates have same time, duration and rate and therefore are equivalent for our purposes even if they show differences in other columns. 
  - Others share the same datetime and duration but different rate. 
@@ -161,48 +177,12 @@ While the above approaches might seem plausible, we can't really say that it is 
  2. We don't know if we can judge the right row by the duration
  3. We don't know if a suspend really overpowers a scheduled event
 
-Other approaches might be even better such as using the import date etc. However, we could not find any data that would favor one over the other. Ultimately this affects only about 1% of the data. Therefore, we go back to a simpler method in resolving duplicates: using the row with the Record ID maximum. 
+Other approaches might be even better such as using the import date etc. However, we could not find any data that would favor one over the other. Ultimately this affects only about 1% of the data. 
+
+**Therefore, we go back to a simpler method in resolving duplicates: using the row with the Record ID maximum. **
 
 
-### Incomplete Patients
-There are 226 unique patients in the patient roster
-There are 224 unique patients in the bolus table
-There are 208 unique patients in the basal table
-There are 226 unique patients in the cgm table
-
-There are 208 patients with data in all datasets. We exclude all other patients.
-
-
-## Datetimes
-Datetimes are provided relative to enrollment start by day (`DeviceDtTmDaysFromEnroll`) and time (`DeviceTm`). To keep data anonymous, the enrollment date is not provided. Therefore, we chose an arbitrary enrollment date for all patients `enrollment_start = datetime(2015,1,1)`
-
-From the glossary we know that the run in phase is at max 10 weeks before enrollment while study duration is maximum of 26 weeks. However, we see significant amounts of data exists beyond especially for pump data. 
-![](assets/replacebg_DeviceDtTmDaysFromEnroll.png)
-
-A quick check on cgm data shows that the reconstructed datetimes result in a continuous trace. 
-![](assets/replacebg_CGM_example.png)
-
-### Local time
-By glossary all datetimes are in local time and the moving average analysis shows charcteristic daily patterns showing post prandial peaks (bolus,cgm). However, basal profiles do not show this trend, likely because we are dealing with a CSII and not a AID system here. 
-![](assets/replacebg_moving_averages.png)
-
-### Durations
-#### Diasend vs. Tidepool data source
-From the glossary we know that diasend durations are given in minutes instead of ms as in Tidepool. The cdf below confirms this.
-![](assets/replacebg_Bolus_Duration_Diasend.png)
-
-Our analysis shows that 
- - there are no Diasend Basals (all Tidepool) 
- - There are only 1060 Diasend boluses with BolusType `Combination` or `Normal`
- - all Combination boluses have a duration, this is given (**in minutes**)
- - But only 4 out of 1060 have an extended part
-
-Given that some of them have an extended part it seems more logical that the extended part is missing for the others. Therefore we treat Diasend imports by    
-
-**1.** Adjust from minutes to milliseconds and   
-**2.** Set Duration to 0 when extended part is missing.
-
-#### Basal Durations 
+### Basal Durations 
 We observed many very large basal durations. 
  - Often, long durations have a zero basal rate
  - Mostly the duraitons match the data gap of 1 or more days until next basal rate
@@ -213,20 +193,15 @@ Potentially, durations were calcualted retrospectively from one to the next basa
 
 It remains to the user to detect data gaps and outdated basal rates.
 
-## Data distributions
-![](assets/replacebg_CDFs.png)
-
-The data distributions look as expected. Basal rates range from 0-~5.175 U/hr, boluses from 0-35 Units and glucose data from 39-401 mg/dl.
 
 ## CGM
-Calibrations need to be dropped. Values surrounding 39md/dl values exist and appear capped as in the image below. 
+Calibrations need to be dropped. 
+
+### Special CGM Values
+Values surrounding 39md/dl values exist and appear capped as in the image below. 
 ![](assets/replacebg_CGM_example_39.png)
 
-
-### Special Values
-    - Identify and replace any special CGM values if needed.
-
-It seems like 39 and 401 encode below and above range readings. A `value_counts()` analysis confirms this: There are much more 39 and 401 readings than 40 and 400 respectively:
+A `value_counts()` analysis confirms there are much more 39 and 401 readings than 40 and 400 respectively which represent out of range readings.
 ``` 
 39.0     28885
 40.0      4753
@@ -239,27 +214,37 @@ In Loop, data was capped to 40-400, in DCLP3 0 values indicated out of bound rea
 ```df_cgm = df_cgm['GlucoseValue'].replace({39:40, 401:400})```
 
 ## Boluses
+### Extended Boluses
+Each basal row has a Normal and an Extended part. The duration is Nan when there is an extended part. Therefore, to convert it into the target format of a insulin delivery with duration, we need to split rows with both parts in two rows (as we did before in other similar datasets). Normal boluses are assigned a zero duration while extended parts use the duration of the row. 
+
+### Extended Bolus Durations
+- Extended bolus duration is within expected limits of <8 hours.
+- Only extended bolus have a duration (that's good meaning there are no incorrect labeled Normal boluses)
+- Many extended boluses with short durations
+    - these have very small doses, many of them are 0
+- Around 1000 extended bolus doses are 0
+    - These have almost always a zero duration.
+
+It remains unclear where the zero durations come from and why we also see extremely short durations. 
+
+To avoid unnecessary rows with 0 deliveries, extended parts should be removed:
+```df_bolus = df_bolus.replace({'Normal':0, 'Extended':0}, np.nan)```
+
+### Diasend Boluses 
+As discussed in the section [Diasend vs. Tidepool data source](##Diasend-vs.-Tidepool-data-source), Diasend boluses seem to be corrup. At least the extended parts were almost always empty despite having a delivery duration. We resolve these by treating the Normal part as normal bolus. However, we can not guarantee that this is correct. However, if only affect ~1060 boluses (and even much less after dropping patients with incomplete data).
 
 ### Requested vs. Delivered
 See note on [discarded columns](#discarded-columns)
 
-
-### Extended Bolus Duration
-    - Check durations for extended boluses to ensure accuracy.
-
-
-## Basal Rates
-See note on [discarded columns](#discarded-columns)
-
-### Suspends
-    - Identify and process any basal suspensions.
-
-### Temporary Basals
-    - Review and validate temporary basal settings.
-
-## Other 
-
-### Leftovers/Nice to haves
-- Remove data outside of study start/end (figure out how to get study start and end day for each patient)
-- How to deal with clamped CGM data.
-- Marking and dealing out of bound readings
+## Collected Questions
+- Is our assumption about [irrelevant columns ](#discarded-columns) correct?
+- How should we resolve basal duplicates 
+    - with equal time and durations but different rates (e.g. scheduled)
+    - with equal time but different duration?
+    - why do some have differen durations? (some match next time, others don't)
+    - Should we use suspends over other events? And then, is NaN equal to a 0 basal rate? This is how we treated them in T1DExi
+- Should we exclude data before and after study start?
+    - Why is there such an excess of data before enrollment and after study end?
+- Why are there extended boluses with zero (or very small) dose?
+    - What are extended boluses with zero duration?
+- Why do almost all diasend boluses have a duration but no extended part?
