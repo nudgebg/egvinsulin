@@ -153,3 +153,99 @@ def get_min_max_duplicates(df,dup_cols,val_col):
     dups = df[df.duplicated(subset=dup_cols, keep=False)]
     results = dups.groupby(dup_cols)[val_col].agg(['min','max'])
     return results
+
+
+def overlaps(df, datetime_col, duration_col):
+    """
+    Check for overlapping intervals in a DataFrame.
+
+    Args:
+       df (pd.DataFrame): A DataFrame containing at least two columns:
+            - 'datetime_col': Start times of the intervals.
+            - 'duration_col': Durations of the intervals.
+    Returns:
+        pd.Series: A boolean Series indicating whether each interval overlaps
+        with the next interval
+    """
+    assert df[datetime_col].is_monotonic_increasing
+    end = df[datetime_col] + df[duration_col]
+    next = df[datetime_col].shift(-1)
+    overlap = (next < end)
+    return overlap
+
+
+def count_differences_in_duplicates(df, subset):
+    """
+    Counts the number of differences between duplicated rows for all columns.
+    
+    Parameters:
+        df (pd.DataFrame): The input DataFrame.
+    
+    Returns:
+        pd.Series: A series where the index represents column names and values represent the count of differences.
+    """
+    duplicated_rows = df[df.duplicated(keep=False, subset=subset)]  # Keep all duplicate occurrences
+    
+    if duplicated_rows.empty:
+        return pd.Series({col: 0 for col in df.columns})
+    
+    # Group by all columns and compute pairwise differences
+    diff_counts = (duplicated_rows.groupby(subset)
+                   .apply(lambda group: group.nunique(dropna=False) > 1)
+                   .sum())
+    
+    return diff_counts
+
+
+def extract_surrounding_rows(df, index, n, sort_by):
+    """
+    Extracts rows surrounding a given index after sorting the DataFrame by a subset of columns.
+    
+    Parameters:
+        df (pd.DataFrame): The input DataFrame.
+        index (int): The row index to center on.
+        n (int): The number of rows before and after the given index to extract (using logical indexing).
+        sort_by (list): List of column names to sort the DataFrame by.
+    Returns:
+        pd.DataFrame: A DataFrame containing the extracted rows.
+    """
+    if index not in df.index:
+        raise ValueError("The provided index is not in the DataFrame.")
+    
+    sorted_df = df.sort_values(by=sort_by)
+    i_loc = sorted_df.index.get_loc(index)
+    
+    start = max(i_loc - n, 0)
+    end = min(i_loc + n + 1, len(sorted_df))
+    
+    return sorted_df.iloc[start:end]
+
+
+def grouped_value_counts(df, group_cols, value_cols):
+    """
+    Count the number of NaN, Non-NaN, and Zero values in each group of a DataFrame.
+    
+    Parameters:
+        df (pd.DataFrame): The input DataFrame.
+        group_cols (str or list): The column(s) to group by.
+        value_cols (str or list): The column(s) to count values for.
+    
+    Returns:
+        pd.DataFrame: A DataFrame containing the count of NaN, Non-NaN, and Zero values for each group.
+    """
+    if isinstance(group_cols, str):
+        group_cols = [group_cols]
+    if isinstance(value_cols, str):
+        value_cols = [value_cols]
+
+    def count_values(group):
+        nan_count = group[value_cols].isna().sum().sum()  # Sum NaNs for all value columns
+        non_nan_count = group[value_cols].notna().sum().sum()  # Sum Non-NaNs for all value columns
+        zero_count = (group[value_cols] == 0).sum().sum()  # Sum zeros for all value columns
+        return pd.Series({
+            'NaN Count': nan_count,
+            'Non-NaN Count': non_nan_count,
+            'Zero Count': zero_count
+        })
+
+    return df.groupby(group_cols).apply(count_values).reset_index()

@@ -29,6 +29,28 @@ def parse_duration(duration_str):
     hours, minutes, seconds = map(int, duration_str.split(":"))
     return timedelta(hours=hours, minutes=minutes, seconds=seconds)
 
+def drawCGM(ax, datetimes, values, color=colors['CGM'], unit='mg/dL', **kwargs):
+    """Draws CGM (Continuous Glucose Monitoring) data on the given axes.
+
+    Args:
+        ax (matplotlib.axes.Axes): The axes on which to draw the CGM data.
+        datetimes (list of datetime): List of datetime objects representing the time points.
+        values (list of float): List of glucose values corresponding to the datetime points.
+        color (str, optional): Color for the CGM plot. Defaults to colors['CGM'].
+        **kwargs: Additional keyword arguments to customize the plot.
+    """
+    defaults = {'color': color, 'label': 'CGM', 's': 10}
+    defaults.update(kwargs)
+    
+    if unit == 'mmol/L':
+        values = values * 18.01559
+    elif unit != 'mg/dL':
+        raise ValueError(f'Unknown unit: {unit}')
+    
+    ax.scatter(datetimes, values, **defaults)
+    ax.set_ylabel('Glucose (mg/dL)')
+    ax.legend()
+
 def drawBasal(ax, datetimes, rates, color=colors['Basal'], **kwargs):
     """Draws the basal rates on the given axes.
     
@@ -137,8 +159,8 @@ def drawMovingAverage(ax, df, datetime_col, value_col, aggregator='mean', **kwar
     df = df.copy()
     
     df['hod'] = get_hour_of_day(df[datetime_col])
-    ma  = df[['hod',value_col]].sort_values('hod').rolling(window=len(df)//48, 
-                                                                          min_periods=len(df)//48, 
+    ma  = df[['hod',value_col]].sort_values('hod').rolling(window=len(df)//24, 
+                                                                          min_periods=len(df)//24, 
                                                                           on='hod', center=True).agg(aggregator)    
     ma = ma.sample(len(df)//10)
 
@@ -146,7 +168,7 @@ def drawMovingAverage(ax, df, datetime_col, value_col, aggregator='mean', **kwar
     args.update(kwargs)
     #if not ax:
     #    f,ax = create_axis()
-    ax.scatter(ma.hod, ma[value_col], **args)
+    ax.scatter(ma['hod'], ma[value_col], **args)
     ax.set_xlabel('Hour of Day')
     ax.set_xticks(np.arange(0,24,4))
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x):02d}:00'))

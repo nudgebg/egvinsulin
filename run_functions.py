@@ -57,7 +57,7 @@ For each study, the dataframes are saved in the `data/out/<study-name>/` folder:
 
 """
 import os
-from studies import IOBP2,Flair,PEDAP,DCLP3,DCLP5,Loop,StudyDataset,T1DEXI,T1DEXIP
+from studies import IOBP2,Flair,PEDAP,DCLP3,DCLP5,Loop,StudyDataset,T1DEXI,T1DEXIP, ReplaceBG
 
 import src.postprocessing as pp
 from src.logger import Logger
@@ -110,7 +110,8 @@ def main(load_subset=False):
               'DCLP5_Dataset_2022-01-20-5e0f3b16-c890-4ace-9e3b-531f3687cf53': DCLP5,
               'Loop study public dataset 2023-01-31': Loop,
               'T1DEXI': T1DEXI,
-              'T1DEXIP': T1DEXIP}
+              'T1DEXIP': T1DEXIP,
+              'REPLACE-BG Dataset-79f6bdc8-3c51-4736-a39f-c4c0f71d45e5': ReplaceBG}
 
   # Filter and log folders that cannot be matched
   study_folder_names = [f for f in os.listdir(in_path) if os.path.isdir(os.path.join(in_path, f))]

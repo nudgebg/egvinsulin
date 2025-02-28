@@ -14,5 +14,6 @@ reference for the technical implementation of the
 ::: studies.loop.Loop
 ::: studies.t1dexi.T1DEXI
 ::: studies.t1dexi.T1DEXIP
+::: studies.replacebg.ReplaceBG
 ::: src.postprocessing
 ::: src.drawing
