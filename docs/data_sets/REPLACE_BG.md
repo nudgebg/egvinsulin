@@ -119,6 +119,8 @@ By glossary all datetimes are in local time and the moving average analysis show
 ## Diasend vs. Tidepool data source
 From the glossary we know that diasend durations are given in minutes instead of ms as in Tidepool. The cdf below confirms this.
 ![](assets/replacebg_Bolus_Duration_Diasend.png)
+![](assets/replacebg_data_source_pie.png)
+
 
 Our analysis shows that Diasend durations are in fact in minutes and need to be converted to milliseconds. 
 
