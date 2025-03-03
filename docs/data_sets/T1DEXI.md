@@ -1,7 +1,15 @@
-## Study
+# T1DEXI 
+This page summarizes our insights about the clinical study data of the **T1DEXI** study in efforts to understand how to handle bolus, basal and cgm data as well as assumptions that were made as well as open questions. 
 
-**Background:** Type 1 Diabetes EXercise Initiative: The Effect of Exercise on Glycemic Control in Type 1 Diabetes Study.  
-**Devices:** Dexcom G6 CGM system and one of the following Pumps (AID or CSII) or MDI.
+The full analysis of this dataset is provided in: `notebooks/understand-t1dexi-dataset/2025-01-14 - Understand Insulin Data Structures.ipynb`. We initially considered using published code [4], but decided against it due to unclear assumptions and partially unnecessarily complex code.
+
+## Study Overview
+- **Study Name**: Type 1 Diabetes EXercise Initiative: The Effect of Exercise on Glycemic Control in Type 1 Diabetes Study.  
+- **Population**: A total of 493 patients are in the dataset (with both bolus and cgm data) 
+- **Data Amount**: Total number of days with data 13413. Average of ~27 days per patient.
+
+### Devices
+Dexcom G6 CGM system and one of the following Pumps (AID or CSII) or MDI.
 
 |Pump|Treatment|# patients|   
 |----|----|-|
@@ -27,13 +35,10 @@
 |MEDTRONIC 770G IN AUTO MODE |AID|2|
 |MEDTRONIC 770G |AID|1|
 
-- A total of 493 patients are in the dataset (with both bolus and cgm data) 
-- Total number of days with data 13413
-- Average of ~27 days per patient
 
 
 ## Data
-The files are in .xpt format (SAS Transport) files which are often used in clinical research and pharmaceutical datasets. We load this data using pandas as tabular data. The tables hold data of different types and therefore each specific type (basals, boluses, cgms,..) need to be extracted using the right column conditions.
+The files are in .xpt format (SAS Transport) files which are often used in clinical research and pharmaceutical datasets. We load this data using pandas as tabular data. The tables hold data of different types and therefore each specific type (basals, boluses, cgms,..) need to be extracted using the right column conditions. As mentioned anbove, we initially considered using published code [4], but decided against it due to unclear assumptions and partially unnecessarily complex code.
 
 ## Glucose Data
 **LB (lb.xpt)** - Laboratory Test Results The LB domain contains records for most recent HbA1c as reported by participant at baseline, and Dexcom G6 continuous glucose monitoring (CGM) data during study period. Dexcom G6 data is typically recorded once every five minutes
@@ -139,9 +144,8 @@ We also see some patients (1149, 1386, 255,475,987) that have the same MDI basal
 
 #### Duplicated Basal Rates
 - We see temporal Boluses and Basal duplicates, what should we do?
+ (also with different durations alternating between 0 and a bigger value). Let's check how to get rid of them:
 
- (in basal also with different durations altnerating between 0 and a bigger value). Let;s check how to get rid of them
-#inspect duplicates
 
 **What we found**:  
  - ~0.1 % duplicates

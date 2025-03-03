@@ -1,18 +1,19 @@
-## Replace BG
+# Replace BG 
+This page summarizes our insights about the clinical study data of the **Replace BG** study in efforts to understand how to handle bolus, basal and cgm data as well as assumptions that were made as well as open questions. 
 
-A Randomized Trial Comparing Continuous Glucose Monitoring With and Without Routine Blood Glucose Monitoring in Adults with Type 1 Diabetes
+The full analysis of this dataset is provided in: `notebooks/understand-replacebg-dataset/understand-replace-bg.ipynb`
 
-**Background:** The primary objective of the study is to determine whether the routine use of CGM without BGM confirmation is as safe and effective as CGM used as an adjunct to BGM. 
-
-**Duration**: Run-in phase of 2–10 weeks, 26 weeks study duration
-**Devices:** Dexcom G4 Platinum
-**Population:** 276 entered run in phase, 226 were assigned to groups, 217 completed, Patients, Type 1, >=18 years, CSII
-**Data:** There are roughly xxx days of data from 225 participants  
-
-
-“Data were uploaded from the study CGM and BGM devices and the participant’spersonal insulin pump by using the Tidepool platform (http://tidepool.org). For insulin pumps that were unable to be uploaded to the Tidepool platform, the data were obtained by using Diasend (Chicago, IL) software” ([Aleppo et al., 2017, p. 540](zotero://select/library/items/JMBWSKEE)) ([pdf](zotero://open-pdf/library/items/JHYQJ9TW?page=3&annotation=GTMF46IL))
+## Study Overview
+- **Study Name**: A Randomized Trial Comparing Continuous Glucose Monitoring With and Without Routine Blood Glucose Monitoring in Adults with Type 1 Diabetes
+- **Background:** The primary objective of the study is to determine whether the routine use of CGM without BGM confirmation is as safe and effective as CGM used as an adjunct to BGM. 
+- **Duration**: Run-in phase of 2–10 weeks, 26 weeks study duration
+- **Devices:** Dexcom G4 Platinum
+- **Population:** 276 entered run in phase, 226 were assigned to groups, 217 completed, Patients, Type 1, >=18 years, CSII
+- **Data:** There are roughly xxx days of data from 225 participants  
 
 ### Data
+
+“Data were uploaded from the study CGM and BGM devices and the participant’spersonal insulin pump by using the Tidepool platform (http://tidepool.org). For insulin pumps that were unable to be uploaded to the Tidepool platform, the data were obtained by using Diasend (Chicago, IL) software” ([Aleppo et al., 2017, p. 540](zotero://select/library/items/JMBWSKEE)) ([pdf](zotero://open-pdf/library/items/JHYQJ9TW?page=3&annotation=GTMF46IL))
 
 The study data folder is named **Loop study public dataset 2023-01-31**
 
@@ -55,7 +56,7 @@ The following lists all relevant columns. Other columns were considered irreleva
 |-|-|-|
 |PtId||Different spelling (small d) instead of PtID|
 |RecID| Unique record ID in table|This is the upload id which we match with the ParentHDeviceUploadsID in the other tables|
-|DataSource|Source of data (Ex: Tidepool, Diasend, etc.)|We need this to distingusih between Tidepool and Diasend (see [durations](#durations))| 
+|DataSource|Source of data (Ex: Tidepool, Diasend, etc.)|We need this to distingusih between Tidepool and Diasend (see [diasend vs. tidepool](#diasend-vs-tidepool))| 
 
 #### HDeviceBasal.txt
 Note: File not included in the JAEB file anymore!
@@ -81,7 +82,7 @@ Differences:
 - Dexcom times seem to be present in all rows
 - No timezone offsets are present, probably all in local time
 
-#TODO:
+## TODO:
  1. Check if Dexcom times exist and if they are needed
  2. Check if duration is in milliseconds (Bolus)
 
@@ -116,7 +117,7 @@ A quick check on cgm data shows that the reconstructed datetimes result in a con
 By glossary all datetimes are in local time and the moving average analysis shows charcteristic daily patterns showing post prandial peaks (bolus,cgm). However, basal profiles do not show this trend, likely because we are dealing with a CSII and not a AID system here. 
 ![](assets/replacebg_moving_averages.png)
 
-## Diasend vs. Tidepool data source
+## Diasend vs. Tidepool
 From the glossary we know that diasend durations are given in minutes instead of ms as in Tidepool. The cdf below confirms this.
 ![](assets/replacebg_Bolus_Duration_Diasend.png)
 ![](assets/replacebg_data_source_pie.png)
@@ -233,7 +234,7 @@ To avoid unnecessary rows with 0 deliveries, extended parts should be removed:
 ```df_bolus = df_bolus.replace({'Normal':0, 'Extended':0}, np.nan)```
 
 ### Diasend Boluses 
-As discussed in the section [Diasend vs. Tidepool data source](##Diasend-vs.-Tidepool-data-source), Diasend boluses seem to be corrup. At least the extended parts were almost always empty despite having a delivery duration. We resolve these by treating the Normal part as normal bolus. However, we can not guarantee that this is correct. However, if only affect ~1060 boluses (and even much less after dropping patients with incomplete data).
+As discussed in the section [Diasend vs. Tidepool data source](#diasend-vs-tidepool), Diasend boluses seem to be corrup. At least the extended parts were almost always empty despite having a delivery duration. We resolve these by treating the Normal part as normal bolus. However, we can not guarantee that this is correct. However, if only affect ~1060 boluses (and even much less after dropping patients with incomplete data).
 
 ### Requested vs. Delivered
 See note on [discarded columns](#discarded-columns)

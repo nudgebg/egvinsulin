@@ -13,7 +13,7 @@ def durations_since_previous_valid_value(dates, values):
     values (list): A list of values.
 
     Returns:
-    list: A list of durations between each date and the previous valid date. NaN if there is no previous valid date.
+        durations (list): A list of durations between each date and the previous valid date. NaN if there is no previous valid date.
     """
     last_valid_date = None
     durations = []
@@ -44,8 +44,7 @@ def calculate_daily_basal_dose(df):
         df (pandas.DataFrame): The DataFrame containing the insulin data.
     
     Returns:
-        pandas.DataFrame: The daily basal rates DataFrame with two columns: 'date' and 'basal'. 
-        The 'date' column contains the dates of each day, and the 'basal' column contains the calculated TDDs.
+        tdds (pandas.DataFrame):  dataframe with two columns: `date` and `dose` golding the daily total basal dose. 
     
     Required Column Names:
         - datetime: The timestamp of each basal insulin rate event.
@@ -122,7 +121,7 @@ def calculate_tdd(df_bolus, df_basal):
         - datetime (datetime): The date and time of the basal dose.
         - basal_rate (float): The basal insulin rate event [U/hr].
     Returns:
-    DataFrame: DataFrame containing the merged TDD data.
+        tdd (DataFrame): DataFrame containing both the bolus and basal tdd data.
     """
     daily_basals = df_basal.groupby('patient_id').apply(calculate_daily_basal_dose, include_groups=False )
     daily_bolus = df_bolus.groupby('patient_id').apply(calculate_daily_bolus_dose, include_groups=False)

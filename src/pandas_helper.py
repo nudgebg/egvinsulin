@@ -45,8 +45,8 @@ def split_sequences(df, label_col):
       df (pd.DataFrame): The DataFrame containing the data.
       label_col (str): The column name for the labels.
 
-      Returns:
-         (pd.Series): The group IDs.
+    Returns:
+        group_ids (pd.Series): The group IDs.
     
     Example:
         df = pd.DataFrame({'label': ['A', 'A', 'B', 'B', 'B', 'A', 'A', 'C', 'C', 'A']})
@@ -142,8 +142,9 @@ def head_tail(df,n=2):
         n (int): The number of rows to return from the head and tail of the DataFrame.
 
     Returns:
-        tuple: A tuple containing two DataFrames:
-            - The first n rows of the DataFrame.
+        dataframe (pd.DataFrame): A new pandas dataframe containing   
+
+            - The first n rows of the DataFrame.  
             - The last n rows of the DataFrame.
     """
     return pd.concat([df.head(n), df.tail(n)])
@@ -182,7 +183,7 @@ def count_differences_in_duplicates(df, subset):
         df (pd.DataFrame): The input DataFrame.
     
     Returns:
-        pd.Series: A series where the index represents column names and values represent the count of differences.
+        series (pd.Series): A series where the index represents column names and values represent the count of differences.
     """
     duplicated_rows = df[df.duplicated(keep=False, subset=subset)]  # Keep all duplicate occurrences
     
@@ -231,7 +232,7 @@ def grouped_value_counts(df, group_cols, value_cols):
         value_cols (str or list): The column(s) to count values for.
     
     Returns:
-        pd.DataFrame: A DataFrame containing the count of NaN, Non-NaN, and Zero values for each group.
+        dataframe (pd.DataFrame): A DataFrame containing the count of NaN, Non-NaN, and Zero values for each group.
     """
     if isinstance(group_cols, str):
         group_cols = [group_cols]

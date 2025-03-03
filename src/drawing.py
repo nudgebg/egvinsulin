@@ -12,7 +12,9 @@ def create_axis():
     """Creates a new figure and axis for plotting.
     
     Returns:
-        matplotlib.axes.Axes: The created axis.
+        figure (matplotlib.figure.Figure): The created figure.
+        axes (matplotlib.axes.Axes): The created axis.
+
     """
     fig, ax = plt.figure(figsize=(10, 2)), plt.gca()
     return fig, ax
@@ -37,7 +39,7 @@ def drawCGM(ax, datetimes, values, color=colors['CGM'], unit='mg/dL', **kwargs):
         datetimes (list of datetime): List of datetime objects representing the time points.
         values (list of float): List of glucose values corresponding to the datetime points.
         color (str, optional): Color for the CGM plot. Defaults to colors['CGM'].
-        **kwargs: Additional keyword arguments to customize the plot.
+        **kwargs (dict): Additional keyword arguments to customize the plot.
     """
     defaults = {'color': color, 'label': 'CGM', 's': 10}
     defaults.update(kwargs)
@@ -59,7 +61,7 @@ def drawBasal(ax, datetimes, rates, color=colors['Basal'], **kwargs):
         datetimes (list of datetime): List of datetime objects representing the time points.
         rates (list of float): List of basal rates corresponding to the datetime points.
         color (str, optional): Color for the basal rates plot. Defaults to colors['Basal'].
-        **kwargs: Additional keyword arguments to customize the plot.
+        **kwargs (dict): Additional keyword arguments to customize the plot.
     """
     defaults = {'color': color, 'fill': True, 'alpha': 0.5, 'edgecolor': 'blue'}
     defaults.update(kwargs)
@@ -77,8 +79,7 @@ def drawBoluses(ax, datetimes, boluses, **kwargs):
         ax (matplotlib.axes.Axes): The axis on which to draw the boluses.
         datetimes (list of datetime.datetime): List of datetime objects representing the times of the boluses.
         boluses (list of float): List of bolus values corresponding to the datetimes.
-        color (str, optional): Color of the bolus bars. Default is colors['Bolus'].
-        **kwargs: Additional keyword arguments passed to the ax.bar() method.
+        **kwargs (dict): Additional keyword arguments passed to the ax.bar() method.
     """
     if len(boluses) > 0:
         defaults= {'width': timedelta(minutes=15), 'color': colors['Bolus'], 'label': 'boluses', 'align': 'center'}
@@ -97,7 +98,7 @@ def drawExtendedBoluses(ax, datetimes, boluses_units, duration, color=colors['Bo
         boluses_units (list of float): List of bolus units corresponding to each datetime.
         duration (list of numpy.timedelta): List of delivery duration for each bolus.
         color (str, optional): Color of the boluses. Default is colors['Bolus'].
-        **kwargs: Additional keyword arguments to pass to the bar function.
+        **kwargs (dict): Additional keyword arguments to pass to the bar function.
     """
     for i in range(len(datetimes)):
         duration_hours = duration[i]/np.timedelta64(1, 'h')
@@ -112,7 +113,7 @@ def drawTempBasal(ax, datetimes, temp_basal_rates, temp_basal_durations, temp_ba
         temp_basal_rates (list of float): List of temporary basal rates corresponding to the datetimes.
         temp_basal_durations (list of numpy.timedelta): List of temporary basal durations corresponding to the datetimes.
         color (str, optional): Color of the temporary basal rates. Default is colors['Basal'].
-        **kwargs: Additional keyword arguments passed to the ax.bar() method.
+        **kwargs (dict): Additional keyword arguments passed to the ax.bar() method.
     """
     colors = np.where(temp_basal_types == 'Percent', 'yellow', 'orange')
     widths = np.array([parse_duration(dur) for dur in temp_basal_durations])
@@ -129,11 +130,11 @@ def drawAbsoluteBasalRates(ax, datetimes, rate, **kwargs):
         ax (matplotlib.axes.Axes): The axes on which to draw the basal rates.
         datetimes (array-like): An array of datetime objects representing the time points.
         rate (array-like): An array of basal rates corresponding to the time points.
-        **kwargs: Additional keyword arguments to customize the plot. Possible keys include:  
+        **kwargs (dict): Additional keyword arguments to customize the plot. Possible keys include:  
         
-         - 'hatch' (str): The hatch pattern for the plot. Default is '//'.
-         - 'label' (str): The label for the plot. Default is 'true basal rate'.
-         - 'edgecolor' (str): The edge color for the plot. Default is 'black'.
+            - 'hatch' (str): The hatch pattern for the plot. Default is '//'.
+            - 'label' (str): The label for the plot. Default is 'true basal rate'.
+            - 'edgecolor' (str): The edge color for the plot. Default is 'black'.
     """
 
     if len(datetimes)>0: 

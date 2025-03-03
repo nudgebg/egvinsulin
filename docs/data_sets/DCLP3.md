@@ -1,8 +1,10 @@
-This part of the project documentation focuses on 
-**The International Diabetes Closed Loop (iDCL) trial: Clinical Acceptance of the Artificial Pancreas - A Pivotal Study of t:slim X2 with Control-IQ Technology (DCLP3)**. You'll get a chance to read about the background of the dataset,
-as well as the reasoning behind how the data was cleaned and normalized.
+# DCLP3
+This page summarizes our insights about the clinical study data of the **DCLP3** study in efforts to understand how to handle bolus, basal and cgm data as well as assumptions that were made as well as open questions. 
 
-## Study
+The full analysis of this dataset is provided in: `notebooks/understand-dclp3-dataset.ipynb`
+
+## Study Overview
+- **Study Name:** The International Diabetes Closed Loop (iDCL) trial: Clinical Acceptance of the Artificial Pancreas - A Pivotal Study of t:slim X2 with Control-IQ Technology (DCLP3)
 - **Study Background:** The objective of the study is to assess efficacy and safety of a closed loop system (t:slim X2 with Control-IQ Technology) in a large randomized controlled trial.
 - **Study Devices:** t:slim X2 with Control-IQ and Dexcom G6 system
 - **Study Population:** Teens and adults with type 1 diabetes ages 14 and older
