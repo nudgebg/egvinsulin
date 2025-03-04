@@ -1,17 +1,17 @@
-# The FLAIR study dataset
+# Flair 
+This page summarizes our insights about the clinical study data of the **Flair** study in efforts to understand how to handle bolus, basal and cgm data as well as assumptions that were made as well as open questions. 
 
+The full analysis of this dataset is provided in: `notebooks/understand-flair-dataset/understand-flair-dataset.ipynb` and (later added to refine) `notebooks/understand-flair-dataset/2024-07-12 - Understanding TDD Discrepancies in Flair Data.ipynb`
 
-## Background information
-**Study Title**: A Crossover Study Comparing Two Automated Insulin Delivery System
+## Study Overview
+- **Study Name**: A Crossover Study Comparing Two Automated Insulin Delivery System
 Algorithms (PID vs. PID + Fuzzy Logic) in Individuals with Type 1
-Diabetes (FLAIR- Fuzzy Logic Automated Insulin Regulation)
-
-**Description**: A randomized crossover trial will compare the efficacy and safety of an
+Diabetes (FLAIR - Fuzzy Logic Automated Insulin Regulation)
+- **Description**: A randomized crossover trial will compare the efficacy and safety of an
 automated insulin delivery (AID) system with a proportional-integral-
 derivative (PID) algorithm versus an automatic insulin delivery (AID) system
 with a PID algorithm enhanced with a Fuzzy Logic algorithm.
-    
-**Devices**: The Minimed 670G 4.0 Advanced Hybrid Closed-Loop (AHCL) (PID +
+- **Devices**: The Minimed 670G 4.0 Advanced Hybrid Closed-Loop (AHCL) (PID +
 Fuzzy Logic) pump with the Guardian Sensor (3) continuous glucose
 monitoring sensor.
 

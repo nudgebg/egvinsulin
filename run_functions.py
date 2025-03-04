@@ -77,7 +77,7 @@ def main(load_subset=False):
   Main function to process study data folders.
 
   Args:
-    test (bool): If True, use the test data directory. If False, use the raw data directory.
+    load_subset (bool): If True, runs the script on a limited amount of data (e.g. skipping rows)
   
   Logs:
     - Information about the current working directory and paths being used.

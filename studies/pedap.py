@@ -1,4 +1,4 @@
-from .studydataset import StudyDataset
+from studies.studydataset import StudyDataset
 import os
 import pandas as pd
 from src.date_helper import parse_flair_dates
@@ -50,7 +50,8 @@ class PEDAP(StudyDataset):
         temp = self.df_basal[['PtID', 'BasalRate', 'DeviceDtTm']].astype({'PtID':str}).copy()
         #to pass the data set validaiton
         temp['DeviceDtTm'] = pd.to_datetime(temp.DeviceDtTm)
-        return temp.rename(columns={'PtID': 'patient_id', 'DeviceDtTm': 'datetime', 'BasalRate': 'basal_rate'})
+        temp = temp.rename(columns={'PtID': 'patient_id', 'DeviceDtTm': 'datetime', 'BasalRate': 'basal_rate'})
+        return temp
 
     def _extract_bolus_event_history(self):
         # keep only tandem patients (having data in all 3 datasets)
@@ -65,10 +66,11 @@ class PEDAP(StudyDataset):
         
         temp = temp.rename(columns={'PtID': 'patient_id', 'DeviceDtTm': 'datetime',
                            'BolusAmount': 'bolus', 'Duration': 'delivery_duration'})
-        return temp.copy()
+        return temp
 
     def _extract_cgm_history(self):
         temp = self.df_cgm[['PtID', 'DeviceDtTm', 'CGMValue']].astype({'PtID':str}).copy()
         #to pass the data set validaiton
         temp['DeviceDtTm'] = pd.to_datetime(temp.DeviceDtTm)
-        return temp.rename(columns={'PtID': 'patient_id', 'DeviceDtTm': 'datetime', 'CGMValue': 'cgm'})
+        temp = temp.rename(columns={'PtID': 'patient_id', 'DeviceDtTm': 'datetime', 'CGMValue': 'cgm'})
+        return temp

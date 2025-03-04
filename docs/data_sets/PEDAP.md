@@ -1,14 +1,14 @@
-### The PEDAP study
+# PEDAP 
+This page summarizes our insights about the clinical study data of the **PEDAP** study in efforts to understand how to handle bolus, basal and cgm data as well as assumptions that were made as well as open questions. 
 
-**Title**: The Pediatric Artificial Pancreas (PEDAP) trial: A Randomized Controlled Comparison of the Control- IQ technology 
+The full analysis of this dataset is provided in: `notebooks/understand-pedap-dataset.ipynb`
+
+## Study Overview
+- **Study Name**: The Pediatric Artificial Pancreas (PEDAP) trial: A Randomized Controlled Comparison of the Control- IQ technology 
 Versus Standard of Care in Young Children in Type 1 Diabetes
-
-
-**Description**: The objective of the study is to assess efficacy, quality of life, and safety of a closed loop control (CLC) system (t:slim X2 with Control-IQ Technology) in a randomized controlled trial with partial crossover.
-    
-**Devices**: t:slim X2 with Control-IQ and Dexcom G6 system
-
-**Study Population**: Children aged 2 - 5 years old
+- **Description**: The objective of the study is to assess efficacy, quality of life, and safety of a closed loop control (CLC) system (t:slim X2 with Control-IQ Technology) in a randomized controlled trial with partial crossover.  
+- **Devices**: t:slim X2 with Control-IQ and Dexcom G6 system
+- **Study Population**: Children aged 2 - 5 years old
 
 ### Data Tables
 

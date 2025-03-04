@@ -1,12 +1,18 @@
-## Study
-Type 1 Diabetes EXercise Pediatrics Initiative (T1Dexi):
-The Effect of Exercise on Glycemic Control in Youth with
-Type 1 Diabetes
+# T1DEXIP (Pediatric) 
+This page summarizes our insights about the clinical study data of the **T1DEXIP (Pediatric)** study in efforts to understand how to handle bolus, basal and cgm data as well as assumptions that were made as well as open questions. 
 
-**Background:** Understanding of the effects of different forms of physical activity on
+The full analysis of this dataset is provided in: `notebooks/understand-t1dexi-dataset/2025-01-30 - Understand Insulin Data Structures T1DEXIP.ipynb`
+
+## Study Overview
+- **Study Name**: Type 1 Diabetes EXercise Pediatrics Initiative (T1Dexi):
+The Effect of Exercise on Glycemic Control in Youth with Type 1 Diabetes
+- **Background:** Understanding of the effects of different forms of physical activity on
 acute glycemia and on insulin and carbohydrate needs to better maintain
 euglycemia during and after exercise in youth with type 1 diabetes
-**Devices:** 
+- **Population:** 245 pediatric pateitns, age 12 – <18 years
+- **Data:** There are roughly 2500 patient days of data
+
+### Devices
 
 |Device|Treatment Type *| Number of Users|
 |-|-|-|
@@ -22,8 +28,6 @@ euglycemia during and after exercise in youth with type 1 diabetes
 |MEDTRONIC 670G IN AUTO MODE |AID|1|
 |TANDEM T:SLIM X2 WITH BASAL IQ |AID|1|
 
-**Population:** 245 pediatric pateitns, age 12 – <18 years
-**Data:** There are roughly 2500 patient days of data
 
 ## Differences T1DExi vs. T1DExip
 

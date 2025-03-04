@@ -4,9 +4,8 @@ from collections import namedtuple
 
 Period = namedtuple('Period', ['index_start', 'index_end', 'time_start', 'time_end'])
 
-def find_periods(df, value_col, time_col, start_trigger_fun, stop_trigger_fun, 
-                 use_last_start_occurence=False,
-                 use_last_stop_occurence=False):
+def find_periods(df, value_col: str, time_col: str, start_trigger_fun: callable, stop_trigger_fun: callable, 
+                 use_last_start_occurence=False):
     """
     Find periods in a DataFrame based on start and stop triggers.
 
@@ -14,12 +13,12 @@ def find_periods(df, value_col, time_col, start_trigger_fun, stop_trigger_fun,
         df (pandas.DataFrame): The DataFrame to search for periods.
         value_col (str): The name of the column containing the trigger values.
         time_col (str): The name of the column containing the time values.
-        start_trigger: The value that indicates the start of a period.
-        stop_trigger: The value that indicates the end of a period.
+        start_trigger_fun (callable): The value that indicates the start of a period.
+        stop_trigger_fun (callable): The value that indicates the end of a period.
         use_last_start_occurence (bool): If True, the last occurrence of the start trigger will be used.
 
     Returns:
-        list: A list of namedtuples representing the periods found. Each namedtuple contains the following attributes:
+        list (list): A list of named tuples representing the periods found. Each namedtuple contains the following attributes:
             - start_index (int): The index of the start trigger in the DataFrame.
             - end_index (int): The index of the stop trigger in the DataFrame.
             - start_time: The time value of the start trigger.

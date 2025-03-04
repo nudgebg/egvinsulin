@@ -1,7 +1,10 @@
-# Loop
+# Loop 
+This page summarizes our insights about the clinical study data of the **Loop** study in efforts to understand how to handle bolus, basal and cgm data as well as assumptions that were made as well as open questions. 
+
 The full analysis of this dataset is provided in: `notebooks/understand-loop-dataset.ipynb`
 
-**Study Title**: An Observational Study of Individuals with Type 1 Diabetes Using the Loop System for Automated Insulin Delivery: The Loop Observational Study (LOS)  
+## Study Overview
+- **Study Name**: An Observational Study of Individuals with Type 1 Diabetes Using the Loop System for Automated Insulin Delivery: The Loop Observational Study (LOS)  
 **Description**: Passive data collection to collect data on the efficacy, safety, usability, and quality of life/ psychosocial effects of the Loop System  
 **Devices**: insulin pump and a Dexcom or Medtronic CGM  
 **Study Population**: People of any age with Type 1 Diabetes

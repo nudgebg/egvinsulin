@@ -15,12 +15,10 @@ class Loop(StudyDataset):
         self._bolus_parquet_filename = 'loop_bolus.parquet'
 
         self.logger = Logger.get_logger('Loop')
-        self.temp_dir = os.path.join(self.study_path, '..', '..', 'temp')
         self.load_subset = False
-        if not os.path.exists(self.temp_dir):
-            os.makedirs(self.temp_dir)
-            self.logger.debug(f"Temporary directory created at {self.temp_dir}")
         
+        # Create a temporary directory to store the parquet files
+        self.temp_dir = os.path.join(self.study_path, '..', '..', 'temp')
     
     def convert_csv_to_partqet(self, ddf, parquet_path, override=False):
         if os.path.exists(parquet_path) and (not override):
@@ -37,13 +35,16 @@ class Loop(StudyDataset):
     def _load_data(self, subset: bool = False):
         self.df_patient = pd.read_csv(os.path.join(self.study_path, 'Data Tables',  'PtRoster.txt'), sep='|')
         self.load_subset = subset
-
+        
+        # Create a temporary directory to store the parquet files
+        if not os.path.exists(self.temp_dir):
+            os.makedirs(self.temp_dir)
+            self.logger.debug(f"Temporary directory created at {self.temp_dir}")
+        
         # Load the data from the CSV files and convert them to parquet files
         ddf_cgm = dd.read_csv(os.path.join(self.study_path, 'Data Tables', 'LOOPDeviceCGM*.txt'), sep='|', 
                             parse_dates=['UTCDtTm'], date_format='%Y-%m-%d %H:%M:%S', 
                             usecols=['PtID', 'UTCDtTm', 'RecordType', 'CGMVal'])
-        
-        
         ddf_basal = dd.read_csv(os.path.join(self.study_path, 'Data Tables', 'LOOPDeviceBasal*.txt'), sep='|', 
                                 parse_dates=['UTCDtTm'], date_format='%Y-%m-%d %H:%M:%S', 
                                 usecols=['PtID', 'UTCDtTm', 'BasalType', 'Duration', 'Rate'])

@@ -6,11 +6,16 @@ markdown_extensions:
   - pymdownx.snippets:
       base_path: ["."]  # Relative to the current Markdown file
 
+
+extra_css:
+  - style.css
+
 plugins:
-# - with-pdf:
-#     author: nudgebg
-#     copyright: This software is dedicated to the public domain. You can freely copy, modify, publish, use, distribute, sell, and sublicense this software, either in source code or in binary form, without warranty or limitation of liability.
-#     cover_subtitle: Project Documentation
+- with-pdf:
+    author: nudgebg
+    copyright: This software is dedicated to the public domain. You can freely copy, modify, publish, use, distribute, sell, and sublicense this software, either in source code or in binary form, without warranty or limitation of liability.
+    cover_subtitle: Project Documentation
+    toc_level: 2
         #
         #cover: false
         #back_cover: true

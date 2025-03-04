@@ -4,7 +4,7 @@ import numpy as np
 from datetime import datetime, timedelta
 import isodate
 
-from .studydataset import StudyDataset
+from studies.studydataset import StudyDataset
 from src.logger import Logger
 from src.pandas_helper import get_duplicated_max_indexes
 
@@ -186,7 +186,8 @@ class T1DEXI(StudyDataset):
         
 class T1DEXIP(T1DEXI):
     def __init__(self, study_path, drop_mdi=False):
-        super().__init__(study_path, 'T1DEXIP')
+        super().__init__(study_path)
+        self.study_name = 'T1DEXIP'
         self.drop_mdi = drop_mdi
     
     def _extract_cgm_history(self):

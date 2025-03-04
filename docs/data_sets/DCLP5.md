@@ -1,10 +1,10 @@
 # DCLP5 
+This page summarizes our insights about the clinical study data of the **DCLP5** study in efforts to understand how to handle bolus, basal and cgm data as well as assumptions that were made as well as open questions. 
 
-This part of the project documentation focuses on 
-**The International Diabetes Closed Loop (iDCL) trial: Clinical Acceptance of the Artificial Pancreas in Pediatrics - A Pivotal Study of t:slim X2 with Control-IQ Technology**. You'll get a chance to read about the background of the dataset,
-as well as the reasoning behind how the data was cleaned and normalized.
+The full analysis of this dataset is provided in: `notebooks/understand-dclp5-dataset.ipynb`
 
-## Study
+## Study Overview
+- **Study Name:** The International Diabetes Closed Loop (iDCL) trial: Clinical Acceptance of the Artificial Pancreas in Pediatrics - A Pivotal Study of t:slim X2 with Control-IQ Technology
 - **Study Background:** The objective of the study is to assess efficacy and safety of a closed loop control (CLC) system (t:slim X2 with Control-IQ Technology) in a randomized controlled trial with partial crossover.
 - **Study Devices:** t:slim X2 with Control-IQ and Dexcom G6 system
 - **Study Population:** Children aged 6 - 13 years old with type 1 diabetes
