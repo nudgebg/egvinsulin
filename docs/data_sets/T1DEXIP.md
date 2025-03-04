@@ -10,6 +10,7 @@ The Effect of Exercise on Glycemic Control in Youth with Type 1 Diabetes
 acute glycemia and on insulin and carbohydrate needs to better maintain
 euglycemia during and after exercise in youth with type 1 diabetes
 - **Population:** 245 pediatric pateitns, age 12 – <18 years
+- **Study Duration**: approximately 10 days
 - **Data:** There are roughly 2500 patient days of data
 
 ### Devices
