@@ -63,13 +63,13 @@ plugins:
           
 nav:
  - Babelbetes: index.md
- - How to Guides:
-    - README: how-to-guides.md
-    - Best Pracitces: best-practices.md
-    - Python Setup: python-setup.md
+ - README: how-to-guides.md
  - Better Dataset Recommendations: recommendations.md
- - Checklist for Data Analysis: checklist.md
- - Code Reference: reference.md
+ - Developer Guide:
+    - Python Setup: python-setup.md
+    - Code Reference: reference.md
+    - Best Pracitces: best-practices.md
+    - Checklist for Data Analysis: checklist.md
  - Data Sets: 
     - IOBP2: data_sets/IOBP2.md
     - DCLP3: data_sets/DCLP3.md
@@ -80,4 +80,4 @@ nav:
     - T1DExi: data_sets/T1DEXI.md
     - T1DEXIP: data_sets/T1DEXIP.md
     - Replace BG: data_sets/REPLACE_BG.md
-    
+ - License: snippets/license.md

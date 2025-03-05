@@ -14,7 +14,8 @@ The full analysis of this dataset is provided in: `notebooks/understand-dclp3-da
 From the DataGlossary.rtf file, the following relevant files were identified which are stored in the **Data Tables** subfolder. These are text files ("|" separator) and host many columns related to the iLet pump events and the Dexcom CGM Data. The glossary provides information about each column. Below are the relevant columns contained in each text file.
 
 
-**Pump_BolusDelivered.txt**: Holds information about pump data downloaded (bolus data only)
+**Pump_BolusDelivered.txt**: Holds information about pump data downloaded (bolus data only)   
+
 | Column| Description| Comment|
 |--|--|--|
 | PtID              | Patient ID||
@@ -25,6 +26,7 @@ From the DataGlossary.rtf file, the following relevant files were identified whi
 
 
 **Pump_BasalRateChange.txt**: Holds information about pump data downloaded (basal data only)
+
 | Column| Description| Comment|
 |--|--|--|
 | PtID| Patient ID| |
@@ -33,6 +35,7 @@ From the DataGlossary.rtf file, the following relevant files were identified whi
 | DataDtTm_adjusted| Adjusted value of DataDtTm| when available, should be used instead of DataDtTm, see [Datetime Adjustments](#datetime)|
 
 **Pump_CGMGlucoseValue.txt**: Holds information about cgm data downloaded
+
 | Column| Description| Comment|
 |--|--|--|
 | PtID| Patient ID| |
