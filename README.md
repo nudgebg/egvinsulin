@@ -1,22 +1,22 @@
 # Babelbetes README
-`Babelbetes` is a project designated to standardized public clinical diabetes data to support researchers, companies and regulators around the world. 
+`Babelbetes` is a project designated to standardized public clinical diabetes data to support researchers, companies, and regulators around the world. 
 
-Babelbetes is not only a script that extracts data from clinical studies. We've deliverately build it in a **modular** way including full traceability on the conducted analysis as well as summary of findings and recommendations for researchers and investigators. Babelbetes provides
+Babelbetes is not only a script that extracts data from clinical studies. We've deliberately build it in a **modular** way including full traceability on the conducted analysis as well as a summary of findings and recommendations for researchers and investigators. Babelbetes provides:
 
  **1. Analaysis scripts and and documentation**  
- You can learn about the datasets and what chalanges came with it by consulting the dataset summaries. You might also consult and review the jupyter notebooks that document our analysis.
+ You can learn about the datasets and what chalanges came with normalizing tem by consulting the dataset summaries. You might also consult and review the jupyter notebooks that document our analysis.
 
  **2. Python modules**
- You can use the python modules to extract standardized continuous glucose monitor(CGM) and insulin pump data from the supported study datasets. Reuse the helper and drawing functions to work with the data.
+ You can use the python modules to extract standardized continuous glucose monitor (CGM) and insulin pump data from the supported study datasets. Reuse the helper and drawing functions to work with the data.
   - Extend the functionality of existing study classes or add new implementations of the StudyDataset base class to support additional study datasets. 
 
  **3. Summary of learnings and recommendations**
-Review the [recommendations](./recommendations.md) to understand what challenges we were facing and how investigators can improve the data quality.
+Review the [recommendations](./recommendations.md) to understand what challenges we faced and learn how investigators can improve the data quality.
 
 ## Supported Studies
 The goal is to work with as many clinical diabetes trial datasets as possible. At the moment, the following datasets from the diabetes [JAEB database](https://public.jaeb.org/datasets/diabetes) are supported. 
 
-For each of these studies, we've spent numerous hours analyzing the data to ensure that the class correctly loads and extracts the data. Please refer to the study analysis pages for a summary of the analysis and findings that went into each dataset. While we operated with great care, some asumptions had to be made and other details remain unknown which are also documented.
+For each of these studies, we've spent hundreds of hours analyzing the data to ensure that the class correctly loads and extracts the data. Please refer to the study analysis pages for a summary of the analysis and findings that went into each dataset. While we operated with great care, some asumptions had to be made and other details remain unknown which are also documented.
 
 |Our Analysis|JAEB|Retrieved Date|Folder Name *|Note|
 |-|-|-|-|-|
@@ -32,7 +32,6 @@ For each of these studies, we've spent numerous hours analyzing the data to ensu
 
 \* We have only tested our code on the respective versions. Therefore, the folder names are currently hard-coded and should match with the names above. 
 
-
 ## Data Standardization
 The ultimate purpose of this toolbox is to bring CGM and insulin data into a common standardized format. We chose to abstract study datasets as objects. Each study class derives from the parent `StudyDataset` class and overrides methods to extract cgm, bolus and basal data. 
 
@@ -41,10 +40,10 @@ The ultimate purpose of this toolbox is to bring CGM and insulin data into a com
 Please refer to the [Code Reference](./reference.md) for more details. 
 
 ### Output Format
-The StudyDataset base class defineds methods to extract cgm, basal and bolus data in standardized pandas dataframes of the following format. See the [StudyDataset](./reference.md/#studies.studydataset.StudyDataset) class documentation. The pandas dataframes format is as follows:
+The StudyDataset base class defineds methods to extract cgm, basal and bolus data in standardized pandas dataframes of the following format. See the [StudyDataset](./reference.md/#studies.studydataset.StudyDataset) class documentation. All datetimes are expressed as https://en.wikipedia.org/wiki/Unix_time (seconds since 00:00:00 UTC on 1 January 1970). The pandas dataframes format is as follows:
 
 #### Boluses
-`bolus_history.csv`: These are all bolus delivery events as a event stream. Standard boluses are assumed to be delivered immediately. 
+`bolus_history.csv`: These are all bolus delivery events as a event stream. Standard boluses are assumed to be commanded to be delivered immediately. Note we do not attempt to characterize when insulin was actually delivered, as each pump delivers commanded basal and bolus insulin in different ways.
 
 | Column Name | Type| Description|
 |----|----|----|
@@ -62,7 +61,6 @@ The StudyDataset base class defineds methods to extract cgm, basal and bolus dat
 | `datetime`   | `pd.Timestamp`     | Datetime of the basal rate start  event|
 | `basal_rate` | `float`            | Basal rate in units per hour|
 
-
 #### CGM
 `cgm_history.csv`: CGM values
 
@@ -70,14 +68,13 @@ The StudyDataset base class defineds methods to extract cgm, basal and bolus dat
 |----|----|----|
 | `patient_id` | `str`              | Patient ID|
 | `datetime`   | `pd.Timestamp`     | Datetime of the CGM measurement|
-| `cgm`        | `float`            | CGM value in mg/dL|
-
+| `cgm`        | `float`            | Estimated Glucose Value in mg/dL|
 
 ## Using the toolbox
 Here, we explain how to install the toolbox and how to use the `run_functions.py` script to extract standardized data from the supported studies. 
 
 ### Build the documentation (Optional)
-This is the project README providing a condensed overview of the toolbox and how to use it. To run the full documentation, follow the installation instructions below and run mkdocs: Alternatively, you can download a pdf export `document.pdf` from the repository.
+This is the project README providing a condensed overview of the toolbox and how to use it. To access the full documentation, follow the installation instructions below and run mkdocs. Alternatively, you can download a pdf export `document.pdf` from the repository.
 
 ``` bash
 > cd egvinsulin  # navigate to repository
@@ -104,7 +101,7 @@ pip install -r requirements.txt
 ```
 
 ### Prepare the raw data
- 1. Download the study data files from [jaeb.org](https://public.jaeb.org/datasets/diabetes) (see [supported studies](#supported-studies)).
+ 1. Download the study data zip files from [jaeb.org](https://public.jaeb.org/datasets/diabetes) (see [supported studies](#supported-studies)).
  2. Extract and move the folders inside the `data/raw` directory. Do not rename the folder names, otherwise the `run_functions.py` won't know how to process them.
  3. Depending on which studies you downloaded, the folder structure should look something like this.
 ```
@@ -118,10 +115,10 @@ pip install -r requirements.txt
 ```
 
 ### Run run_functions.py to batch Extract data
-The `run_functions.py` script is the entry point for researchers that simply want to extract standardized data from the supported studies. It performs the data extraction and standarization. For each folder in the `data/raw` directory the script 
- 1. identifies the appropriate handler class (see [supported studies](#supported-studies))
+The `run_functions.py` script is the entry point for users that simply want to extract standardized data from the supported studies. It performs data extraction and standarization. For each folder in the `data/raw` directory the script: 
+ 1. Identifies the appropriate handler class (see [supported studies](#supported-studies))
  2. Loads the study data
- 3. Extracts bolus, basal, and CGM event histories ito a standardized Format (see [output-format](#output-format))
+ 3. Extracts bolus, basal, and CGM event histories to a standardized Format (see [output-format](#output-format))
  4. Saves the extracted data in CSV format. 
 
 Example terminal output:
@@ -157,7 +154,7 @@ These are approximate execution times
 |Replace BG|61.38 seconds|
 |Loop|587.22 seconds*|
 
-\* Loop file sizes are very large which requires the use of `dask` that builds upon pandas and processes chunks of the data in parallel. However, the routine to save the data to csv - at the moment - still requires the whole dataframe to be loaded before storing it which might fail if your machine has insufficient memory. We will change this in the future.
+\* Loop raw data files are very large which requires the use of `dask`. `dask` builds upon pandas and processes chunks of the data in parallel. However, the routine to save the data to csv - at the moment - still requires the whole dataframe to be loaded before storing it which might fail if your machine has insufficient memory. We will change this in the future.
 
 
 ## Troubleshooting
