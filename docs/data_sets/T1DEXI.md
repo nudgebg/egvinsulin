@@ -1,5 +1,5 @@
 # T1DEXI 
-This page summarizes our insights about the clinical study data of the **T1DEXI** study in efforts to understand how to handle bolus, basal and cgm data as well as assumptions that were made as well as open questions. 
+This page summarizes our insights about the clinical study data of the **T1DEXI** study in efforts to understand how to handle bolus, basal, and cgm data, list assumptions that were made, and pose open questions. 
 
 The full analysis of this dataset is provided in: `notebooks/understand-t1dexi-dataset/2025-01-14 - Understand Insulin Data Structures.ipynb`. We initially considered using published code [4], but decided against it due to unclear assumptions and partially unnecessarily complex code.
 
@@ -38,7 +38,7 @@ Dexcom G6 CGM system and one of the following Pumps (AID or CSII) or MDI.
 
 
 ## Data
-The files are in .xpt format (SAS Transport) files which are often used in clinical research and pharmaceutical datasets. We load this data using pandas as tabular data. The tables hold data of different types and therefore each specific type (basals, boluses, cgms,..) need to be extracted using the right column conditions. As mentioned anbove, we initially considered using published code [4], but decided against it due to unclear assumptions and partially unnecessarily complex code.
+The files are in .xpt format (SAS Transport) files which are often used in clinical research and pharmaceutical datasets. We load this data using pandas as tabular data. The tables hold data of different types and therefore each specific type (basals, boluses, cgms, ...) need to be extracted using the appropriate column conditions. As mentioned anbove, we initially considered using published code [4], but decided against it due to unclear assumptions and partially due to unnecessarily complex code.
 
 ## Glucose Data
 **LB (lb.xpt)** - Laboratory Test Results The LB domain contains records for most recent HbA1c as reported by participant at baseline, and Dexcom G6 continuous glucose monitoring (CGM) data during study period. Dexcom G6 data is typically recorded once every five minutes
@@ -48,7 +48,7 @@ Device Exposure: DX domain contains records for participant indicated insulin mo
 
 Relevant columns:
 - DXTRT = Device, USUBJID (patient id)
-- The file contains two rows per patient: One with DXTRT being the pump name or *MULTIPLE DAILY INJECTIONS* and another one with the generic treatment type (INSULIN PUMP, CLOSED LOOP INSULIN PUMP, or MULTIPLE DAILY INJECTIONS). There is some quesiton about wether the generic types are correct for all patients.
+- The file contains two rows per patient: One with DXTRT being the pump name or *MULTIPLE DAILY INJECTIONS* and another one with the generic treatment type (INSULIN PUMP, CLOSED LOOP INSULIN PUMP, or MULTIPLE DAILY INJECTIONS). There is some question about whether the generic types are correct for all patients.
 
 ## FACM: Basal and Bolus Data
 
@@ -87,7 +87,7 @@ Notes on other Columns
 - Hoever, often only FAORRES contains a value and the other columns are empty!
     - It appears as if these boluses were not properly classified. 
     - This is true for at least 26% of the boluses
-    - of these, almost all are normal boluses (based on instype, Durations are therefore always NaN) 
+    - Of these, almost all are normal boluses (based on instype, Durations are therefore always NaN) 
     - 2 Exceptions: 2 "square" part and 46 "combination"" boluses. We treat all of them as Normal because we don't have a duration.
 
 #### Duplicates
@@ -100,8 +100,8 @@ For all patients, basal is reported in two duplicate ways:
     - FATEST==BASAL INSULIN are basal deliveries, the FAORRES contains the total insulin (U)
     - FATES==BASAL FLOW RATE: are basal rates and FAORRESS contains a delivery rate (U/hr)
     - In both cases the FADUR is equal and contains the delivery duration
-Delervies are probably calculated from the flow rates. Since both contain equivalent information, we only focus in the flow rates. 
-Some durations are too long and overlap with subsequent deliveries and therefore need to be recalcualted, using the flow rates does not require recalculation of the dose. 
+Deliveries are probably calculated from the flow rates. Since both contain redundant information, we only focus on the flow rates. 
+Some durations are too long and overlap with subsequent deliveries and therefore need to be recalcualted.  Using the flow rates does not require recalculation of the dose. 
 
 - The basal deliveries modulate the basal rate (U/hr)
 - NaN flow rates happen in regions where flow rates are 0 and likely mark temporal suspensions
@@ -118,8 +118,8 @@ Bolus and Basal doses in MDI are of much larger value indicating injections whic
 
 However, we found that in MULTIPLE DAILY INJECTIONS
  - BASAL INSULIN have NaN duration (probably because nobody wanted to make an assumption about the duration of insulin action)
- - All BASAL FLOW RATE are NaN valued (the basal injection couldn;t be converted to a flow rate due to missing duraiton)
-- All these flow rates (16% of the MDI data) are compltely NaN valued
+ - All BASAL FLOW RATE are NaN valued (the basal injection couldn;t be converted to a flow rate due to missing duration)
+ - All these flow rates (16% of the MDI data) are compltely NaN valued
 
 The time between injections could be taken as insulin action times.
 ![](assets/t1dexi_mdi_basal_durations.png)]
@@ -134,11 +134,11 @@ This seems reasonable. While we might miss some doses (either no injection happe
 
 We also see some priming doses and double injections (either looged twice or injected twice)
 
-Taking the duration between basal injections as estimate for insulin action times, this causes problems when bolus injections are missing (e.g. not logged). For Patient 981, this problem looks severe (assuming that boluses were forgot to be logged). 
+Taking the duration between basal injections as an estimate for insulin action times, this causes problems when bolus injections are missing (e.g. not logged). For Patient 981, this problem looks severe (assuming that boluses were forgot to be logged). 
 
 ![](assets/t1dexi_mdi_basal_rate_vs._injections.png)
 
-We also see some patients (1149, 1386, 255,475,987) that have the same MDI basal injection reported within 30 seconds. These are likely duplicated recordings.
+We also see some patients (1149, 1386, 255,475,987) that have the same MDI basal injection reported within 30 seconds. These are likely duplicate entries.
 ![](assets/t1dexi_mdi_double_basal_injections.png)
 
 
@@ -149,12 +149,12 @@ We also see some patients (1149, 1386, 255,475,987) that have the same MDI basal
 
 **What we found**:  
  - ~0.1 % duplicates
-    - domindated by a handful of patients
+    - dominated by a handful of patients
  - Only basal duplicates (2 bolus exceptions) 
  - When duplciates exist, they exist for deliveries and flow rates
    - Assumption: once a incorrect flow rate was reported, the delivery was also incorrectly duplicated
 - Duplciates show a pattern:
-    - Duration: One row comes with 0 duration (probbaly wrong), the other row with a larger duration (that fits the start of the  next value)
+    - Duration: One row comes with 0 duration (probably wrong), the other row with a larger duration (that fits the start of the  next value)
     - Dose: The BASAL deliveries then also have a wrong entry with a zero FAORRES (amount) value (cant divide by zero)
 
 How to deal with duplicates?
@@ -201,7 +201,7 @@ In the net iob scripts, the 770G Basal (FACAT == Basal) duration (FADUR) was cal
 
 **What we found is**  
 - All durations, except for MDI have durations. 
-- Durations, don't need to be calcualted manually.
+- Durations, don't need to be calculated manually.
 - MDI durations need to be dropped.
 
 #### Inconsistent Basal Selection
@@ -220,7 +220,7 @@ Example from the NetIOB Script [4] (here code from the cunking method) showing d
  - The distribution confirms that these are mostly bigger mdi injections
  - The examples don't give reason to believe that they should be excluded (e.g. no duplicates)
 
- Conclusion: It appears that NaN Insulin Types should be includede (no filtering based on insulin type)!
+ Conclusion: It appears that NaN Insulin Types should be included (no filtering based on insulin type)!
 
 
 #### Incorrect Pump Labels?
@@ -238,7 +238,7 @@ Based on the number of events, we see that for some pumps, some patients might b
 
 ![](assets/t1dexi_daily_events_by_device.png)
 
-- Tandem with Basal IQ shows much less events than other AIDs but more than CSII (this makes sens because it has comes with additional suspend events)
+- Tandem with Basal IQ shows much less events than other AIDs but more than CSII (this makes sense because it has comes with additional suspend events)
  - Some pumps are potential candidates for incorrect assignment
     - Some Tandem with Control IQ seem to be not in AID (1193,1444,5558,677 with <100 events/day)
     - One 770G outlier could be AID (subject 304 with 369 events/day in average)
@@ -286,7 +286,7 @@ However, other dates and patients show similar trends
 
 **Conclusion**  
  - There is no general trend that would support removing these patients or dates, they seem to be surprise findings
- - Thenumber of days or datapoints/patient could be be a better criterion to exclude patients
+ - The number of days or datapoints/patient could be a better criterion to exclude patients
  - Extremely long durations might need to be removed
  - Some might be automatically resolved by using the overlap-removal discussed earlier
 
@@ -294,25 +294,25 @@ However, other dates and patients show similar trends
 LB.xpt is a very simple dataframe:  
 It contains CGM and Hba1c without any nan values.
 - Glucose is in local time
-- all in mg/dl
+- All in mg/dl
 - No nan values 
 - Hb1A1c must be dropped: `lb = lb.loc[lb.LBCAT=='CGM']`
-- only a couple temporal duplicates which are dropped (using first) as they correlate perfectly
+- Only a couple temporal duplicates which are dropped (using first) as they correlate perfectly
 
 ### Summary
 #### Glucose
-- drop Hb1A1c rows 
-- drop temporal duplicates ['USUBJID','LBDTC'] using first  
+- Drop Hb1A1c rows 
+- Drop temporal duplicates ['USUBJID','LBDTC'] using first  
 
 #### Bolus
-- two duplicated rows should be dropped
+- Two duplicated rows should be dropped
 - FAORRESS must be assigned to INSMBOL if  INSMBOL is empty
 - We see ~1k rows where FAORRES< INSEXBOL or INSMBOL is very small (5.397605e-79) and should be replaced with zero
 -split extended and normal boluses
 
 #### Basal  
 ##### Pump  
-    - We should work with flow rates only
+    - w should work with flow rates only
     - overlapping basal rates need to be corrected
     - suspends don't need to be factored in
     - extremely long durations should probably be removed (after overlaps are corrected)
@@ -322,8 +322,8 @@ It contains CGM and Hba1c without any nan values.
 
 ##### MDI  
     - MDI basal flow rates (all NaN) need to be dropped
-    - MDI basal injections miss duration which should be guessed from the insulin action profile (if available or by taking the time until the next injection). Alternatively, we could use the median duration as an estimate for the acting time. Or check if there is a table with basal insulin type information.
-    - there are priming doses and double injections but we keeo these for now
+    - MDI basal injections miss duration which should be inferred from the insulin action profile (if available or by taking the time until the next injection). Alternatively, we could use the median duration as an estimate for the acting time. Or check if there is a table with basal insulin type information.
+    - there are priming doses and double injections but we keep these for now
 
 #### Open Questions
  - Some patient pumps are potentially incorrectly assigned to AID or CSII
