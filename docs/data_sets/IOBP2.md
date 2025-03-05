@@ -1,15 +1,15 @@
 # IOBP2 
-This page summarizes our insights about the clinical study data of the **IOBP2** study in efforts to understand how to handle bolus, basal and cgm data as well as assumptions that were made as well as open questions. 
+This page summarizes our insights about the clinical study data of the **IOBP2** study in efforts to understand how to handle bolus, basal and cgm data, list assumptions that were made, and pose open questions. 
 
 The full analysis of this dataset is provided in: `notebooks/understand-iobp2-dataset.ipynb`
 
 ## Study Overview
 - **Study Name**: The Insulin-Only Bionic Pancreas Pivotal Trial (IOBP2)
-- **Study Background:** This is a multi-center randomized control trial to compare the efficacy and safety of the iLet Bionic Pancreas (BP) system. Enrolled participants used the devices and collected data over a 13 week period.
+- **Study Background:** This was a multi-center randomized control trial to compare the efficacy and safety of the iLet Bionic Pancreas (BP) system. Enrolled participants used the devices and collected data over a 13 week period.
 - **Study Devices:** Insulin data is recorded from the iLet BP. Data is stored as Basal Insulin Delivery, Bolus Insulin Delivery, and Meal Insulin Delivery. 
 CGM data is recorded from Dexcom G6 sensors. 
 - **Study Population:** Children and adults with type 1 diabetes ages 6+
-- **Total Data:** There is roughly 30,000 days of data from 343 participants
+- **Total Data:** There are roughly 30,000 days of data from 343 participants
 
 ## Data
 From the DataGlossary.rtf file, the following relevant files were identified which are stored in the **Data Tables** subfolder.
