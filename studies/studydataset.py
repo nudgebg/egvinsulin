@@ -197,6 +197,19 @@ class StudyDataset:
         and saves it to a specified output directory. If the directory does not exist,
         it will be created. The filenames follow the pattern <study_name>_cgm_history.csv(.gz)
 
+        The output csv format is as follows:
+        - patient_id: A string representing the patient ID
+        - datetime: integer representing the local timestamp in seconds since epoch
+        - cgm: A integer representing the cgm value in mg/dL
+
+        Example csv output:   
+        ```
+        patient_id,datetime,cgm
+        10,1524150016,88
+        10,1524150270,85
+        10,1524150568,81
+        ```
+
         Args:
             out_path (str): The path to the output directory where the file will be saved.
             compressed (bool, optional): If True, the output file will be compressed. Defaults to False.
@@ -217,6 +230,20 @@ class StudyDataset:
         This method extracts the bolus event history, processes it to reduce file size,
         and saves it to a specified output directory. If the directory does not exist,
         it will be created. The filenames follow the pattern <study_name>_bolus_event_history.csv(.gz)
+
+        The output csv format is as follows:
+        - patient_id: A string representing the patient ID
+        - datetime: integer representing the local timestamp in seconds since epoch
+        - bolus: A float representing the bolus amount in units (2 decimal places)
+        - delivery_duration: integer representing the duration of the bolus delivery in seconds
+
+        Example csv output:   
+        ```
+        patient_id,datetime,bolus,delivery_duration
+        10,1522847353,0.1,0
+        10,1522852851,7.45,0
+        10,1523040411,4.449,7200
+        ```
 
         Parameters:
             out_path (str): The path to the output directory where the file will be saved.
@@ -243,6 +270,19 @@ class StudyDataset:
         and saves it to a specified output directory. If the directory does not exist,
         it will be created. The filenames follow the pattern <study_name>_basal_event_history.csv(.gz) 
 
+        The output format is as follows: csv file with the following columns:
+        - patient_id: A string representing the patient ID
+        - datetime: integer representing the local timestamp in seconds since epoch
+        - basal_rate: A float representing the basal rate in units per hour
+
+        Example csv output:   
+        ```
+        patient_id,datetime,basal_rate
+        10,1522846361,2.0
+        10,1522846661,0.0
+        10,1522872700,1.0
+        ```
+        
         Parameters:
             out_path (str): The path to the output directory where the file will be saved.
             compressed (bool): If True, the output file will be compressed. Default is False.
