@@ -1,11 +1,11 @@
 # Replace BG 
-This page summarizes our insights about the clinical study data of the **Replace BG** study in efforts to understand how to handle bolus, basal and cgm data as well as assumptions that were made as well as open questions. 
+This page summarizes our insights about the clinical study data of the **Replace BG** study in efforts to understand how to handle bolus, basal, and cgm data, lists assumptions that were made, and poses open questions. 
 
 The full analysis of this dataset is provided in: `notebooks/understand-replacebg-dataset/understand-replace-bg.ipynb`
 
 ## Study Overview
 - **Study Name**: A Randomized Trial Comparing Continuous Glucose Monitoring With and Without Routine Blood Glucose Monitoring in Adults with Type 1 Diabetes
-- **Background:** The primary objective of the study is to determine whether the routine use of CGM without BGM confirmation is as safe and effective as CGM used as an adjunct to BGM. 
+- **Background:** The primary objective of the study was to determine whether the routine use of CGM without BGM confirmation is as safe and effective as CGM used as an adjunct to BGM. 
 - **Duration**: Run-in phase of 2–10 weeks, 26 weeks study duration
 - **Devices:** Dexcom G4 Platinum
 - **Population:** 276 entered run in phase, 226 were assigned to groups, 217 completed, Patients, Type 1, >=18 years, CSII
@@ -28,7 +28,7 @@ From the ReadMe.rtf file, the following relevant files were identified which are
 | HDeviceUploads.txt| One record per device upload | Contains information about data source (Tidepool vs. Diasend) which we need to differentiate between duration units in milli seconds (Tidepool) or minutes (Diasend)|
 
 #### Relevant Columns:
-The following lists all relevant columns. Other columns were considered irrelevant. Some are still mentioned if they serve the discussion but crossed through.
+The following lists all relevant columns. Other columns were considered irrelevant. Some are still mentioned if they serve the discussion but are crossed through.
 
 #### HDeviceCGM.txt
 | Field_Name | Description (Glossary) | Notes |
@@ -47,8 +47,8 @@ The following lists all relevant columns. Other columns were considered irreleva
 | DeviceTm |Device time | convert to timedelta (H::M:S)|
 | BolusType| Subtype of data (ex: "Normal" and "Square" are subtypes of "Bolus" type)||
 | Normal | Number of units of normal bolus |Likely the only relevant value.|
-| Extended | Number of units for extended delivery | We found that there are 0.4% extended boluses, probably triggered from the pump directly since Loop does not support these.|
-| Duration | Time span over which the bolus was delivered (milliseconds for Tidepool data, minutes for Diasend data) | Our analysis shows that Duration refers to the Extended part of a Bolus. However, unclear how to find out wether in ms or minutes. JAEB couldn't answer.|
+| Extended | Number of units for extended delivery | We found that there are 0.4% extended boluses.|
+| Duration | Time span over which the bolus was delivered (milliseconds for Tidepool data, minutes for Diasend data) | Our analysis shows that Duration refers to the Extended part of a Bolus. However, unclear how to find out whether in ms or minutes. JAEB couldn't answer.|
 |ParentHDeviceUploadsID| RecID from tblHDeviceUploads | We need this to join the datasource from the HDeviceUploads table|
 
 #### HDeviceUploads.txt
@@ -78,7 +78,7 @@ The tables mostly follow the Tidepool structure which we know from previous tudi
 Differences:
 - Timestamps are given relative (day and HH:MM:SS) to enrollment start (which is not provided)
 - Insulin and InsValue columns exist, however always empty
-- CGM values in mgdl not mmol
+- CGM values in mgdl not mmol/dL
 - Dexcom times seem to be present in all rows
 - No timezone offsets are present, probably all in local time
 
@@ -155,7 +155,7 @@ However:
 
 ### Basal Duplicates
 
- - Some duplicates have same time, duration and rate and therefore are equivalent for our purposes even if they show differences in other columns. 
+ - Some duplicates have the same time, duration, and rate and therefore are equivalent for our purposes even if they show differences in other columns. 
  - Others share the same datetime and duration but different rate. 
  - Others have only same time but different duration / rate. 
  - The meaning of the extra columns (Percent, ExpectedDuration, SuprDuration…) remain unclear. 
@@ -168,7 +168,7 @@ A few examples (same time and rate). Split by which combination of basal types e
 When there are temporal duplicates in time and duration we could make the following assuptions:
  1. (scheduled or temp) and suspends: prioritize the suspend, set Rate to 0 (using fillna)
  2. scheduled and temp: prioritize temp row
- 3. Only scheduled: use the maximum value
+ 3. only scheduled: use the maximum value
 
 
 Duplicates with different durations cause more confusion. Many duplicate sets contain rows whose durations don’t match with the “next” correct basal rate while others do. In these cases i would only keep the one that matches. However, this is not necessarily always the suspend row. Here is an example: Two duplicates at 14:00 with different durations. Only one of the durations (4h) matches with the next non-duplicated row at 18:00. The other, is probably wrong. 
@@ -188,11 +188,11 @@ Other approaches might be even better such as using the import date etc. However
 ### Basal Durations 
 We observed many very large basal durations. 
  - Often, long durations have a zero basal rate
- - Mostly the duraitons match the data gap of 1 or more days until next basal rate
+ - Mostly the durations match the data gap of 1 or more days until next basal rate
  - However, some overlap with the next datetime
  - Some are excessive e.g. >250 days: In these cases, the data might not even fall within the study period
 
-Potentially, durations were calcualted retrospectively from one to the next basal rate causing large values when there are data gaps. However, overlaps can not be explained by this. The reasons are unclear. 
+Potentially, durations were calculated retrospectively from one to the next basal rate causing large values when there are data gaps. However, overlaps cannot be explained by this. The reasons are unclear. 
 
 It remains to the user to detect data gaps and outdated basal rates.
 
@@ -222,11 +222,11 @@ Each basal row has a Normal and an Extended part. The duration is Nan when there
 
 ### Extended Bolus Durations
 - Extended bolus duration is within expected limits of <8 hours.
-- Only extended bolus have a duration (that's good meaning there are no incorrect labeled Normal boluses)
+- Only extended bolus have a duration (that's good, and means there are no incorrectly-labeled Normal boluses)
 - Many extended boluses with short durations
     - these have very small doses, many of them are 0
 - Around 1000 extended bolus doses are 0
-    - These have almost always a zero duration.
+    - These almost always have zero duration.
 
 It remains unclear where the zero durations come from and why we also see extremely short durations. 
 
@@ -234,17 +234,17 @@ To avoid unnecessary rows with 0 deliveries, extended parts should be removed:
 ```df_bolus = df_bolus.replace({'Normal':0, 'Extended':0}, np.nan)```
 
 ### Diasend Boluses 
-As discussed in the section [Diasend vs. Tidepool data source](#diasend-vs-tidepool), Diasend boluses seem to be corrup. At least the extended parts were almost always empty despite having a delivery duration. We resolve these by treating the Normal part as normal bolus. However, we can not guarantee that this is correct. However, if only affect ~1060 boluses (and even much less after dropping patients with incomplete data).
+As discussed in the section [Diasend vs. Tidepool data source](#diasend-vs-tidepool), Diasend boluses seem to be corrupt. At least the extended parts were almost always empty despite having a delivery duration. We resolve these by treating the Normal part as normal bolus. However, we can not guarantee that this is correct. However, if only affect ~1060 boluses (and even much less after dropping patients with incomplete data).
 
 ### Requested vs. Delivered
 See note on [discarded columns](#discarded-columns)
 
 ## Collected Questions
 - Is our assumption about [irrelevant columns ](#discarded-columns) correct?
-- How should we resolve basal duplicates 
+- How should we resolve basal duplicates: 
     - with equal time and durations but different rates (e.g. scheduled)
     - with equal time but different duration?
-    - why do some have differen durations? (some match next time, others don't)
+    - why do some have different durations? (some match next time, others don't)
     - Should we use suspends over other events? And then, is NaN equal to a 0 basal rate? This is how we treated them in T1DExi
 - Should we exclude data before and after study start?
     - Why is there such an excess of data before enrollment and after study end?
