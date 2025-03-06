@@ -1,0 +1,38 @@
+name: Build After Push
+
+on:
+  push:
+    branches:
+      - prerelease
+      - develop
+      
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.11.0'  # Use the Python version compatible with MkDocs
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Run tests
+        run: |
+          python test.py
+      
+      - name: Build docs
+        run: |
+          mkdocs build
+      
+      - name: Deploy to GitHub Pages (develop only)
+        if: github.ref == 'refs/heads/develop'
+        run: |
+          mkdocs gh-deploy --force --remote-branch gh-pages
