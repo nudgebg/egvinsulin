@@ -8,8 +8,8 @@ The full analysis of this dataset is provided in: `notebooks/understand-replaceb
 - **Background:** The primary objective of the study was to determine whether the routine use of CGM without BGM confirmation is as safe and effective as CGM used as an adjunct to BGM. 
 - **Duration**: Run-in phase of 2–10 weeks, 26 weeks study duration
 - **Devices:** Dexcom G4 Platinum
-- **Population:** 276 entered run in phase, 226 were assigned to groups, 217 completed, Patients, Type 1, >=18 years, CSII
-- **Data:** There are roughly xxx days of data from 225 participants  
+- **Population:** There are 208 patients with bolus, basal and cgm data.
+- **Data:** There are roughly 52683 patient days of data with an average of 253 days per patient (using cgm).  
 
 ### Data
 
