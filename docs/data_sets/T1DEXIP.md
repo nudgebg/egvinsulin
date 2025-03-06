@@ -1,5 +1,5 @@
 # T1DEXIP (Pediatric) 
-This page summarizes our insights about the clinical study data of the **T1DEXIP (Pediatric)** study in efforts to understand how to handle bolus, basal and cgm data as well as assumptions that were made as well as open questions. 
+This page summarizes our insights about the clinical study data of the **T1DEXIP (Pediatric)** study in efforts to understand how to handle bolus, basal, and cgm data, list assumptions that were made, and pose open questions. 
 
 The full analysis of this dataset is provided in: `notebooks/understand-t1dexi-dataset/2025-01-30 - Understand Insulin Data Structures T1DEXIP.ipynb`
 
@@ -32,19 +32,19 @@ euglycemia during and after exercise in youth with type 1 diabetes
 
 ## Differences T1DExi vs. T1DExip
 
-The structure of T1DEXI and T1DEXIP are almost identical. However, the T1DExiP dataset appears even a little clearner than the T1DExi dataset: Here are some of the differences:
+The structure of T1DEXI and T1DEXIP are almost identical. However, the T1DExiP dataset appears slightly cleaner than the T1DExi dataset: Here are some of the differences:
 
  ### Basal Flow rates
  - MDI has no flow rates
  - No NaN FAORRES or NaN duraitons: no need to fill with zeros
- - basal flow rates and basal deliveries are almost identical but overall deivate a little more (70 Units overall)
+ - basal flow rates and basal deliveries are almost identical but overall deviate a little more (70 Units overall)
 - There are no extreme basal durations (all below 24h) and no resulting extreme basal flow rates
  - These are likely true Basal rates that are set for a whole day 
 
 ![](assets/t1dexip_basal_max_rates.png)
 ![](assets/t1dexip_basal_max_durations.png)
 
-The figure below shows that flow rates don't exceed large values and basal durations a maximum of 24 hours.
+The figure below shows that flow rates don't exceed large values and basal durations are maximum 24 hours.
 
 ### AID Labels
 - It looks like only the Tandem T:SLIM X2 with control IQ was really running in AID mode. In the figure we can see that only this pump shows significanly more than 100 events/day (as an arbitary cut-off between CSII and AID).
@@ -57,7 +57,7 @@ The figure below shows that flow rates don't exceed large values and basal durat
 - Basal
     - Same, we see some alternating basals: use maximum duration
 - Bolus
-    - no complete duplicated bolus rows (instead of 2)
+    - No complete duplicated bolus rows (instead of 2)
     - Some MDI appear to have (close) duplicated recordings causing high TDDs
 - MDI patients with highest TDD appears to have duplicated bolus records
 
@@ -70,8 +70,8 @@ of patient 436 on 2022-08-08 which (having TDD on that day > 400 Units) appears 
 ![](assets/t1dexip_number_of_events_per_patient.png)
 The figure shows that there are many patients with very little data (likely MDI and those which didn't stay in the study long enough) and some with huge amounts (likely patients with AID).   
 
-- T1DExip, also some patients have much less datapoints due to less number of days than study duration (<10>)
+- T1DExip, also some patients have many fewer datapoints due to fewer number of days than study duration (<10>)
 
 ### Glucose
 - there is one sample with a value >401 mg/dl
-- some 8 temporal duplicates that can be dropped using first
+- 8 temporal duplicates that can be dropped using first

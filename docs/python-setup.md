@@ -1,7 +1,7 @@
 # Python Setup Instructions
 
 ## Why using virutal environments?
-Using virtual environments in the context of the bebelbetes project is highly recommended when installing modules via pip install -r requirements.txt. It ensures that all dependencies listed in the requirements.txt file are isolated to the bebelbetes project. This prevents conflicts with other projects that might require different versions of the same modules, and it keeps your system-wide Python environment clean. Additionally, it allows easy replication of the project’s environment on other systems, ensuring consistency across development setups.
+Using virtual environments in the context of the bebelbetes project is highly recommended when installing modules via pip install -r requirements.txt. This ensures that all dependencies listed in the requirements.txt file are isolated to the bebelbetes project, preventing conflicts with other projects that might require different versions of the same modules. It also keeps your system-wide Python environment clean, and allows easy replication of the project’s environment on other systems, ensuring consistency across development setups.
 
 ## macOS
 We recommend using both `pyenv` and `virtualenv` packages to manage virtual enviroments.
@@ -71,27 +71,27 @@ We recommend using both `pyenv` and `virtualenv` packages to manage virtual envi
 ## Windows
 
 1. Ensure Python is installed: 
-```bash 
+``` 
 python --version
 ```
 If needed, install Python and ensure “Add Python to PATH” is checked.
 
-2. Navigate to your project directory: `bash cd C:\path\to\your\project`
-3. Create a virtual environment named babelbetes`bash python -m venv babelbetes`
+2. Navigate to your project directory: `cd C:\path\to\your\project`
+3. Create a virtual environment named babelbetes`python -m venv babelbetes`
 4. Activate the babelbetes virtual environment:
-```bash 
+``` 
 babelbetes\Scripts\activate
 ```
 5. Install packages from requirements.txt :
-```bash 
+``` 
 pip install -r requirements.txt
 ```
 6. Install packages from requirements.txt : 
-```bash 
+``` 
 pip install -r requirements.txt
 ```
 7. Deactivate the virtual environment: 
-```bash 
+``` 
 deactivate
 ```
 
