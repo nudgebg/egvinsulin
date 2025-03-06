@@ -67,10 +67,12 @@ Example (first row):
 | ~~DeviceDtTm~~ | Local device date and time; note not present in most rows because unavailable in Tidepool data source |*1|
 | ~~TmZnOffset~~ | Timezone offset |*1|
 | ExpectedNormal | Expected number of units of normal bolus|Unclear|
-| Extended | Number of units for extended delivery | We found that there are 0.4% extended boluses, probably initiated by the user from the pump directly since Loop does not support these.|
+| Extended | Number of units for extended delivery | |
 | ExpectedExtended | Expected number of units for extended delivery|
-| Duration | Time span over which the bolus was delivered (milliseconds for Tidepool data, minutes for Diasend data) | Our analysis shows that Duration refers to the Extended part of a Bolus. However, unclear how to find out wether in ms or minutes. JAEB couldn't answer.|
+| Duration | Time span over which the bolus was delivered (milliseconds for Tidepool data, minutes for Diasend data) | Our analysis shows that Duration refers to the Extended part of a Bolus. *|
 | ExpectedDuration | Expected time span over which the bolus should have been delivered (milliseconds for Tidepool data, minutes for Diasend data) |
+
+\* The information about the source can be derived from the LoopDeviceUploads.txt. However, this was not done at the time of analysis!
 
 We asked JAEB:
 
@@ -91,6 +93,8 @@ We asked JAEB:
 
  - [1]:DeviceDtTm and TmZnOffset are only available for a fraction of patients. Therefore, we rely on UTCDtTm and patient roster PtTimezoneOffset to obtain local time. 
  - [2]: Loop has no extended boluses, check what this is
+
+Note: After the analysis we found out that the information about the source can be derived from the LoopDeviceUploads.txt. However, this was not done at the time of analysis and is a left-open todo.
 
 ### Todos:  
 Boluses:  
@@ -278,4 +282,7 @@ However, what we found is that our calculated TDDs are much higher than those pr
    - Are reported basal rates the absolute basal rate or the deviation from standard basal?
 
  - Why do we see bolus duplicates shifted by one hour?
+
+## Open Todos
+ - As menttioned above: During the time of the analysis, we weren't aware that the LoopDeviceUploads.txt continas information about the data source (Tidepool vs. Diasend) which should be used to treat extended bolus durations as ms (Tidepool) or minutes (Diasend). This is a left-open item.
 
