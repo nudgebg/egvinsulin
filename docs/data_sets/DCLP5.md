@@ -1,11 +1,11 @@
 # DCLP5 
-This page summarizes our insights about the clinical study data of the **DCLP5** study in efforts to understand how to handle bolus, basal and cgm data as well as assumptions that were made as well as open questions. 
+This page summarizes our insights about the clinical study data of the **DCLP5** study in efforts to understand how to handle bolus, basal, and cgm data, list assumptions that were made, and provide open questions. 
 
 The full analysis of this dataset is provided in: `notebooks/understand-dclp5-dataset.ipynb`
 
 ## Study Overview
 - **Study Name:** The International Diabetes Closed Loop (iDCL) trial: Clinical Acceptance of the Artificial Pancreas in Pediatrics - A Pivotal Study of t:slim X2 with Control-IQ Technology
-- **Study Background:** The objective of the study is to assess efficacy and safety of a closed loop control (CLC) system (t:slim X2 with Control-IQ Technology) in a randomized controlled trial with partial crossover.
+- **Study Background:** The objective of the study was to assess efficacy and safety of a closed loop control (CLC) system (t:slim X2 with Control-IQ Technology) in a randomized controlled trial with partial crossover.
 - **Study Devices:** t:slim X2 with Control-IQ and Dexcom G6 system
 - **Study Population:** Children aged 6 - 13 years old with type 1 diabetes
 - **Total Data:** There are roughly 19,200 days of data from 100 participants
@@ -55,14 +55,14 @@ There are three CGM files mentioned in the glossary:
 | DataDtTm_adjusted| Adjusted Date-time                                                          |                               |
 
 ### Observations
-* Very onfusing differences between Glossary and actual filenames and column names.
+* Very confusing differences between Glossary and actual filenames and column names.
  * e.g. there are 4 CGM Files
  * The glossary file names don't match the actual file names
- * The glossary column names are named differently, some are missing
-* Overall structure as in DCLP3 but different file names
+ * The glossary column names are named differently; some are missing
+* Overall structure as in DCLP3, but different file names
  
 ## DCLP5 vs. 3 (Datafiles)
-This is an overview of file names and glossary discreptancies within and between DCLP3 and 5. Tet that is ~~crossed through~~ are names that were incorrect.
+This is an overview of file names and glossary discreptancies within and between DCLP3 and 5. Test that ~~crossed through~~ are names were incorrect.
 || DCLP3| DCLP5|
 | - | - | - |
 | Clarity | **DexcomClarityCGM**<br>M readings from Dexcom Clarity files| **DCLP5DexcomClarityCGM**<br>CGM readings from Dexcom Clarity (G5) files -- Final table with duplicates removed|
@@ -93,7 +93,7 @@ Bolus:
 
 ### Duplicates & Missing Data
 * No NaN values, except the adjusted datetimes (expected)
-* There are no compelte row duplicates (e.g. also considering record id)
+* There are no complete row duplicates (e.g. also considering record id)
 
 When only checking for PtID, DataDtTm, and DataDtTm_adjusted:  
 
@@ -114,31 +114,31 @@ There is no need to filter patient data as all patients have complete data.
 ## Datetimes
 In Flair and PEDAP datetime strings were reported in inconsistent time formats: time components were missing at midnights which required special handling.
 
-We see that
+We see that:
  - there are no missing datetimes
  - As in Flair, datetimes sometimes miss the time component, even if it is only a few instances
  - The date formats are different from DCLP3 and PEDAP 
   - DCLP3: `%Y-%m-%d %H:%M:%S`
   - DCLP5/PEDAP: `%-m/%-d/%Y %I:%M:%S %p`
  
-We therefore, again check if the missing time components align with midnight by checking a few examples: What we see is that the 5th value (which is the one with the missing time component) snuggly fits the series. Therefore, we can safely assume it is in fact the midnight. The drops to zero are just because because they are out of range. 
+We therefore again check if the missing time components align with midnight by checking a few examples: What we see is that the 5th value (which is the one with the missing time component) snuggly fits the series. Therefore, we can safely assume it is in fact the midnight value. The drops to zero are just because because they are out of range. 
 
 ![dclp5_missing_time_check_cgm.png](assets/dclp5_missing_time_check_cgm.png)
 
 For performance purposes we use the `parse_flair_dates()` function to parse the datetimes.
 
 ### Datetime Adjustments
-Again, we test if using the adjusted datetimes if available is appropriate. In the other datasets this was always tru but anyway we checked again. We see see that using the adjusted datetimes moves the cgm data in the right spot (mostly) and reduces the variation in time differences. DCLP5 cgm with missing time component treated as midnight  fits into overall data
+Again, we test if using the adjusted datetimes, if available, is appropriate. In the other datasets this was always true but we checked again to make sure. We see see that using the adjusted datetimes moves the cgm data in the right spot (mostly) and reduces the variation in time differences. DCLP5 cgm with missing time component treated as midnight fits into overall data
 ![Adjusted Datetimes fits CGM data better](assets/dclp5-gaps-after-datetimeadjustments.png)
 ![Adjusted Datetimes Reduces Variation](assets/dclp5-gaps-after-datetimeadjustments2.png)
 ## Timestamps
 
 ### Time Localization
-The DCLP3 data glossary makes no mention of UTC, timezone or zone. All datetime variables are described as local times. We want to verify by checking the distribution of mean CGM, basal rates and bolus doses to verify we see postprandial peaks in the morning, afternoon and evening as well as more stable glucose during the night.
+The DCLP3 data glossary makes no mention of UTC, timezone ,or zone. All datetime variables are described as local times. We want to verify by checking the distribution of mean CGM, basal rates, and bolus doses to verify we see postprandial peaks in the morning, afternoon, and evening as well as more stable glucose during the night.
 
 ![Daily pattern](assets/dclp5-daily-patterns.png)
 
-We see bolus peaks at around 7 oClock, noon and evening. Slightly delayed we see postprandial glucose peaks as expected. Due to Control IQ basal increase after dinner signifiucantluy slowly decreasing over night. This all makes sense and we can safely assume that all datetimes are in local time. 
+We see bolus peaks at around 7am, noon, and evening. Slightly delayed, we see postprandial glucose peaks as expected. Due to Control IQ, basal increases significantly after dinner then slowly decreases overnight. This all makes sense and we can safely assume that all datetimes are in local time. 
 
 ## CGM
 
@@ -161,7 +161,7 @@ From the data glossary we know that 0 cgm values are either below or above range
 
 ## Boluses
 
-There are no bolus duplicates when including the BolusType column. The duplicates in boluses seem to be a result of Standard and Extended Bolus portions being reported at the same time. Is this true for all exteded boluses? Let's check.
+There are no bolus duplicates when including the BolusType column. The duplicates in boluses seem to be a result of Standard and Extended Bolus portions being reported at the same time. Is this true for all extedned boluses? Let's check.
 
 There are 3169 extended boluses (~1.4% of the boluses). We apply the same logic as in DCLP3 for matching standard and extended boluses.
 
@@ -172,7 +172,7 @@ Mean (STD) [MEDIAN] of extended boluses: 63.72 (49.83), [55.47] minutes
 In comparison **DCLP3**: Mean (STD) [MEDIAN] of extended boluses: 59.02 (46.28), [55.42] minutes  
 ![image.png](assets/dclp3-duration-cdf.png)
 
-As in DCLP3, **We won't be able to clearly separate dual wave boluses (standard followed by an extended part) from *orphan* extended boluses** (without standard part): Orphan Extended boluses will be incorretly matched to the previus standard bolus.However, this will happen only to a small percentage (In PEDAP only ~2% (170 out of 6460)) extended boluses did not have a standard bolus part. The T-Slim X2 allows durations >=8 hours, therefore pairs matched with durations >8 hours are definitely wrong.
+As in DCLP3, **We won't be able to clearly separate dual wave boluses (standard followed by an extended part) from *orphan* extended boluses** (without standard part): Orphan Extended boluses will be incorretly matched to the previus standard bolus.However, this will happen only to a small percentage (In PEDAP only ~2% (170 out of 6460)) extended boluses did not have a standard bolus part. The T-Slim X2 allows durations <=8 hours, therefore pairs matched with durations >8 hours are definitely wrong.
 
 Moving forward, we will 
 1. assume that extended boluses are reported upon completion (as in PEDAP)
