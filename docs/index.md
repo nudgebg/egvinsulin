@@ -26,4 +26,7 @@ We also leave post-processing of the normalized cgm, basal, and bolus data to th
 By implementing this approach to normalize www.jaeb.org’s cgm and insulin pump data, this project minimizes the time and effort required by researchers and developers to utilize clinical trial data, thereby accelerating the development of innovative solutions for managing type 1 diabetes.
 
 ## Acknowledgements
-Thank you Lane, Rachel, Jan
+Thank you Lane Desborough, Jan Wrede, Rachel Brandt
+
+## License
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)

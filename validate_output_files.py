@@ -1,3 +1,7 @@
+# File: validate_output_files.py
+# Author Jan Wrede
+# Copyright (c) 2025 nudgebg
+# Licensed under the MIT License. See LICENSE file for details.
 import os
 import pandas as pd
 from src.logger import LoggerFactory

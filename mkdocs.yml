@@ -11,44 +11,12 @@ extra_css:
   - style.css
 
 plugins:
-- with-pdf:
-    author: nudgebg
-    copyright: This software is dedicated to the public domain. You can freely copy, modify, publish, use, distribute, sell, and sublicense this software, either in source code or in binary form, without warranty or limitation of liability.
-    cover_subtitle: Project Documentation
-    toc_level: 2
-        #
-        #cover: false
-        #back_cover: true
-        #cover_title: TITLE TEXT
-        #custom_template_path: TEMPLATES PATH
-        #
-        #toc_title: TOC TITLE TEXT
-        #heading_shift: false
-        #toc_level: 3
-        #ordered_chapter_level: 2
-        #excludes_children:
-        #    - 'release-notes/:upgrading'
-        #    - 'release-notes/:changelog'
-        #
-        #exclude_pages:
-        #    - 'bugs/'
-        #    - 'appendix/contribute/'
-        #convert_iframe:
-        #    - src: IFRAME SRC
-        #      img: POSTER IMAGE URL
-        #      text: ALTERNATE TEXT
-        #    - src: ...
-        #two_columns_level: 3
-        #
-        #render_js: true
-        #headless_chrome_path: headless-chromium
-        #
-        #output_path: any-place/document.pdf
-        #enabled_if_env: ENABLE_PDF_EXPORT
-        #
-        #debug_html: true
-        #show_anchors: true
-        #verbose: true
+# - with-pdf:
+#     author: nudgebg
+#     copyright: This software is dedicated to the public domain. You can freely copy, modify, publish, use, distribute, sell, and sublicense this software, either in source code or in binary form, without warranty or limitation of liability.
+#     cover_subtitle: Project Documentation
+#     toc_level: 2
+
 - mkdocstrings:
     handlers:
       python:
@@ -63,7 +31,7 @@ plugins:
           
 nav:
  - Babelbetes: index.md
- - README: how-to-guides.md
+ - README: readme.md
  - Better Dataset Recommendations: recommendations.md
  - Developer Guide:
     - Python Setup: python-setup.md
@@ -80,4 +48,4 @@ nav:
     - T1DExi: data_sets/T1DEXI.md
     - T1DEXIP: data_sets/T1DEXIP.md
     - Replace BG: data_sets/REPLACE_BG.md
- - License: snippets/license.md
+ - License: license.md

@@ -1,3 +1,7 @@
+# File: __init__.py
+# Author Jan Wrede
+# Copyright (c) 2025 nudgebg
+# Licensed under the MIT License. See LICENSE file for details.
 from .dclp import DCLP3,DCLP5
 from .flair import Flair
 from .iobp2 import IOBP2
