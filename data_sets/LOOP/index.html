@@ -1,0 +1,1829 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../FLAIR/">
+      
+      
+        <link rel="next" href="../T1DEXI/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.36">
+    
+    
+      
+        <title>LOOP - Babelbetes</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.06209087.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../style.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#loop" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Babelbetes" class="md-header__button md-logo" aria-label="Babelbetes" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Babelbetes
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              LOOP
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Babelbetes" class="md-nav__button md-logo" aria-label="Babelbetes" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Babelbetes
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Babelbetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Supported Datasets
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Supported Datasets
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../IOBP2/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    IOBP2
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DCLP3/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DCLP3
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DCLP5/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DCLP5
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PEDAP/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    PEDAP
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../FLAIR/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    FLAIR
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    LOOP
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    LOOP
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#study-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Study Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#relevant-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Relevant Columns:
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Relevant Columns:">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#loopdevicecgm1-6" class="md-nav__link">
+    <span class="md-ellipsis">
+      LOOPDeviceCGM1-6
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#loopdevicebasal1-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      LOOPDeviceBasal1-3
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#loopdevicebolus" class="md-nav__link">
+    <span class="md-ellipsis">
+      LOOPDeviceBolus
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#todos" class="md-nav__link">
+    <span class="md-ellipsis">
+      Todos:
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#general-observations" class="md-nav__link">
+    <span class="md-ellipsis">
+      General Observations
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="General Observations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#file-sizes" class="md-nav__link">
+    <span class="md-ellipsis">
+      File Sizes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#incomplete-patients" class="md-nav__link">
+    <span class="md-ellipsis">
+      Incomplete Patients
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#datetimes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Datetimes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Datetimes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#uutc-vs-local" class="md-nav__link">
+    <span class="md-ellipsis">
+      uutc vs local
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#timezone-information" class="md-nav__link">
+    <span class="md-ellipsis">
+      Timezone information
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#estimating-time-zone-error" class="md-nav__link">
+    <span class="md-ellipsis">
+      Estimating time zone error
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#datetime-conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Datetime Conclusion
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cgm" class="md-nav__link">
+    <span class="md-ellipsis">
+      CGM
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CGM">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#special-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      Special Values
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Special Values">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cgm-duplicates" class="md-nav__link">
+    <span class="md-ellipsis">
+      CGM Duplicates
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#boluses" class="md-nav__link">
+    <span class="md-ellipsis">
+      Boluses
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Boluses">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#duplicates" class="md-nav__link">
+    <span class="md-ellipsis">
+      Duplicates
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dual-wave-boluses" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dual wave Boluses
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dual wave Boluses">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bolus-duration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bolus Duration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requested-vs-delivered" class="md-nav__link">
+    <span class="md-ellipsis">
+      Requested vs. Delivered
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conclusion
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basal-rates" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basal Rates
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Basal Rates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#duplicates_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Duplicates
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#basal-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basal Type
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#basal-durations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basal Durations
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#basal-gaps" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basal Gaps
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tdd-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      TDD Validation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#open-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Open questions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#open-todos" class="md-nav__link">
+    <span class="md-ellipsis">
+      Open Todos
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../T1DEXI/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    T1DExi
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../T1DEXIP/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    T1DEXIP
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../REPLACE_BG/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Replace BG
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommendations/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Better Datasets
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Toolbox Guide
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Toolbox Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Code Reference
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../checklist/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Study Checklist
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../best-practices/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Best Pracitces
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../python-setup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Virtual Environments
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contribute/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contribute
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    About
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../snippets/license/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    License
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#study-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Study Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#relevant-columns" class="md-nav__link">
+    <span class="md-ellipsis">
+      Relevant Columns:
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Relevant Columns:">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#loopdevicecgm1-6" class="md-nav__link">
+    <span class="md-ellipsis">
+      LOOPDeviceCGM1-6
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#loopdevicebasal1-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      LOOPDeviceBasal1-3
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#loopdevicebolus" class="md-nav__link">
+    <span class="md-ellipsis">
+      LOOPDeviceBolus
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#todos" class="md-nav__link">
+    <span class="md-ellipsis">
+      Todos:
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#general-observations" class="md-nav__link">
+    <span class="md-ellipsis">
+      General Observations
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="General Observations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#file-sizes" class="md-nav__link">
+    <span class="md-ellipsis">
+      File Sizes
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#incomplete-patients" class="md-nav__link">
+    <span class="md-ellipsis">
+      Incomplete Patients
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#datetimes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Datetimes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Datetimes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#uutc-vs-local" class="md-nav__link">
+    <span class="md-ellipsis">
+      uutc vs local
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#timezone-information" class="md-nav__link">
+    <span class="md-ellipsis">
+      Timezone information
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#estimating-time-zone-error" class="md-nav__link">
+    <span class="md-ellipsis">
+      Estimating time zone error
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#datetime-conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Datetime Conclusion
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cgm" class="md-nav__link">
+    <span class="md-ellipsis">
+      CGM
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CGM">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#special-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      Special Values
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Special Values">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cgm-duplicates" class="md-nav__link">
+    <span class="md-ellipsis">
+      CGM Duplicates
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#boluses" class="md-nav__link">
+    <span class="md-ellipsis">
+      Boluses
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Boluses">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#duplicates" class="md-nav__link">
+    <span class="md-ellipsis">
+      Duplicates
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dual-wave-boluses" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dual wave Boluses
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Dual wave Boluses">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bolus-duration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bolus Duration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#requested-vs-delivered" class="md-nav__link">
+    <span class="md-ellipsis">
+      Requested vs. Delivered
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conclusion
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basal-rates" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basal Rates
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Basal Rates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#duplicates_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Duplicates
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#basal-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basal Type
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#basal-durations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basal Durations
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#basal-gaps" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basal Gaps
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tdd-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      TDD Validation
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#open-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Open questions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#open-todos" class="md-nav__link">
+    <span class="md-ellipsis">
+      Open Todos
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="loop">Loop</h1>
+<p>This page summarizes our insights about the clinical study data of the <strong>Loop</strong> study in efforts to understand how to handle bolus, basal, and cgm data, list assumptions that were made, and pose open questions. </p>
+<p>The full analysis of this dataset is provided in: <code>notebooks/understand-loop-dataset.ipynb</code></p>
+<h2 id="study-overview">Study Overview</h2>
+<ul>
+<li><strong>Study Name</strong>: An Observational Study of Individuals with Type 1 Diabetes Using the Loop System for Automated Insulin Delivery: The Loop Observational Study (LOS)<br />
+<strong>Description</strong>: Passive data collection to collect data on the efficacy, safety, usability, and quality of life/ psychosocial effects of the Loop System<br />
+<strong>Devices</strong>: insulin pump and a Dexcom or Medtronic CGM<br />
+<strong>Study Population</strong>: People of any age with Type 1 Diabetes</li>
+</ul>
+<h2 id="data">Data</h2>
+<p>The study data folder is named <strong>Loop study public dataset 2023-01-31</strong></p>
+<p>From the DataGlossary.rtf file, the following relevant files were identified which are stored in the <strong>Data Tables</strong> subfolder.</p>
+<table>
+<thead>
+<tr>
+<th>File Name</th>
+<th>Description</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>LOOPDeviceBasal<i>.txt</strong></td>
+<td>i=1-3, basal data exported from Tidepool</td>
+<td>3 files: 2.9GB, 2.9GB, and 1.35GB</td>
+</tr>
+<tr>
+<td><strong>LOOPDeviceCGM<i>.txt</strong></td>
+<td>i=1-6, CGM data exported from Tidepool</td>
+<td>6 files: 2.14GB, 2.24GB, 2.3GB, 2.31GB, 2.33GB, and 1.53GB.  Contains more patient IDs than Basal and Bolus files</td>
+</tr>
+<tr>
+<td><strong>LOOPDeviceBolus.txt</strong></td>
+<td>Bolus data exported from Tidepool</td>
+<td>1 file: 349MB</td>
+</tr>
+<tr>
+<td><strong>PtRoster.txt</strong></td>
+<td>Patient Roster</td>
+<td>Contains fixed UTC offsets which we need</td>
+</tr>
+</tbody>
+</table>
+<h3 id="relevant-columns">Relevant Columns:</h3>
+<p>The following lists all relevant columns. Other columns were considered irrelevant. Some are still mentioned if they serve the discussion but are crossed through.</p>
+<h4 id="loopdevicecgm1-6">LOOPDeviceCGM1-6</h4>
+<table>
+<thead>
+<tr>
+<th>Field_Name</th>
+<th>Description</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>UTCDtTm</strong></td>
+<td>Device date and time adjusted with timezone offset</td>
+<td>These are UTC, the description is misleading! *1</td>
+</tr>
+<tr>
+<td><strong>RecordType</strong></td>
+<td>Type of data (CGM, Calibration, etc)</td>
+<td>Needed to drop calibrations</td>
+</tr>
+<tr>
+<td><strong>CGMVal</strong></td>
+<td>Glucose reading from the CGM (in mmol/dL from Tidepool)</td>
+<td>Convert to convert to mg/dl</td>
+</tr>
+<tr>
+<td>~~DeviceDtTm~~</td>
+<td>Local device date and time; note not present in most rows because unavailable in Tidepool data source</td>
+<td>*1</td>
+</tr>
+<tr>
+<td>~~TmZnOffset~~</td>
+<td>Timezone offset</td>
+<td>*1</td>
+</tr>
+<tr>
+<td>~~Units~~</td>
+<td>Glucose reading units</td>
+<td>all CGMs are in mmol/dL</td>
+</tr>
+</tbody>
+</table>
+<h4 id="loopdevicebasal1-3">LOOPDeviceBasal1-3</h4>
+<table>
+<thead>
+<tr>
+<th>Field Name</th>
+<th>Glossary Description</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PtID</strong></td>
+<td>Patient ID</td>
+<td>Was not mentioned in glossary</td>
+</tr>
+<tr>
+<td><strong>UTCDtTm</strong></td>
+<td>Date and time with timezone offset</td>
+<td>*1</td>
+</tr>
+<tr>
+<td><strong>Rate</strong></td>
+<td>Number of units per hour</td>
+<td><strong>This is likely the only relevant value here</strong></td>
+</tr>
+<tr>
+<td>~~DeviceDtTm~~</td>
+<td>~~Local device date and time; note not present in most rows because unavailable in Tidepool data source~~</td>
+<td>*1</td>
+</tr>
+<tr>
+<td>~~TmZnOffset~~</td>
+<td>~~Timezone offset~~</td>
+<td>*1</td>
+</tr>
+<tr>
+<td>BasalType</td>
+<td>Basal delivery type</td>
+<td>Unclear</td>
+</tr>
+<tr>
+<td>Duration</td>
+<td>Actual number of milliseconds basal will be in effect</td>
+<td>Unclear</td>
+</tr>
+<tr>
+<td>ExpectedDuration</td>
+<td>Expected number of milliseconds basal will be in effect</td>
+<td>Unclear</td>
+</tr>
+<tr>
+<td>Percnt</td>
+<td>Percentage of suppressed basal that should be delivered</td>
+<td>Unclear</td>
+</tr>
+<tr>
+<td>SuprBasalType</td>
+<td>Suppressed basal delivery type (suppressed basal = basal event not being delivered because this one is active)</td>
+<td>Unclear, ambiguous description. JAEB did not use these values (see Q&amp;A with JAEB below)</td>
+</tr>
+<tr>
+<td>SuprDuration</td>
+<td>Suppressed duration</td>
+<td>Unclear</td>
+</tr>
+<tr>
+<td>SuprRate</td>
+<td>Suppressed rate</td>
+<td>Unclear</td>
+</tr>
+</tbody>
+</table>
+<p>Example (first row):<br />
+| PtID   | UTCDtTm| <strong>BasalType</strong> | Duration | ExpectedDuration | Percnt | Rate  | <strong>SuprBasalType</strong> | SuprDuration | SuprRate | TmZnOffset | 
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1082 | 2018-05-29 10:02:56| <strong>temp</strong>| 244000   ||| 1.475 | <strong>scheduled</strong>|| 1.600|| </p>
+<h4 id="loopdevicebolus">LOOPDeviceBolus</h4>
+<table>
+<thead>
+<tr>
+<th>Field_Name</th>
+<th>Description</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>UTCDtTm</strong></td>
+<td>Device date and time (with timezone offset)</td>
+<td>*1</td>
+</tr>
+<tr>
+<td><strong>BolusType</strong></td>
+<td>Subtype of data (ex: "Normal" and "Square" are subtypes of "Bolus" type)</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Normal</strong></td>
+<td>Number of units of normal bolus</td>
+<td>Likely the only relevant value.</td>
+</tr>
+<tr>
+<td>~~DeviceDtTm~~</td>
+<td>Local device date and time; note not present in most rows because unavailable in Tidepool data source</td>
+<td>*1</td>
+</tr>
+<tr>
+<td>~~TmZnOffset~~</td>
+<td>Timezone offset</td>
+<td>*1</td>
+</tr>
+<tr>
+<td>ExpectedNormal</td>
+<td>Expected number of units of normal bolus</td>
+<td>Unclear</td>
+</tr>
+<tr>
+<td>Extended</td>
+<td>Number of units for extended delivery</td>
+<td></td>
+</tr>
+<tr>
+<td>ExpectedExtended</td>
+<td>Expected number of units for extended delivery</td>
+<td></td>
+</tr>
+<tr>
+<td>Duration</td>
+<td>Time span over which the bolus was delivered (milliseconds for Tidepool data, minutes for Diasend data)</td>
+<td>Our analysis shows that Duration refers to the Extended part of a Bolus. *</td>
+</tr>
+<tr>
+<td>ExpectedDuration</td>
+<td>Expected time span over which the bolus should have been delivered (milliseconds for Tidepool data, minutes for Diasend data)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>* The information about the source can be derived from the LoopDeviceUploads.txt. However, this was not done at the time of analysis!</p>
+<p>We asked JAEB:</p>
+<p><strong>Suppressed Deliveries:</strong> What are suppressed deliveries in the context of basal data?    </p>
+<blockquote>
+<p>Answer: <strong>We do not know</strong> what the suppressed deliveries represent in this context, and we did not use this information for our analyses.  We calculated TDI using the Rate and Duration variables.  We suggest reaching out to Tidepool for information on suppressed deliveries.</p>
+</blockquote>
+<p><strong>Patient IDs Discrepancy:</strong> Why are there more patient IDs in the CGM files than in the Basal and Bolus files?  </p>
+<blockquote>
+<p>If available, CGM data from the participant’s personal CGM was collected for the 3 months prior to enrollment. A number of participants provided the retrospective personal CGM data but did not use Loop/provide us with their Loop data.</p>
+</blockquote>
+<p><strong>Time Zones:</strong> The UTCDtTm field does not include timezone information and TmZnOffset is only available when DeviceDtTm exists, which is rare. Local time might need to be extrapolated using backward / forward filling or using PtTimezoneOffset of the patient roster, which may not be reliable over long periods. How can local times be obtained for all patients, given the limited availability of DeviceDtTm and the potential inaccuracy of PtTimezoneOffset? </p>
+<blockquote>
+<p>When we did the analysis, we used participant zip codes to estimate a local time. However, the zip code is not available in the public dataset. Instead, the variable PTTimezoneOffset in the PtRoster dataset can be applied to all UTC times to obtain a local time. During daylight savings, the offset should be reduced by 1.  This won’t be a perfect measure of the local time but should be a close approximation.</p>
+</blockquote>
+<p><strong>Dexcom Times:</strong> Are Dexcom DexInternalDtTm times in local time or UTC?  </p>
+<blockquote>
+<p>We did not use this variable because it is missing for the majority of cases.  We believe that it was only available in downloads from personal CGMs but not available in the data uploaded by Tidepool.  It may be the local time but may need to reach out to Dexcom to confirm this.</p>
+</blockquote>
+<p><strong>Data Source Identification:</strong> How can we determine if the data is uploaded from Tidepool or Diasend, especially since this affects the interpretation of extended boluses?  </p>
+<blockquote>
+<p>In most cases (perhaps all), Tidepool uploads are indicated by the OriginName field being equal to ‘.com.apple.HealthKit’.  However, we suggest reaching out to Tidepool as there might be scenarios where Diasend was involved in the data chain.</p>
+</blockquote>
+<ul>
+<li>[1]:DeviceDtTm and TmZnOffset are only available for a fraction of patients. Therefore, we rely on UTCDtTm and patient roster PtTimezoneOffset to obtain local time. </li>
+<li>[2]: Loop has no extended boluses, check what this is</li>
+</ul>
+<p>Note: After the analysis we found out that the information about the source can be derived from the LoopDeviceUploads.txt. However, this was not done at the time of analysis and is a left-open todo.</p>
+<h3 id="todos">Todos:</h3>
+<p>Boluses:<br />
+ - Need to check if the Normal portion is the actual delivered by comparing the values (&lt;= in all cases would prove this to be true).
+ - Check if there are extended boluses
+ - Can we determine the delivery duration (ms or minutes) based on the data source?
+Basals:
+ - Need to double check if the Suppressed values are already factored in and if standard basal rates are reported as well.
+ - Check potential values for columns like basal type (value-counts)</p>
+<h2 id="general-observations">General Observations</h2>
+<h3 id="file-sizes">File Sizes</h3>
+<ul>
+<li><strong>Memory usage:</strong> 1GB for a single CGM file is too much. The patient data is spread accross various files which requires out of memory approaches.</li>
+</ul>
+<p>Processing patient data requires us to load all files into memory at once because the patient data is spread accross all CGM files. While we could use dask on the csvs directly, this would create a lot of overhead (shuffling to perform grouped conversions). 
+Instead, we convert the csvs to parquet format which splits the data into patient directories. This way we can load patient data one by one and process in parallel using dask.</p>
+<h3 id="incomplete-patients">Incomplete Patients</h3>
+<p>Yes, there are some patients with only CGM data but missing basal data.  The patients were excluded.</p>
+<h2 id="datetimes">Datetimes</h2>
+<h3 id="uutc-vs-local">uutc vs local</h3>
+<p>We started by working with CGM data to understand how to obtain local datetimes.  Unfortunately, for most of the data only UTC time exists while DeviceDtTm (local device time) and TmznOffset (time zone offset from utc) are NaN.
+<img alt="alt text" src="../assets/loop-localtimes.png" />
+ We confirmed this relationship by plotting the diurnal distributions of glucose and boluses and found the expected postprandial peaks in the morning, around noon, and evening when using local times.</p>
+<p><img alt="" src="../assets/loop-localtime-boluses.png" /></p>
+<h3 id="timezone-information">Timezone information</h3>
+<p>However, we can <strong>not rely</strong> on DeviceDtTm and TmZnOffset because it only exists for a fraction of the data. Therefore we need to rely on UTCDtTm and either extrapolate TmZnOffset (using forwarnd/backward filling) or use the patient roster time zone offsets. </p>
+<p>One option would be to extrapolate the <code>TmZnOffset</code> (bfill/ffill)? To check if this is a viable option we checked how many patients have TmZnOffset data and found that only 37.18% of patients have at least one timezone offset.</p>
+<p>Instead, we chose to use the <code>PtTimezoneOffset</code> (utc offset in hours) from the patient roster. To understand if using this <em>static</em> value is acceptable, we wanted to understand how often the actual timezone changes. Because we need to consider more frequent changes such as travel times, daylight saving times, etc.</p>
+<p>We did this by using the 37% of patients with actual timezone data available:</p>
+<p><img alt="" src="../assets/loop-timezones-per-patient.png" />
+<img alt="" src="../assets/loop-timezone-diff-within.png" /></p>
+<ul>
+<li>approx 63.0% of patients have shifts of 1 hours or less</li>
+<li>approx 65.3% of patients have 2 unique time zones or less</li>
+</ul>
+<p>We see that: 
+ - Most patients experience more than 1 time zone. 
+ - The majority is a change of 1 hour. This is likely the result of daylight saving times. 
+- But, also a significant fraction experiences changes of 2,3 or 4 hours or more. </p>
+<h3 id="estimating-time-zone-error">Estimating time zone error</h3>
+<p>However, these time zone changes are likely infrequent as most patients will travel for short periods only. We estimated the expected error by comparing the static offsets (PtTimezoneOffset) (from the patient roster) with the actual device reported offsets ((TmZnOffset) for the fraction of patients with that data). </p>
+<p><img alt="" src="../assets/loop-timezoneerror-cdf.png" /></p>
+<p>The CDF shows the distribution of the error which we can expect in the other patients. The local time error will be &lt;2 hours for &gt;96% of the cases.</p>
+<h3 id="datetime-conclusion">Datetime Conclusion</h3>
+<p>Local datetimes can be obtained with a small estimated error (&lt;2 hours for &gt;96% of the cases) by using the patient roster static time zone utc offsets PtTimezoneOffset and UTCDtTm utc timestamps. </p>
+<p><code>local_time = UTCDtTm + PtTimezoneOffset</code></p>
+<h2 id="cgm">CGM</h2>
+<ul>
+<li>Unit is mmol/dL or mg/dl</li>
+<li>there are also blood glucose calibrations </li>
+</ul>
+<h3 id="special-values">Special Values</h3>
+<p>CGM values are capped (as expected) but no special values (e.g. 0) values exist.
+<img alt="" src="../assets/loop-cgm-dist.png" /></p>
+<h4 id="cgm-duplicates">CGM Duplicates</h4>
+<ul>
+<li>There are no nan values</li>
+<li>38,562,037 duplicates (34.70%) (same in all columns)</li>
+<li>42,680,198 duplicates (38.41%) (when only considering 'UTCDtTm' column)</li>
+</ul>
+<p>We checked and found that even the 4 % CGM values that reported at the same time but with diffferent values are almost identical:
+ <img alt="" src="../assets/loop-cgm-corr.png" /></p>
+<p>### CGM Conclusion
+- Many duplicates that need to be dropped
+ - CGM Data must be converted from mmol/dL to mg/dl
+ - There are no NaN values
+ - Calibrations need to be dropped</p>
+<h2 id="boluses">Boluses</h2>
+<h3 id="duplicates">Duplicates</h3>
+<p>There are a significant amount of duplicates; most duplicated rows are completely identical (except for the record id). 
+However, we also see slightly more duplicates when only considering ['UTCDtTm', 'PtID'] columns (72891 duplicates (2.97%)). This means that there are rows that have equal  ['UTCDtTm', 'PtID'] but vary otherwise. </p>
+<p>We found that there are:
+1. some differences in the firmware (can be dropped)
+2. temporal duplicates with different bolus amounts </p>
+<p><img alt="" src="../assets/loop-bolus-dups-minmax.png" /></p>
+<p>We found that sometimes boluses are drastically different. We don't know why that is and we wouldn't know which value to pick. But on average, the error seems negligible (close to zero).</p>
+<h3 id="dual-wave-boluses">Dual wave Boluses</h3>
+<p>We know there are some dual wave and extended boluses. Since Loop does not support these natively, these were likey initiated by the user from the pump or during open loop mode.</p>
+<p>0.43% of boluses are extended
+In 100.0% of all rows, it is either extended and duration are filled or neither</p>
+<h4 id="bolus-duration">Bolus Duration</h4>
+<p>From the glossary we know that the duration is either in ms or minutes.  However, it appears that only milliseconds are present. </p>
+<p><img alt="" src="../assets/loop-bolus-duration-hours.png" /></p>
+<p>However, it does not look like the data would be split in ms and minutes (there is no skewed peak around 0). </p>
+<p>We know that duration values refer to the extended bolus duration. Therefore these rows need to be split in an immediate and an extended part. This is different to other datasets where we had to merge rows or subtract delivery durations to obtain delivery start and delivery durations.</p>
+<h4 id="requested-vs-delivered">Requested vs. Delivered</h4>
+<p>There seem to be only delivered events, no requested.</p>
+<h3 id="conclusion">Conclusion</h3>
+<ul>
+<li>There are some duplicated (in time) Boluses ~3% </li>
+<li>These boluses are mostly equal but in rare cases significantly different (reason unclear)</li>
+<li>Extended boluses exist and should be separted, it appears that Duration is always given in milliseconds</li>
+</ul>
+<h2 id="basal-rates">Basal Rates</h2>
+<ul>
+<li>&lt;0.1% Basal rates are percent (TODO: check if these rows miss the rate)</li>
+<li>~0.1% duplciates, which is very little</li>
+<li>25% don't have suppressed basal type, most miss duration</li>
+</ul>
+<p>The glossary defines Suppressed events as follows:</p>
+<blockquote>
+<p>Percnt: Percentage of suppressed basal that should be delivered
+SuprBasalType: Suppressed basal delivery type (suppressed basal = basal event not being delivered because this one is active)
+SuprDuration: Suppressed duration
+SuprRate: Suppressed rate</p>
+</blockquote>
+<p>From this it is not quite clear what they mean. </p>
+<h3 id="duplicates_1">Duplicates</h3>
+<p>DUPLICATES:
+'211166 duplicates (0.44%)'"435830 duplicates (0.90%) ['UTCDtTm', 'PtID']"</p>
+<p>We found that these temporal duplicates differ in almost all columns. In some cases we saw that temporal duplicated rows have different durations and one row seems to have incorrect/incomplete data: very small Duration, missing type, missing rate. By keeping the maximum duration, we mostly remove the left tail. But honestly, we don't know what is going on.</p>
+<h3 id="basal-type">Basal Type</h3>
+<p><code>BaslTypes</code> differ with <code>temp</code> in ~ 99.5% of the cases. Less than 0.5% are scheduled or suspend (0.038%).
+The SuprBasalType colum only contains <code>scheduled</code> values (92%, while the rest is empty).</p>
+<p>We asked JAEB about suppressed deliveries and they also didn't know how to interpret them and recommended reaching out to Tidepool directly. </p>
+<p>We checked and found that the relationship between the values is <code>Percnt = Rate / SuprRate</code>. Now it is unclear wether to use the SuprRate or the Rate. The glossary sounds like the Rate is the actual delivered rate. We asked JAEB and they also used the rate.</p>
+<h3 id="basal-durations">Basal Durations</h3>
+<p>It is unclear to us whether the basal duration must be considered or if the basal rate should be kept active until the next basal rate is reported. We are unsure because we sometimes see basal rates being reported as zero while at other times, after the duration expires, no new basal rates are reported.</p>
+<p>In the example below (Patient 13, day 2018-01-27), basal rate at 6:48 is reported with a duration of 300000 (5min) but no further rate is reported until the next reported value at 12:14. </p>
+<p><img alt="" src="../assets/loop-basal-durations-patient13.png" />
+In the figure, the red markers indicate the duration.  These mostly reach from one basal rate to the next. However, in some cases, the duration is shorter.</p>
+<h3 id="basal-gaps">Basal Gaps</h3>
+<p>We are aware that there are gaps in basal rates. For example on day 2019-05-17 patient 3 basal rates only range from midnight to 10:00AM it is unlikely this is because basal rates remain unchanged. </p>
+<p>The general trend can be seen in the CDF plot below showing the time between the first and last reported basal rate for each day. 
+<img alt="" src="../assets/loop-basal-coverage.png" /></p>
+<p>As we can see most days have good coverage but about 10% have less coverage than 20 hours. This means that many hours of basal rates need to be forward filled from basal rates from previous days.</p>
+<h2 id="tdd-validation">TDD Validation</h2>
+<p>In order to verify if we correctly extracted basal rates, we compared our calculated TDDs with those reported by JAEB (using <strong>totalDailyInsBolus</strong> from the gluIndices.txt with Period <em>Months 1-6</em>). </p>
+<p>However, what we found is that our calculated TDDs are much higher than those provided by JAEB. Understanding the differences could help us reveal unknowns and wrong assumptions that we made about the data. </p>
+<p><img alt="" src="../assets/loop-tdd-basal.png" /></p>
+<h2 id="open-questions">Open questions</h2>
+<ul>
+<li>Do we need to consider basal type and suppressed values? </li>
+<li>How to treat basal durations and how to fill basal gaps?</li>
+<li>Do basal rates remain active until the next event is reported?</li>
+<li>
+<p>Are reported basal rates the absolute basal rate or the deviation from standard basal?</p>
+</li>
+<li>
+<p>Why do we see bolus duplicates shifted by one hour?</p>
+</li>
+</ul>
+<h2 id="open-todos">Open Todos</h2>
+<ul>
+<li>As menttioned above: During the time of the analysis, we weren't aware that the LoopDeviceUploads.txt continas information about the data source (Tidepool vs. Diasend) which should be used to treat extended bolus durations as ms (Tidepool) or minutes (Diasend). This is a left-open item.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.56dfad97.min.js"></script>
+      
+    
+  </body>
+</html>

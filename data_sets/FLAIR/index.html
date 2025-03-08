@@ -1,0 +1,972 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../PEDAP/">
+      
+      
+        <link rel="next" href="../LOOP/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.36">
+    
+    
+      
+        <title>FLAIR - Babelbetes</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.06209087.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../style.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#flair" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Babelbetes" class="md-header__button md-logo" aria-label="Babelbetes" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Babelbetes
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              FLAIR
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Babelbetes" class="md-nav__button md-logo" aria-label="Babelbetes" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Babelbetes
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Babelbetes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Supported Datasets
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            Supported Datasets
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../IOBP2/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    IOBP2
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DCLP3/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DCLP3
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DCLP5/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    DCLP5
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../PEDAP/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    PEDAP
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    FLAIR
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    FLAIR
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#study-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Study Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-description" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data Description:
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../LOOP/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    LOOP
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../T1DEXI/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    T1DExi
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../T1DEXIP/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    T1DEXIP
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../REPLACE_BG/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Replace BG
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recommendations/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Better Datasets
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Toolbox Guide
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Toolbox Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Code Reference
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../checklist/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Study Checklist
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../best-practices/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Best Pracitces
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../python-setup/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Virtual Environments
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contribute/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contribute
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    About
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../snippets/license/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    License
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#study-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      Study Overview
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-description" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data Description:
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="flair">Flair</h1>
+<p>This page summarizes our insights about the clinical study data of the <strong>Flair</strong> study in efforts to understand how to handle bolus, basal, and cgm data as well, list assumptions that were made, and pose open questions. </p>
+<p>The full analysis of this dataset is provided in: <code>notebooks/understand-flair-dataset/understand-flair-dataset.ipynb</code> and (later added to refine) <code>notebooks/understand-flair-dataset/2024-07-12 - Understanding TDD Discrepancies in Flair Data.ipynb</code></p>
+<h2 id="study-overview">Study Overview</h2>
+<ul>
+<li><strong>Study Name</strong>: A Crossover Study Comparing Two Automated Insulin Delivery System
+Algorithms (PID vs. PID + Fuzzy Logic) in Individuals with Type 1
+Diabetes (FLAIR - Fuzzy Logic Automated Insulin Regulation)</li>
+<li><strong>Description</strong>: A randomized crossover trial to compare the efficacy and safety of an
+automated insulin delivery (AID) system with a proportional-integral-
+derivative (PID) algorithm versus an automatic insulin delivery (AID) system
+with a PID algorithm enhanced with a Fuzzy Logic algorithm.</li>
+<li><strong>Devices</strong>: The Minimed 670G 4.0 Advanced Hybrid Closed-Loop (AHCL) (PID +
+Fuzzy Logic) pump with the Guardian Sensor (3) continuous glucose
+monitoring sensor.</li>
+</ul>
+<h2 id="data-description">Data Description:</h2>
+<p>The study data folder is named <strong>FLAIRPublicDataSet</strong>
+From the DataGlossary.rtf file, the following relevant files were identified which are stored in the <strong>Data Tables</strong> subfolder.</p>
+<ul>
+<li><strong>FLAIRDeviceCGM.txt</strong>: List of CGM data downloaded</li>
+<li><strong>FLAIRDevicePump.txt</strong>: List of pump data dowloaded </li>
+<li><strong>PtRoster.txt</strong>*: Patient Roster</li>
+</ul>
+<p>These are csv files ("|" separator) and host many columns related to the Medtronic pump events and the guardian cgm. The glossary provides information about each column. While there are many columns, the following were identified as relevant.</p>
+<p><strong>FLAIRDeviceCGM</strong>:</p>
+<ul>
+<li><strong>PtID</strong>: Patient ID</li>
+<li><strong>DataDtTm</strong>: Date-time of sensor glucose reading</li>
+<li><strong>CGM</strong>: Sensor glucose aka CGM - mdDl or mmol/L</li>
+<li><strong>DataDtTm_adjusted</strong>: Adjusted value of DataDtTm </li>
+</ul>
+<p><strong>FLAIRDevicePump</strong>:</p>
+<ul>
+<li><strong>PtID</strong>: Patient ID</li>
+<li><strong>DataDtTm</strong>: Date-time of pump data</li>
+<li><strong>NewDeviceDtTm</strong>: The new date and time if this was changed in the device</li>
+<li><strong>BolusType</strong>: Bolus type - The bolus insulin delivery type [Normal, Square, Dual (normal part), or Dual (square part)]</li>
+<li><strong>BolusDeliv</strong>: Bolus volume delivered (U) - The number of insulin units actually delivered during the bolus insulin delivery</li>
+<li><strong>ExtendBolusDuration</strong>: Duration of the square portion of either a square bolus or a dual wave bolus</li>
+<li><strong>BasalRt</strong>: Basal Rate (U/h) - The active basal insulin delivery rate in units per hour</li>
+<li><strong>BasalRtUnKnown</strong>: Basal rate unknown as marked in the carelink file</li>
+<li><strong>TempBasalAmt</strong>: Temp basal amount - If a temp basal was applied on the pump, this value is the temp basal amount</li>
+<li><strong>TempBasalType</strong>: Temp basal type - The type of temporary basal adjustment (insulin rate or percent of basal)</li>
+<li><strong>TempBasalDur</strong>: Temp basal duration (h:mm:ss) - The length of time for the temporary basal insulin delivery</li>
+<li><strong>Suspend</strong>: State "Suspend" when the pump is suspended and "Resumed" when the pump is resumed </li>
+</ul>
+<h1 id="analysis-of-the-data">Analysis of the Data</h1>
+<p>The study data was analyzed to understand which data is relevant, and how it must be manipulated and interpreted in order to obtain the true delivered insulin amounts. The results are mostly based on the analysis in the jupyter notebook <code>understand-flair-dataset.ipynb</code>. Later, a second notebook was added: <code>understand-flair-dataset/2024-08-12 - Modularize-Flair.ipynb</code> that added details to TDDs and closed loop modes focusing on improving the match between reported and calcualted TDDs.</p>
+<p><strong>Leading Questions</strong>: 
+* Do we need to track DataDtTm_adjusted or can we rely on DataDtTm?
+* How often do NewDeviceDtTm<strong> events happen and do we need to account for these or is DataDtTm sufficient?
+* How often do BasalRtUnKnown</strong> events happen and how should we handle these?
+* Are TempBasalAmt reflected in the BasalRt? Is the value a rate (U/h) or does it depend on the TempBasalType (Percent/Rate)?
+* Do we have to keep track of temporary basal durations events (TempBasalDur) or do we get a normal basal rate at the end of the basal rate?
+* How do we know if the temp basal rate is ended earlier than programmed
+* How often does the pump suspend (Suspend)? Should we stop counting basal rates in this time?
+* Do suspend events stop bolus deliveries? Do we need to account for it?</p>
+<h2 id="general-findings">General Findings</h2>
+<ul>
+<li><strong>Temp Basal:</strong> We have 1446 temp basal values. only 9 of these are set by insulin rate, the others are in percent. These need to be factored in.</li>
+<li><strong>Suspend:</strong> There are 72424 suspend events. These need to be factored in.</li>
+<li><strong>Date Adjustments:</strong> There are many adjusted datetime events for CGM (none for Insulin). We need to understand how to factor them in.</li>
+<li><strong>There are 684</strong> instances where the device time changes. Unclear if these are reflected.</li>
+</ul>
+<h3 id="datetimes">Datetimes</h3>
+<ul>
+<li><strong>Date time strings</strong>: From manual inspection we know that there are date time strings without time component. We treat those without as midnight (00AM). If we don't do this in two steps, the loading is extremely slow because python needs to dynamically adjust the formatter. </li>
+<li>Date Adjustments: We need to use the adjusted datetimes for cgm, when it exists.</li>
+</ul>
+<p><strong>Unknowns:</strong>
+* We don't know the implications of NewDeviceDtTm. These should be clarified!</p>
+<h2 id="basal-rates">Basal Rates</h2>
+<h3 id="temp-basal-rates-background">Temp Basal Rates (Background)</h3>
+<p>Medtronic allows setting temp basal percentages from 0 (shut off) to 200% (twice the basal rate)</p>
+<p><strong>Temp basal rates:</strong> "The duration of the temp basal rate can range from 30 minutes to 24 hours. After the temp basal rate delivery is completed or canceled, the programmed basal pattern resumes. The temp basal rates and preset temp basal rates can be defined using either a <strong>percentage</strong> of the current basal pattern or by setting a <em>specific rate</em>, as described as follows:"</p>
+<p><strong>Percent:</strong> "Percent delivers a percentage of the basal rates programmed in the active basal pattern for the duration of the temp basal rate. The temp basal amount is rounded down to the next 0.025 units if the basal rate is set at less than 1 unit per hour, or to the next 0.05 units if the basal rate is set at more than 1 unit per hour. Temp basal rates can be set to deliver from <em>0% to 200%</em> of the scheduled basal rate. The <em>percentage used is based on the largest basal rate scheduled during the temp basal rate duration</em><em> and is </em><em>limited by the Max basal rate</em>."</p>
+<p><strong>Rate</strong>: "delivers a fixed basal insulin rate in <em>units per hour</em> for the duration of the temp basal rate. The amount set is <em>limited by the Max basal rate</em>"</p>
+<p>[1] MiniMed-780G-system-user-guide-with-Guardian-4-sensor.pdf
+[2] user_guide_minimed_670g_pump-skompresowany.pdf</p>
+<p><img alt="Basal Rate Histograms" src="../assets/flair_basal_rate_histograms.svg" /></p>
+<blockquote>
+<p>Description: Histogram of temporary basal rates reported in the Flair data.</p>
+</blockquote>
+<h3 id="processing-temp-basal-rates">Processing Temp Basal Rates</h3>
+<ul>
+<li>We have no unknown basal rates, therefore this column can be ignored</li>
+<li>Basal rates are reported every time they change</li>
+<li>Standard basal rates do not reflect temporary basal rate changes</li>
+<li>Temporary basal rates are either given in percent [%] of the normal basal (TempBasalType=='Percent') or as a delivery rate [U/h]  replacing standard basal (TempBasalType=='Rate') </li>
+<li>During temp basal rates are active, Standard BasalRt events can change and are reported</li>
+</ul>
+<p><img alt="Temp Basal event reporting" src="../assets/flair_events_around_temporary_basal_rates.png" /></p>
+<blockquote>
+<p><strong>Description</strong>: The figure above shows that temporary basal rates are not reflected in the reported basal rates.</p>
+</blockquote>
+<p><strong>Percent</strong>:
+* Standard Basal rates are reported shortly after temp basal start and stop
+* Temporary Basal Percent rates are reported <strong>twice</strong>, with the same timestamp but the duration format differs with leading 0 or without leading zeros for the hour (e.g. 00:15:00) vs.(0:15:00) 
+* Interpreting Temp Basal of 100 Percent:The manual notes that <em>The percentage used is based on the largest basal rate scheduled during the temp basal rate duration</em>. So a value of 100% would change the basal rate to the highest standard basal rate, even if it occurs occurs within the duration of the temp basal rate. (<em>Assumption</em>)</p>
+<p><strong>Rate:</strong>
+* There are only 9 cases where temporary basal is "Rate", in these cases, standard basal rate is <strong>not</strong> reported shortly after the temp basal rate <em>starts</em>
+* Temporary Basal Percent rates are reported <strong>once</strong>, without leading 0 for duration hour (0:15:00) </p>
+<p><strong>Takeaway:</strong> 
+To reconstruct true basal rates, we need to consider the TempBasalAmt and TempBasalType. We can use the BasalRt events as a basis and apply the TempBasalAmt for the duration of the TempBasalDur. Depending on the value of the TempBasalType, we either need to multiply the BasalRt by the TempBasalAmt (when TempBasalType is "Percent") or we can directly set the BasalRt to the TempBasalAmt (when TempBasalType is "rate"). </p>
+<p>To create the correct event history, we take advantage of the fact that basal rates are reported shortly after a Percent rate is set. Here, we simply multiply all basal rates within the temp basal duration period. After the temp basal duration, the standard basal rate is reported and automatically takes over. In the "Rate" case, we know that the standard basal rate is not reported shortly after the temp basal starts, so we need to treat the event as a new basal rate by copying the temp basal amount. While the temp basal Rate is set, standard basal rate changes should be ignored, we do this by setting all basal rates within the active duration to NaN (not 0!). As before, we take advantage of the fact that after the temp basal stops, a standard basal event is reported and automtaically takes over. </p>
+<p><img alt="Absolute Basal Rates" src="../assets/flair_absolute_basal_rates.png" /></p>
+<blockquote>
+<p><strong>Description</strong>: The figure above shows the result of applying the method described in the previous section to reconstruct the true basal rates. </p>
+</blockquote>
+<h3 id="pump-suspends">Pump Suspends</h3>
+<p><img alt="Suspend Events" src="../assets/flair_suspends.png" />
+* <strong>End suspend without start:</strong>  The very small difference is likely due to glucose suspend events that were started before the observation period. But this makes matching a little <em>more difficult</em>. We want to make sure we match the right pairs!
+* <strong>Most users start with NORMAL_PUMPING:</strong> For the majority of users we get a NORMAL_PUMPING event as the first Suspend event without a previous Suspend event. This could be because a) the pump was being set-up (reservoir change, etc.) and reported normal operation (to be verified) or b) there was a suspend event before the data collection started (unlikely because suspends are often short). 
+* <strong>First Resume event</strong>: For those users whose first suspend event is a resume to normal pumping event, we don't know how long before the pump was suspended. The average time between the first insulin event and this resume event is roughly 0.25 hours. However, the maximum time is &gt;10 hours.
+* <strong>Not reflected in Basal</strong>: Suspend events are not reflected in the reported basal or temporary basal rates. 
+* <strong>Basal rates</strong> are <em>not</em> reported before/after a suspend event starts/stops</p>
+<p><img alt="Suspend Events with CGM" src="../assets/flair_suspends_with_cgm.png" /></p>
+<h2 id="smartguard">SmartGuard</h2>
+<p><strong>670g manual:</strong></p>
+<blockquote>
+<p>SmartGuard suspend (Suspend before low and Suspend on low) features. SmartGuard suspend features can automatically stop and resume insulin delivery based on your SG values and low limit.
+When a SmartGuard suspend event occurs, basal insulin delivery automatically resumes if your SG values are rising and have met the specified criteria,</p>
+</blockquote>
+<p>From this it is unclear wether boluses are also cancelled or just basal.</p>
+<p><strong>Medtronic FAQ:</strong></p>
+<blockquote>
+<p>I bolused for food I did not eat, will the system stop insulin delivery?
+If the system sees that the sensor glucose is falling it will decrease the insulin being delivered and/or stop insulin from being delivered. However, it is important that you eat the amount of carbohydrates that you bolused for because the bolus insulin that you gave will already be working in your body.
+This indicates that boluses will in fact be stopped</p>
+<p>Can you deliver a Dual Wave™ or Square Wave™ bolus in SmartGuard™ technology?
+You cannot deliver a dual or square wave bolus in SmartGuard™ technology. The system is designed to compensate for a delayed rise in sensor glucose levels due to high fat, high carb meals. The auto basal adjustments every 5 minutes and auto corrections may eliminate the need for using the dual or squave wave bolus.
+So it might not even be relevant for us. Question remains what happens during a suspend while a standard bolus is ongoing.</p>
+</blockquote>
+<p><strong>User Blog Post</strong>
+https://littlet1d.blogspot.com/2015/03/smartguard-dual-wave-bolus-cancellation.html</p>
+<blockquote>
+<p>In this article from 2015 a user complains:
+The message in the data file (not the pump screen) is the same as before:-
+Suspend Before / At Low will suspend basal and cancel an extended bolus. </p>
+<p>The answer for us is the same: We need to manually go back in after basal has resumed and put in a revised Square Wave bolus if necessary.</p>
+<p>Ok, I get it, but I’m still concerned: We know and understand that we need to think about manually inputting a revised Square Wave bolus following a Suspend before Low.</p>
+<p>But - and this is, I think a big “but”, there’s no obvious warning / reminder message on Resume to prompt you (or whoever happens to be looking after Janki) to do this. There is an alarm in the pump log, but it doesn’t make it to the screen...
+:arrow_right: At least in 2015 boluses seem to be cancelled and not resumed automatically, only basal resumes.```</p>
+</blockquote>
+<h3 id="what-we-learned-about-smartguard">What we learned about SmartGuard</h3>
+<ul>
+<li>Extended bolus are not possible during closed loop mode</li>
+<li>Boluses during closed loop mode are often reduced, this is likely a result of the Smartguard feature.</li>
+<li>pump suspends stop basal rates</li>
+<li>pump suspend <em>might</em> also cancel boluses (moving forward, we rely on the reported delivered bolus amounts)</li>
+</ul>
+<p><strong>Unknowns</strong>: 
+* It is still unclear if suspend events are reflected in the "delivered" boluses (we assume the reported delivered amounts are correct)
+ * One way to check this would be to identify boluses that overlap with a suspend event.</p>
+<h1 id="boluses">Boluses:</h1>
+<ul>
+<li><strong>Normal bolus</strong>: provides a single immediate dose of insulin.</li>
+<li><strong>Square Wave bolus</strong>: delivers a single bolus evenly over an extended period of time from 30 minutes up to 8 hours.</li>
+<li><strong>Dual Wave bolus</strong>: delivers a combination of an immediate normal bolus followed by a Square Wave bolus.</li>
+</ul>
+<p><img alt="Bolus Types" src="../assets/Bolus%20Types%20Medtronic.png" /></p>
+<blockquote>
+<p><strong>Description</strong>: Bolus types explained from the Medtronic Manual.</p>
+</blockquote>
+<h3 id="what-we-learned-about-boluses">What we learned about Boluses</h3>
+<ul>
+<li>There are (697 or 534) dual wave and 46 sqaure (extended) boluses (&lt;0.02% of the boluses). The dual wave bolus events (square part) (normal part) should be equal in theory. But this could be because some boluses were stopped (working assumption).</li>
+<li>There are very few extended boluses because these are not allowed during closed loop mode</li>
+<li>For dual wave boluses, the number of normal and square events don't match. We <strong>assume</strong> that these boluses were stopped early. This could be further verified by checking if the number of missing events matches the amount of boluses for which the deliverd amount &lt; the selected (were stopped early).</li>
+<li>When a bolus is stopped early, the shorter duration appears to be automatically reflected in the reported duration (data-based assumption).</li>
+<li>We need to use the delivered bolus rather than the selected bolus.</li>
+</ul>
+<p><strong>Unknowns</strong>:
+* It remains unclear if pump suspend events impact the boluses, this should be clarified with the investigator or manufacturer</p>
+<h2 id="bolus-duplicates">Bolus Duplicates</h2>
+<p>Overall, we have 78088 duplicated bolus rows which makes 2.20% of all boluses. After removing these, the reported and calculated TDDs move closer together. The tricky part here was that the bolus source names were different: For example some duplicated micro boluses use CLOSED_LOOP_MICRO_BOLUS while the other row uses CL_MICRO_BOLUS. Therefore, the bolus source is not used to find duplicates, only the datetime and bolus amount. After removing the duplciates, the calculated and reported TDDs matched better:
+<img alt="TDD after Adjusting for Close Loop Modes" src="../assets/flair_removing_bolus_duplicates.png" /></p>
+<h2 id="closed-loop-mode">Closed Loop Mode</h2>
+<p>When closed loop mode is on, basal rates are replaced by micro-boluses.  To prevent incorrect forward filling of basal rates, closed loop modes must be respected. 
+<img alt="Basal Rates and Micor Boluses" src="../assets/flair_basal_micro_boluses.png" /></p>
+<p>Initially we set all basal rates to zero that occur between closed loop start (AutoModeStatus==True) and stop (AutoModeStatus==False) events. However, when patients transition from the 670G to the AHCL algorithm, the reported AutoModeStatus can be incorrect (e.g. auto mode on but no micro boluses) and correct basal rates would be ignored.
+<img alt="Wrong Closed Loop Mode during Algo transition" src="../assets/flair_example_incorrect_closed_loop_mode.png" /></p>
+<p>By only setting the basal rate to zero when a AutoModeStatus true event occurs solves this problem: 
+1. Basal rates are not forward filled with previous basal rates (e.g. also when suspend events occur)
+2. When basal rates are reported again, we trust them.</p>
+<p><img alt="TDD after Adjusting for Close Loop Modes" src="../assets/flair_tdd_after_auto_mode_adjustments.png" /></p>
+<h2 id="tdds">TDDs</h2>
+<p>Reported TDDs are used to test our calculated basals and boluses. However, we often see multiple TDDs reported on a single day including zero values. On these days, the reported and calculated TDDs don't match at all and taking the sum or the last or the maximum value still results in a poor fit. Therefore, we can't trust that reported TDDs are 100% accurate, especially on days where multiple values are reported. For testing, days with multiple TDDs should not be trusted.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.56dfad97.min.js"></script>
+      
+    
+  </body>
+</html>
