@@ -5,17 +5,17 @@ theme: material
 markdown_extensions:
   - pymdownx.snippets:
       base_path: ["."]  # Relative to the current Markdown file
-
+  - admonition
 
 extra_css:
   - style.css
 
 plugins:
-- with-pdf:
-    author: nudgebg
-    copyright: This software is dedicated to the public domain. You can freely copy, modify, publish, use, distribute, sell, and sublicense this software, either in source code or in binary form, without warranty or limitation of liability.
-    cover_subtitle: Project Documentation
-    toc_level: 2
+# - with-pdf:
+#     author: nudgebg
+#     copyright: This software is dedicated to the public domain. You can freely copy, modify, publish, use, distribute, sell, and sublicense this software, either in source code or in binary form, without warranty or limitation of liability.
+#     cover_subtitle: Project Documentation
+#     toc_level: 2
         #
         #cover: false
         #back_cover: true
@@ -62,15 +62,8 @@ plugins:
           show_submodules: true
           
 nav:
- - Babelbetes: index.md
- - README: how-to-guides.md
- - Better Dataset Recommendations: recommendations.md
- - Developer Guide:
-    - Python Setup: python-setup.md
-    - Code Reference: reference.md
-    - Best Pracitces: best-practices.md
-    - Checklist for Data Analysis: checklist.md
- - Data Sets: 
+ - Babelbetes: README.md
+ - Supported Datasets:
     - IOBP2: data_sets/IOBP2.md
     - DCLP3: data_sets/DCLP3.md
     - DCLP5: data_sets/DCLP5.md
@@ -80,4 +73,12 @@ nav:
     - T1DExi: data_sets/T1DEXI.md
     - T1DEXIP: data_sets/T1DEXIP.md
     - Replace BG: data_sets/REPLACE_BG.md
+ - Better Datasets: recommendations.md
+ - Toolbox Guide:
+    - Code Reference: reference.md
+    - Study Checklist: checklist.md
+    - Best Pracitces: best-practices.md
+    - Virtual Environments: python-setup.md
+ - Contribute: contribute.md
+ - About: about.md
  - License: snippets/license.md

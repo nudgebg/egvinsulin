@@ -1,7 +1,7 @@
 # Python Setup Instructions
 
 ## Why using virutal environments?
-Using virtual environments in the context of the bebelbetes project is highly recommended when installing modules via pip install -r requirements.txt. This ensures that all dependencies listed in the requirements.txt file are isolated to the bebelbetes project, preventing conflicts with other projects that might require different versions of the same modules. It also keeps your system-wide Python environment clean, and allows easy replication of the project’s environment on other systems, ensuring consistency across development setups.
+Using virtual environments in the context of the BabelBetes project is highly recommended when installing modules via pip install -r requirements.txt. This ensures that all dependencies listed in the requirements.txt file are isolated to the BabelBetes project, preventing conflicts with other projects that might require different versions of the same modules. It also keeps your system-wide Python environment clean, and allows easy replication of the project’s environment on other systems, ensuring consistency across development setups.
 
 ## macOS
 We recommend using both `pyenv` and `virtualenv` packages to manage virtual enviroments.
