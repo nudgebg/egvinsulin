@@ -1,3 +1,6 @@
+!!! info
+	The checklist below is not well formatted at this point. However, it serves hreat as a guide when processing new datasets, based on pitfalls, challenges, and errors encountered in the past. It ensures that new datasets are correctly implemented and that important aspects are not overlooked. 
+
 ## Checklist Template
 - [ ] Things to check in every dataset
 0. [ ] Data
