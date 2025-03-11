@@ -114,9 +114,15 @@ def main(load_subset=False):
               'REPLACE-BG Dataset-79f6bdc8-3c51-4736-a39f-c4c0f71d45e5': ReplaceBG,
 
               # Alternatively, people might use the unzipped original data
-              # TODO: add for all
+              'IOBP2 RCT Public Dataset.zip': IOBP2,
+              'FLAIRPublicDataSet.zip': Flair,
+              'PEDAP Public Dataset - Release 3 - 2024-09-25.zip': PEDAP,
+              'DCLP3 Public Dataset - Release 3 - 2022-08-04.zip': DCLP3,
+              'DCLP5_Dataset_2022-01-20-5e0f3b16-c890-4ace-9e3b-531f3687cf53.zip': DCLP5,
+              'Loop study public dataset 2023-01-31.zip': Loop,
               'T1DEXI - DATA FOR UPLOAD.zip': T1DEXI,
               'T1DEXIP - DATA FOR UPLOAD.zip': T1DEXIP,
+              'REPLACE-BG Dataset-79f6bdc8-3c51-4736-a39f-c4c0f71d45e5.zip': ReplaceBG,
               }
 
   # Filter and log folders that cannot be matched

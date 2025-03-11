@@ -5,7 +5,19 @@ from datetime import timedelta
 
 from .studydataset import StudyDataset
 from src.find_periods import find_periods
+from src.pandas_helper import get_df
 from src.date_helper import parse_flair_dates, convert_duration_to_timedelta
+
+
+def get_pump_data_mock():
+    df = pd.DataFrame(columns=['PtID', 'DataDtTm', 'BasalRt', 'TempBasalAmt', 'TempBasalType', 'TempBasalDur',
+                                 'BolusDeliv', 'ExtendBolusDuration', 'Suspend', 'AutoModeStatus', 'TDD'])
+    #df.loc[0] = np.nan
+    for col in ['BolusDeliv', 'BasalRt']:
+        df[col] = pd.to_numeric(df[col])
+    df['ExtendBolusDuration'] = pd.to_timedelta(df['ExtendBolusDuration'])
+    return df
+
 
 def merge_basal_and_temp_basal(df):
     """
@@ -93,19 +105,19 @@ class Flair(StudyDataset):
     def _load_data(self, subset) -> tuple[pd.DataFrame, pd.DataFrame]:
         
         if self.df_pump is None and self.df_cgm is None:
-            df_cgm = pd.read_csv(self.cgm_file, sep="|", low_memory=False, usecols=['PtID', 'DataDtTm', 'DataDtTm_adjusted', 'CGM'],
-                                 skiprows=lambda x: (x % 10 != 0) & subset)
+            df_cgm = get_df(self.cgm_file, usecols=['PtID', 'DataDtTm', 'DataDtTm_adjusted', 'CGM'], subset=subset)
+
             df_cgm['DateTime'] = df_cgm.loc[df_cgm.DataDtTm.notna(), 'DataDtTm'].transform(parse_flair_dates).astype('datetime64[ns]')
             df_cgm['DateTimeAdjusted'] = df_cgm.loc[df_cgm.DataDtTm_adjusted.notna(), 'DataDtTm_adjusted'].transform(parse_flair_dates).astype('datetime64[ns]')
             self.df_cgm = df_cgm
 
-            df_pump = pd.read_csv(self.pump_file, sep="|", low_memory=False, usecols=['PtID', 'DataDtTm', 
-                                                                                    'BasalRt', 'TempBasalAmt', 'TempBasalType', 'TempBasalDur',
-                                                                                    'BolusDeliv', 'ExtendBolusDuration',
-                                                                                    'Suspend', 'AutoModeStatus', 
-                                                                                    'TDD'],
-                                                                                    skiprows=lambda x: (x % 10 != 0) & subset)
-            
+            # Using pump data mock for the data where it is removed
+            """
+            df_pump = get_df(self.pump_file, usecols=['PtID', 'DataDtTm', 'BasalRt', 'TempBasalAmt', 'TempBasalType',
+                                                      'TempBasalDur', 'BolusDeliv', 'ExtendBolusDuration', 'Suspend',
+                                                      'AutoModeStatus', 'TDD'], subset=subset)
+            """
+            df_pump = get_pump_data_mock()
             df_pump['DateTime'] = df_pump.loc[df_pump.DataDtTm.notna(), 'DataDtTm'].transform(parse_flair_dates)
             #to datetime required because otherwise pandas provides a Object type which will fail the studydataset validation
             df_pump['DateTime'] = pd.to_datetime(df_pump['DateTime'])
@@ -124,6 +136,13 @@ class Flair(StudyDataset):
     
     def _extract_basal_event_history(self):
         if self.basals is None:
+            if self.df_pump.empty:
+                adjusted_basal = pd.DataFrame(columns=['patient_id', 'datetime', 'basal_rate'])
+                adjusted_basal['datetime'] = pd.to_datetime(adjusted_basal['datetime'])
+                adjusted_basal['basal_rate'] = pd.to_numeric(adjusted_basal['basal_rate'])
+                self.basals = adjusted_basal
+                return self.basals
+
             df_pump_copy = self.df_pump.copy()
 
             #adjust for temp basals

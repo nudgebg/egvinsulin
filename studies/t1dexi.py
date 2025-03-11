@@ -8,7 +8,7 @@ import zipfile_deflate64
 
 from studies.studydataset import StudyDataset
 from src.logger import Logger
-from src.pandas_helper import get_duplicated_max_indexes
+from src.pandas_helper import get_duplicated_max_indexes, get_df
 
 def load_facm(path, subset):
         facm = get_df(path, subset=subset)
@@ -38,37 +38,6 @@ def load_dx(path):
         dx = get_df(path).replace('', np.nan)
         dx = dx.drop(columns=['DXSCAT','DXPRESP','STUDYID','DOMAIN','SPDEVID','DXSEQ','DXCAT','DXSCAT','DXSTRTPT','DXDTC','DXENRTPT','DXEVINTX','VISIT'])
         return dx
-
-
-def get_df(path, subset=False):
-    if '.zip' in path:
-        path, file_name = path.rsplit('/', 1)
-        with zipfile_deflate64.ZipFile(path, 'r') as zip_file:
-            matched_files = [f for f in zip_file.namelist() if f.endswith(file_name)]
-
-            if not matched_files:
-                raise FileNotFoundError(f"No file ending with '{file_name}' found in the zip archive.")
-
-            # Use the first match (if multiple matches, refine criteria as needed)
-            matched_file = matched_files[0]
-
-            # Read the .xpt file directly from the zip
-            with zip_file.open(matched_file) as f:
-                with io.BytesIO(f.read()) as bio:  # Ensure compatibility with pandas
-                    return get_df_from_filepath_or_buffer(bio, subset)
-    else:
-        return get_df_from_filepath_or_buffer(path, subset=subset)
-
-
-def get_df_from_filepath_or_buffer(filepath_or_buffer, subset=False):
-    # if subset, read only the first 25k Rows
-    if subset:
-        chunk_size = 25000
-        df_iter = pd.read_sas(filepath_or_buffer, format='xport', encoding='latin-1', chunksize=chunk_size)
-        df = next(df_iter)
-    else:
-        df = pd.read_sas(filepath_or_buffer, format='xport', encoding='latin-1', )
-    return df
 
 
 def load_lb(path, subset):
