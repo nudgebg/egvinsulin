@@ -9,14 +9,14 @@ class PEDAP(StudyDataset):
     def _load_data(self, subset):
         data_table_path = os.path.join(self.study_path, 'Data Files')
 
-        df_bolus = get_df(os.path.join(data_table_path, 'PEDAPTandemBOLUSDELIVERED.txt'), usecols=['PtID', 'DeviceDtTm',
+        df_bolus = get_df(os.path.join(data_table_path, 'PEDAPTandemBolusDelivered.txt'), usecols=['PtID', 'DeviceDtTm',
                                                                                                    'BolusAmount',
                                                                                                    'Duration'],
                           subset=subset)
         df_basal = get_df(os.path.join(data_table_path, 'PEDAPTandemBASALRATECHG.txt'), usecols=['PtID', 'DeviceDtTm',
                                                                                                  'BasalRate'],
                           subset=subset)
-        df_cgm = get_df(os.path.join(data_table_path, 'PEDAPTandemCGMDataGXB.txt'), usecols=['PtID', 'DeviceDtTm',
+        df_cgm = get_df(os.path.join(data_table_path, 'PEDAPTandemCGMDATAGXB.txt'), usecols=['PtID', 'DeviceDtTm',
                                                                                              'CGMValue'],
                           subset=subset)
         
