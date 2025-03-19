@@ -117,6 +117,8 @@ class Flair(StudyDataset):
             #resolve duplicates using maximum record id (assuming later imports are more accurate)
             _,_,i_drop = pandas_helper.get_duplicated_max_indexes(subFrame, ['PtID','DateTime'],max_col='RecID')
             subFrame = subFrame.drop(i_drop)
+            #drop zero boluses
+            subFrame = subFrame[subFrame.BolusDeliv != 0]
             boluses = subFrame[['PtID', 'DateTime', 'BolusDeliv', 'ExtendBolusDuration']].copy().astype({'PtID': str})
             boluses = boluses.rename(columns={'PtID': 'patient_id', 'DateTime': 'datetime', 'BolusDeliv': 'bolus', 'ExtendBolusDuration': 'delivery_duration'})
             boluses.delivery_duration = boluses.delivery_duration.apply(lambda x: convert_duration_to_timedelta(x) if pd.notnull(x) else pd.Timedelta(0))
