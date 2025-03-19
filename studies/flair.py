@@ -6,7 +6,7 @@ from datetime import timedelta
 from .studydataset import StudyDataset
 from src.find_periods import find_periods
 from src.date_helper import parse_flair_dates, convert_duration_to_timedelta
-
+from src import pandas_helper
 def merge_basal_and_temp_basal(df):
     """
     Calculates the absolute basal rates based on the provided DataFrame.
@@ -99,7 +99,7 @@ class Flair(StudyDataset):
             df_cgm['DateTimeAdjusted'] = df_cgm.loc[df_cgm.DataDtTm_adjusted.notna(), 'DataDtTm_adjusted'].transform(parse_flair_dates).astype('datetime64[ns]')
             self.df_cgm = df_cgm
 
-            df_pump = pd.read_csv(self.pump_file, sep="|", low_memory=False, usecols=['PtID', 'DataDtTm', 
+            df_pump = pd.read_csv(self.pump_file, sep="|", low_memory=False, usecols=['RecID','PtID', 'DataDtTm', 
                                                                                     'BasalRt', 'TempBasalAmt', 'TempBasalType', 'TempBasalDur',
                                                                                     'BolusDeliv', 'ExtendBolusDuration',
                                                                                     'Suspend', 'AutoModeStatus', 
@@ -114,8 +114,9 @@ class Flair(StudyDataset):
     def _extract_bolus_event_history(self):
         if self.boluses is None:
             subFrame = self.df_pump.dropna(subset=['BolusDeliv'])
-            #ther are duplicated boluses, we need to remove them
-            subFrame = subFrame[~subFrame.duplicated(subset=['PtID','DateTime', 'BolusDeliv'], keep='first')]
+            #resolve duplicates using maximum record id (assuming later imports are more accurate)
+            _,_,i_drop = pandas_helper.get_duplicated_max_indexes(subFrame, ['PtID','DateTime'],max_col='RecID')
+            subFrame = subFrame.drop(i_drop)
             boluses = subFrame[['PtID', 'DateTime', 'BolusDeliv', 'ExtendBolusDuration']].copy().astype({'PtID': str})
             boluses = boluses.rename(columns={'PtID': 'patient_id', 'DateTime': 'datetime', 'BolusDeliv': 'bolus', 'ExtendBolusDuration': 'delivery_duration'})
             boluses.delivery_duration = boluses.delivery_duration.apply(lambda x: convert_duration_to_timedelta(x) if pd.notnull(x) else pd.Timedelta(0))
