@@ -1,7 +1,8 @@
-# import rootpath
-# import os
-# cwd = os.getcwd()
-# rootpath.append(cwd)
+# File: test_postprocessing.py
+# Author Jan Wrede, Rachel Brandt
+# Copyright (c) 2025 nudgebg
+# Licensed under the MIT License. See LICENSE file for details.
+
 
 import pytest
 import pandas as pd

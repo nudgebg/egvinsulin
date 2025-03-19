@@ -1,3 +1,7 @@
+# File: test_iobp2.py
+# Author Jan Wrede
+# Copyright (c) 2025 nudgebg
+# Licensed under the MIT License. See LICENSE file for details.
 import pandas as pd
 from studies import IOBP2    
 
