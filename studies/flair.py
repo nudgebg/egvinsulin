@@ -131,16 +131,23 @@ class Flair(StudyDataset):
 
             #adjust for temp basals
             df_pump_copy['merged_basal'] = df_pump_copy.groupby('PtID').apply(merge_basal_and_temp_basal,include_groups=False).droplevel(0)
-            
+
             #adjust for closed loop periods
             df_pump_copy['basal_adj_cl'] = df_pump_copy.merged_basal
             df_pump_copy.loc[df_pump_copy.AutoModeStatus==True, 'basal_adj_cl'] = 0.0
+            #settina the basal rate from NaN to zero can cause additional temporal duplicates if we already had a non Nan basal rate at the same time
 
             #adjust for pump suspends
             df_pump_copy['basal_adj_cl_spd'] = df_pump_copy.groupby('PtID').apply(lambda x: disable_basal(x, find_periods(x.dropna(subset='Suspend'), 'Suspend', 'DateTime', 
                                                                                                      lambda x: x != 'NORMAL_PUMPING', 
                                                                                                      lambda x: x == 'NORMAL_PUMPING'), 'basal_adj_cl'), include_groups=False).droplevel(0)
+            
 
+            #we drop duplicates after adjusting for temp basals, closed loop periods and pump suspends because these routines can cause additional duplicates
+            #drop duplicates keeping the maximum value
+            _,_,i_drop = pandas_helper.get_duplicated_max_indexes(df_pump_copy.dropna(subset=['basal_adj_cl_spd']), ['PtID','DateTime'], max_col='basal_adj_cl_spd')
+            df_pump_copy = df_pump_copy.drop(i_drop)
+            
             #reduce
             adjusted_basal = df_pump_copy.dropna(subset=['basal_adj_cl_spd'])[['PtID', 'DateTime', 'basal_adj_cl_spd']]
             adjusted_basal = adjusted_basal.rename(columns={'PtID':'patient_id', 'DateTime':'datetime', 'basal_adj_cl_spd':'basal_rate'})

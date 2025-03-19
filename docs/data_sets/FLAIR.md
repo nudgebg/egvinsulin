@@ -74,6 +74,19 @@ The study data was analyzed to understand which data is relevant, and how it mus
 * We don't know the implications of NewDeviceDtTm. These should be clarified!
 
 ## Basal Rates
+### Basal Rate Duplicates
+We found that temporal basal duplicates
+ - in many cases have equal rate
+ - About 1/3 differ by 0.005 (rounded?, similar as we found in bolus duplicates)
+ - The rest differ by more 
+     - Here, we often see more than 2 rows with values of NaN, 0 and a much higher value
+ 
+ Looking at the data in context did not help us clarify this.
+ For now we assume that taking the maximum is the right thing to do.
+
+![](assets/flair_basal_rate_difference_cdf.png)
+![](assets/flair_basal_rate_duplicates_scatter.png)
+
 ### Temp Basal Rates (Background)
 Medtronic allows setting temp basal percentages from 0 (shut off) to 200% (twice the basal rate)
 
