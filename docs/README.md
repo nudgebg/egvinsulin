@@ -148,3 +148,7 @@ These are approximate execution times
 ## Troubleshooting
 - Ensure the raw data folders are named correctly to match the patterns in the script. You shouldn't need to rename the folders after you extracted the study datasets from jaeb.
 - Check the console output for any warning or error messages.
+
+
+## License
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](license.md)

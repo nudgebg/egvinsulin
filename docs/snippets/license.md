@@ -1,1 +1,0 @@
-This software is dedicated to the public domain. You can freely copy, modify, publish, use, distribute, sell, and sublicense this software, either in source code or in binary form, without warranty or limitation of liability.
