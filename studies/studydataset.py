@@ -14,7 +14,7 @@ def validate_bolus_output_dataframe(func):
             raise TypeError("Output should be a pandas DataFrame")
         required_columns = ['patient_id', 'datetime', 'bolus', 'delivery_duration']
         if set(df.columns) != set(required_columns):
-            raise ValueError(f"DataFrame should have columns 'patient_id', 'datetime' and 'basal_rate' but has {df.columns}")
+            raise ValueError(f"DataFrame should have columns {required_columns} but has {df.columns}")
         if not pd.api.types.is_datetime64_dtype(df['datetime'].dtype):
             raise ValueError("DataFrame should have a 'datetime' column of type pandas datetime but is {df['datetime'].dtype}")
         if not all(isinstance(item, str) for item in df['patient_id']):
