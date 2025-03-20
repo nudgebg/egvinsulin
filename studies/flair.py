@@ -76,9 +76,9 @@ def disable_basal(df, periods, column):
 class Flair(StudyDataset):
     def __init__(self, study_path: str):
         super().__init__(study_path, 'Flair')
-        self.basals = None
-        self.boluses = None
-        self.cgms = None
+        self.extracted_basals = None
+        self.extracted_bolus = None
+        self.extracted_cgms = None
         self.df_pump = None
         self.df_cgm = None
         self.pump_file = os.path.join(
@@ -93,7 +93,7 @@ class Flair(StudyDataset):
     def _load_data(self, subset) -> tuple[pd.DataFrame, pd.DataFrame]:
         
         if self.df_pump is None and self.df_cgm is None:
-            df_cgm = pd.read_csv(self.cgm_file, sep="|", low_memory=False, usecols=['PtID', 'DataDtTm', 'DataDtTm_adjusted', 'CGM'],
+            df_cgm = pd.read_csv(self.cgm_file, sep="|", low_memory=False, usecols=['PtID', 'DataDtTm', 'DataDtTm_adjusted', 'CGM', 'Unusuable'],
                                  skiprows=lambda x: (x % 10 != 0) & subset)
             df_cgm['DateTime'] = df_cgm.loc[df_cgm.DataDtTm.notna(), 'DataDtTm'].transform(parse_flair_dates).astype('datetime64[ns]')
             df_cgm['DateTimeAdjusted'] = df_cgm.loc[df_cgm.DataDtTm_adjusted.notna(), 'DataDtTm_adjusted'].transform(parse_flair_dates).astype('datetime64[ns]')
@@ -112,7 +112,7 @@ class Flair(StudyDataset):
             self.df_pump = df_pump.sort_values('DateTime')
     
     def _extract_bolus_event_history(self):
-        if self.boluses is None:
+        if self.extracted_bolus is None:
             subFrame = self.df_pump.dropna(subset=['BolusDeliv']).copy()
             #convert ExtendBolusDuration to timedelta (do this first so that duplicates can be found)
             subFrame['ExtendBolusDuration'] = subFrame.ExtendBolusDuration.apply(lambda x: convert_duration_to_timedelta(x) if pd.notnull(x) else pd.Timedelta(0))
@@ -134,11 +134,11 @@ class Flair(StudyDataset):
             #reduce, rename, return
             subFrame = subFrame[['PtID', 'DateTime', 'BolusDeliv', 'ExtendBolusDuration']].copy().astype({'PtID': str})
             subFrame = subFrame.rename(columns={'PtID': 'patient_id', 'DateTime': 'datetime', 'BolusDeliv': 'bolus', 'ExtendBolusDuration': 'delivery_duration'})
-            self.boluses = subFrame
-        return self.boluses
+            self.extracted_bolus = subFrame
+        return self.extracted_bolus
     
     def _extract_basal_event_history(self):
-        if self.basals is None:
+        if self.extracted_basals is None:
             df_pump_copy = self.df_pump.copy()
 
             #adjust for temp basals
@@ -165,23 +165,26 @@ class Flair(StudyDataset):
             adjusted_basal = adjusted_basal.rename(columns={'PtID':'patient_id', 'DateTime':'datetime', 'basal_adj_cl_spd':'basal_rate'})
             adjusted_basal['patient_id'] = adjusted_basal['patient_id'].astype(str)
 
-            self.basals = adjusted_basal
-        return self.basals
+            self.extracted_basals = adjusted_basal
+        return self.extracted_basals
     
     def _extract_cgm_history(self):
-        if self.cgms is None:
-            # Use np.where to select DateTimeAdjusted if it's not null, otherwise use DateTime
-            datetime = np.where(self.df_cgm['DateTimeAdjusted'].notnull(),
-                                self.df_cgm['DateTimeAdjusted'],
-                                self.df_cgm['DateTime'])
-            # Select the AdjustedDateTime and CGM columns
-            temp = pd.DataFrame({'patient_id': self.df_cgm['PtID'].astype(str),
-                                'datetime': datetime,
-                                'cgm': self.df_cgm['CGM']})
-            self.cgms = temp
-            #TODO: check for magic number cgms and out of range values
-            
-        return self.cgms
+        if self.extracted_cgms is None:
+            df_cgm = self.df_cgm.copy()
+            # Use DateTimeAdjusted over DateTime
+            df_cgm['DateTime'] = df_cgm.DateTimeAdjusted.fillna(df_cgm.DateTime)
+            #drop unusable cgms
+            df_cgm = df_cgm[~df_cgm.Unusuable]
+            #drop duplicates
+            df_cgm = df_cgm.drop_duplicates(subset=['PtID', 'DateTime'])
+            #reduce, rename return
+            df_cgm = df_cgm[['PtID', 'DateTime', 'CGM']].copy()
+            df_cgm = df_cgm.rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 
+                                        'DateTime': self.COL_NAME_DATETIME,
+                                        'CGM': self.COL_NAME_CGM})
+            df_cgm[self.COL_NAME_PATIENT_ID] = df_cgm[self.COL_NAME_PATIENT_ID].astype(str)
+            self.extracted_cgms = df_cgm
+        return self.extracted_cgms
 
     def get_reported_tdds(self, method='max'):
         """
