@@ -102,7 +102,7 @@ class Flair(StudyDataset):
             df_pump = pd.read_csv(self.pump_file, sep="|", low_memory=False, usecols=['RecID','PtID', 'DataDtTm', 
                                                                                     'BasalRt', 'TempBasalAmt', 'TempBasalType', 'TempBasalDur',
                                                                                     'BolusDeliv', 'ExtendBolusDuration',
-                                                                                    'Suspend', 'AutoModeStatus', 'BolusSource',
+                                                                                    'Suspend', 'AutoModeStatus', 'BolusSource','BolusType',
                                                                                     'TDD'],
                                                                                     skiprows=lambda x: (x % 10 != 0) & subset)
             
@@ -113,16 +113,28 @@ class Flair(StudyDataset):
     
     def _extract_bolus_event_history(self):
         if self.boluses is None:
-            subFrame = self.df_pump.dropna(subset=['BolusDeliv'])
-            #resolve duplicates using maximum record id (assuming later imports are more accurate)
-            _,_,i_drop = pandas_helper.get_duplicated_max_indexes(subFrame, ['PtID','DateTime'],max_col='RecID')
-            subFrame = subFrame.drop(i_drop)
+            subFrame = self.df_pump.dropna(subset=['BolusDeliv']).copy()
+            #convert ExtendBolusDuration to timedelta (do this first so that duplicates can be found)
+            subFrame['ExtendBolusDuration'] = subFrame.ExtendBolusDuration.apply(lambda x: convert_duration_to_timedelta(x) if pd.notnull(x) else pd.Timedelta(0))
+            
+            #the extended boluses are reported upon completion
+            subFrame['DateTime'] = subFrame['DateTime']-subFrame['ExtendBolusDuration']
+
             #drop zero boluses
             subFrame = subFrame[subFrame.BolusDeliv != 0]
-            boluses = subFrame[['PtID', 'DateTime', 'BolusDeliv', 'ExtendBolusDuration']].copy().astype({'PtID': str})
-            boluses = boluses.rename(columns={'PtID': 'patient_id', 'DateTime': 'datetime', 'BolusDeliv': 'bolus', 'ExtendBolusDuration': 'delivery_duration'})
-            boluses.delivery_duration = boluses.delivery_duration.apply(lambda x: convert_duration_to_timedelta(x) if pd.notnull(x) else pd.Timedelta(0))
-            self.boluses = boluses
+            
+            #resolve duplicates:
+            # most rows are duplicates with NaN Bolus Source
+            # most others others are identical but the BolusDeliv value is rounded up by 0.005 
+            # therefore we are using maximum record id (assuming later imports are more accurate)
+            # we include the ExtendBolusDuration in the duplicate check to avoid dropping extended parts that start at the same time
+            _,_,i_drop = pandas_helper.get_duplicated_max_indexes(subFrame, ['PtID', 'DateTime', 'ExtendBolusDuration'],max_col='RecID')
+            subFrame = subFrame.drop(i_drop)
+            
+            #reduce, rename, return
+            subFrame = subFrame[['PtID', 'DateTime', 'BolusDeliv', 'ExtendBolusDuration']].copy().astype({'PtID': str})
+            subFrame = subFrame.rename(columns={'PtID': 'patient_id', 'DateTime': 'datetime', 'BolusDeliv': 'bolus', 'ExtendBolusDuration': 'delivery_duration'})
+            self.boluses = subFrame
         return self.boluses
     
     def _extract_basal_event_history(self):
@@ -135,7 +147,7 @@ class Flair(StudyDataset):
             #adjust for closed loop periods
             df_pump_copy['basal_adj_cl'] = df_pump_copy.merged_basal
             df_pump_copy.loc[df_pump_copy.AutoModeStatus==True, 'basal_adj_cl'] = 0.0
-            #settina the basal rate from NaN to zero can cause additional temporal duplicates if we already had a non Nan basal rate at the same time
+            #setting the basal rate from NaN to zero can cause additional temporal duplicates if we already had a non Nan basal rate at the same time
 
             #adjust for pump suspends
             df_pump_copy['basal_adj_cl_spd'] = df_pump_copy.groupby('PtID').apply(lambda x: disable_basal(x, find_periods(x.dropna(subset='Suspend'), 'Suspend', 'DateTime', 
