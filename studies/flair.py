@@ -106,7 +106,7 @@ class Flair(StudyDataset):
             df_pump = pd.read_csv(self.pump_file, sep="|", low_memory=False, usecols=['RecID','PtID', 'DataDtTm', 
                                                                                     'BasalRt', 'TempBasalAmt', 'TempBasalType', 'TempBasalDur',
                                                                                     'BolusDeliv', 'ExtendBolusDuration',
-                                                                                    'Suspend', 'AutoModeStatus', 'BolusSource','BolusType',
+                                                                                    'Suspend', 'AutoModeStatus',
                                                                                     'TDD'],
                                                                                     skiprows=lambda x: (x % 10 != 0) & subset)
             

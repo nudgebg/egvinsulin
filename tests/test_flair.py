@@ -47,6 +47,9 @@ def sample_data_dir_basal_simple(tmpdir):
     for col in ['TempBasalAmt', 'TempBasalType', 'TempBasalDur', 'BolusDeliv', 'ExtendBolusDuration', 'Suspend', 'AutoModeStatus','TDD']:
         pump_data[col] = None
 
+    #add record id
+    pump_data['RecID'] = range(1, len(pump_data)+1)
+    
     # Create sample CGM data with constant values of 100 every 5 minutes
     cgm_times = pd.date_range(start='2023-01-01 00:00:00', end='2023-01-02 23:59:59', freq='5min')
     cgm_times = list(cgm_times.strftime('%m/%d/%Y %I:%M:%S %p'))
@@ -54,43 +57,46 @@ def sample_data_dir_basal_simple(tmpdir):
     cgm_data = pd.DataFrame({
         'PtID': [1] * len(cgm_times) + [2] * len(cgm_times),
         'DataDtTm': cgm_times + cgm_times,
-        'CGM': cgm_values + cgm_values
+        'CGM': cgm_values + cgm_values,
     })
     cgm_data['DataDtTm_adjusted'] = None
+    cgm_data['Unusuable'] = False
     store_data_to_files(tmpdir, pump_data, cgm_data)
     return tmpdir
 
 
-@pytest.fixture
-def sample_data_closed_loop(tmpdir):
-    # Create sample basal rate data for two days, alternating between 0.5 and 1 unit every 4 hours
-    times = pd.date_range(start='2023-01-01 00:00:00', end='2023-01-02 23:59:59', freq='4h')
-    times = times.strftime('%m/%d/%Y %I:%M:%S %p')
+# @pytest.fixture
+# def sample_data_closed_loop(tmpdir):
+#     # Create sample basal rate data for two days, alternating between 0.5 and 1 unit every 4 hours
+#     times = pd.date_range(start='2023-01-01 00:00:00', end='2023-01-02 23:59:59', freq='4h')
+#     times = times.strftime('%m/%d/%Y %I:%M:%S %p')
 
-    basal_rates_patient1 = [0.6 if i % 2 == 0 else 1.2 for i in range(len(times))]
-    basal_rates_patient2 = [1.2 if i % 2 == 0 else 2.4 for i in range(len(times))]
+#     basal_rates_patient1 = [0.6 if i % 2 == 0 else 1.2 for i in range(len(times))]
+#     basal_rates_patient2 = [1.2 if i % 2 == 0 else 2.4 for i in range(len(times))]
      
-    pump_data = pd.DataFrame({
-        'PtID': [1] * len(times) + [2] * len(times),
-        'DataDtTm': list(times) + list(times),
-        'BasalRt': basal_rates_patient1 + basal_rates_patient2,
-    })
+#     pump_data = pd.DataFrame({
+#         'PtID': [1] * len(times) + [2] * len(times),
+#         'DataDtTm': list(times) + list(times),
+#         'BasalRt': basal_rates_patient1 + basal_rates_patient2,
+#     })
 
-    for col in ['TempBasalAmt', 'TempBasalType', 'TempBasalDur', 'BolusDeliv', 'ExtendBolusDuration', 'Suspend', 'AutoModeStatus','TDD']:
-        pump_data[col] = None
+#     for col in ['TempBasalAmt', 'TempBasalType', 'TempBasalDur', 'BolusDeliv', 'ExtendBolusDuration', 'Suspend', 'AutoModeStatus','TDD']:
+#         pump_data[col] = None
 
-    # Create sample CGM data with constant values of 100 every 5 minutes
-    cgm_times = pd.date_range(start='2023-01-01 00:00:00', end='2023-01-02 23:59:59', freq='5min')
-    cgm_times = list(cgm_times.strftime('%m/%d/%Y %I:%M:%S %p'))
-    cgm_values = [100] * len(cgm_times)
-    cgm_data = pd.DataFrame({
-        'PtID': [1] * len(cgm_times) + [2] * len(cgm_times),
-        'DataDtTm': cgm_times + cgm_times,
-        'CGM': cgm_values + cgm_values
-    })
-    cgm_data['DataDtTm_adjusted'] = None
-    store_data_to_files(tmpdir, pump_data, cgm_data)
-    return tmpdir
+#     # Create sample CGM data with constant values of 100 every 5 minutes
+#     cgm_times = pd.date_range(start='2023-01-01 00:00:00', end='2023-01-02 23:59:59', freq='5min')
+#     cgm_times = list(cgm_times.strftime('%m/%d/%Y %I:%M:%S %p'))
+#     cgm_values = [100] * len(cgm_times)
+#     cgm_data = pd.DataFrame({
+#         'PtID': [1] * len(cgm_times) + [2] * len(cgm_times),
+#         'DataDtTm': cgm_times + cgm_times,
+#         'CGM': cgm_values + cgm_values,
+#         'Unusable': [True] * len(cgm_times)*2
+#     })
+#     cgm_data['DataDtTm_adjusted'] = None
+
+#     store_data_to_files(tmpdir, pump_data, cgm_data)
+#     return tmpdir
 
 
 
@@ -132,6 +138,8 @@ def sample_data_closed_loop(tmpdir):
     for col in ['TempBasalAmt', 'TempBasalType', 'TempBasalDur', 'ExtendBolusDuration', 'Suspend', 'TDD']:
         pump_data[col] = None
 
+    #add record id
+    pump_data['RecID'] = range(1, len(pump_data)+1)
 
     # Create sample CGM data with constant values of 100 every 5 minutes
     cgm_times = pd.date_range(start, end, freq='5min')
@@ -140,9 +148,10 @@ def sample_data_closed_loop(tmpdir):
     cgm_data = pd.DataFrame({
         'PtID': [1] * len(cgm_times) + [2] * len(cgm_times),
         'DataDtTm': cgm_times + cgm_times,
-        'CGM': cgm_values + cgm_values
+        'CGM': cgm_values + cgm_values,
     })
     cgm_data['DataDtTm_adjusted'] = None
+    cgm_data['Unusuable'] = False
 
     store_data_to_files(tmpdir, pump_data, cgm_data)
 
@@ -153,6 +162,7 @@ def test_sample_data_closed_loop(sample_data_closed_loop):
     flair.load_data()
 
     basal = flair.extract_basal_event_history()
+    print(basal)
     tdd_basal = basal.groupby('patient_id').apply(tdd.calculate_daily_basal_dose, include_groups=False).reset_index().astype({'date': 'datetime64[ns]'})
 
     expected_basal = pd.DataFrame({
