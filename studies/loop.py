@@ -7,12 +7,15 @@ import zipfile_deflate64
 from .studydataset import StudyDataset
 
 def unzip_folder(zip_path, extract_to):
-    """Unzips a folder given its path."""
-    #extract_to = os.path.dirname(zip_path)  # Extract in the same directory
+    """
+    Extracts all contents of a ZIP archive to the specified directory.
 
+    Parameters:
+        zip_path (str): Path to the ZIP file.
+        extract_to (str): Directory where the contents should be extracted.
+    """
     with zipfile_deflate64.ZipFile(zip_path, 'r') as zip_ref:
         zip_ref.extractall(extract_to)
-        print(f"Extracted to: {extract_to}")
 
 
 class Loop(StudyDataset):
