@@ -255,6 +255,18 @@ def grouped_value_counts(df, group_cols, value_cols):
 
 
 def get_df(path, usecols=None, subset=False, dtype=None):
+    """
+    Reads a data file from a given path, handling both standard file formats and files within ZIP archives.
+
+    Parameters:
+    path (str): The file path or a path to a file inside a ZIP archive.
+    usecols (list, optional): List of column names to include in the df
+    subset (bool, optional): If True, we only read the 25k first rows of the data, for lightweight testing
+    dtype (dict, optional): Data types to enforce for specific columns.
+
+    Returns:
+    pd.DataFrame: The loaded data as a Pandas DataFrame.
+    """
     file_ending = path.rsplit('.', 1)[-1]
     if '.zip' in path:
         path, file_name = path.rsplit('.zip/', 1)
@@ -272,6 +284,19 @@ def get_df(path, usecols=None, subset=False, dtype=None):
 
 
 def get_df_from_filepath_or_buffer(filepath_or_buffer, file_ending, usecols=None, subset=False, dtype=None):
+    """
+    Reads a data file from a given file path or buffer and returns it as a Pandas DataFrame.
+
+    Parameters:
+    filepath_or_buffer (str or buffer): File path or in-memory buffer.
+    file_ending (str): The file extension indicating format (e.g., 'csv', 'xpt').
+    usecols (list, optional): List of column names to include in the df
+    subset (bool, optional): If True, we only read the 25k first rows of the data, for lightweight testing
+    dtype (dict, optional): Data types for specific columns.
+
+    Returns:
+    pd.DataFrame: The loaded data.
+    """
     skip_fn = (lambda x: (x % 10 != 0)) if subset else None
 
     if file_ending in ["csv", "txt"]:
