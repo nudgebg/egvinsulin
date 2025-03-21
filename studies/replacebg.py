@@ -6,12 +6,6 @@ import numpy as np
 import os
 from src import pandas_helper, logger
 
-def get_basal_df_mock():
-    df = pd.DataFrame(columns=['PtID', 'datetime', 'DeviceDtTmDaysFromEnroll', 'DeviceTm', 'Duration',
-                          'ExpectedDuration', 'SuprDuration', 'RecID', 'Rate'])
-    df['Rate'] = pd.to_numeric(df['Rate'])
-    return df
-
 
 class ReplaceBG(StudyDataset):
     def __init__(self, study_path):
@@ -24,10 +18,8 @@ class ReplaceBG(StudyDataset):
         enrollment_start = datetime(2015, 1, 1)
         #load data
         dtype = {'PtID': str}
-        # Using a mock df basal because it's not publicly available
-        #df_basal = pandas_helper.get_df(os.path.join(study_path, 'Data Tables', 'HDeviceBasal.txt'), dtype=dtype,
-        #                                subset=subset)
-        df_basal = get_basal_df_mock()
+        df_basal = pandas_helper.get_df(os.path.join(study_path, 'Data Tables', 'HDeviceBasal.txt'), dtype=dtype,
+                                        subset=subset)
         df_bolus = pandas_helper.get_df(os.path.join(study_path, 'Data Tables', 'HDeviceBolus.txt'),
                                         dtype=dtype, subset=subset)
         df_patient = pandas_helper.get_df(os.path.join(study_path, 'Data Tables', 'HPtRoster.txt'),
@@ -71,7 +63,7 @@ class ReplaceBG(StudyDataset):
         df_bolus['ExpectedDuration'] = pd.to_timedelta(df_bolus['ExpectedDuration'], unit='ms')
         
         #drop patients that are not in all datasets 
-        patient_ids_to_keep = reduce(np.intersect1d, [#df_basal['PtID'].unique(),
+        patient_ids_to_keep = reduce(np.intersect1d, [df_basal['PtID'].unique(),
                                   df_bolus['PtID'].unique(), 
                                   df_cgm['PtID'].unique()])
         df_basal = df_basal[df_basal['PtID'].isin(patient_ids_to_keep)]
