@@ -1,3 +1,7 @@
+# File: pedap.py
+# Author Jan Wrede
+# Copyright (c) 2025 nudgebg
+# Licensed under the MIT License. See LICENSE file for details.
 from studies.studydataset import StudyDataset
 import os
 import pandas as pd

@@ -74,6 +74,19 @@ The study data was analyzed to understand which data is relevant, and how it mus
 * We don't know the implications of NewDeviceDtTm. These should be clarified!
 
 ## Basal Rates
+### Basal Rate Duplicates
+We found that temporal basal duplicates
+ - in many cases have equal rate
+ - About 1/3 differ by 0.005 (rounded?, similar as we found in bolus duplicates)
+ - The rest differ by more 
+     - Here, we often see more than 2 rows with values of NaN, 0 and a much higher value
+ 
+ Looking at the data in context did not help us clarify this.
+ For now we assume that taking the maximum is the right thing to do.
+
+![](assets/flair_basal_rate_difference_cdf.png)
+![](assets/flair_basal_rate_duplicates_scatter.png)
+
 ### Temp Basal Rates (Background)
 Medtronic allows setting temp basal percentages from 0 (shut off) to 200% (twice the basal rate)
 
@@ -188,9 +201,28 @@ Suspend Before / At Low will suspend basal and cancel an extended bolus.
 
 
 ## Bolus Duplicates
-Overall, we have 78088 duplicated bolus rows which makes 2.20% of all boluses. After removing these, the reported and calculated TDDs move closer together. The tricky part here was that the bolus source names were different: For example some duplicated micro boluses use CLOSED_LOOP_MICRO_BOLUS while the other row uses CL_MICRO_BOLUS. Therefore, the bolus source is not used to find duplicates, only the datetime and bolus amount. After removing the duplciates, the calculated and reported TDDs matched better:
+
+In `notebooks/understand-flair-dataset/2024-07-12 - Understanding TDD Discrepancies in Flair Data.ipynb` we found that overall we have 78088 duplicated boluses (with equal dose) rows which makes 2.20% of all boluses. After removing these, the reported and calculated TDDs move closer together. The tricky part here was that the bolus source names were different: For example some duplicated micro boluses use CLOSED_LOOP_MICRO_BOLUS while the other row uses CL_MICRO_BOLUS. Therefore, the bolus source is not used to find duplicates, only the datetime and bolus amount. After removing the duplciates, the calculated and reported TDDs matched better:
 ![TDD after Adjusting for Close Loop Modes](assets/flair_removing_bolus_duplicates.png)
 
+
+During this analysis we forgot to deal with temporal duplicates (only equal datetime). This analysis was added March 19th 2025 to the main notebook. 
+
+What we found: 
+- ~9.2% bolus *rows* are duplicates
+- half of these have equal amounts (as we've seen before)
+  - mostly ebcause the BolusSource differs (e.g. CL_ vs. CLOSED_LOOP, or NaN)
+  - extended bolus duration misses leading 0
+ - the other half differs in the delivered or selected amount 
+  - the difference is mostly 0.005 units (probably the delivery resolution) which can be ignored
+    - CLOSED_LOOP_MICRO_BOLUS appear to be rounded up to the next 0.005 increment while CL_MICRO_BOLUS are not
+  - From manual inspection we could not find clues why there are duplicated normal boluses. 
+    - No evidence for suspends that caused early stops
+
+ The differences appear negligible and we resolve the duplicates by trusting the last imported value (record id maximum)
+    
+![](assets/flair_bolus_duplicates_cdf.png)
+![](assets/flair_bolus_duplicates_scatter.png)
 
 ## Closed Loop Mode
 When closed loop mode is on, basal rates are replaced by micro-boluses.  To prevent incorrect forward filling of basal rates, closed loop modes must be respected. 

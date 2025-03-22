@@ -1,3 +1,7 @@
+# File: conftest.py
+# Author Jan Wrede
+# Copyright (c) 2025 nudgebg
+# Licensed under the MIT License. See LICENSE file for details.
 # tests/conftest.py
 import sys
 import os

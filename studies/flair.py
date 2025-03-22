@@ -1,3 +1,7 @@
+# File: flair.py
+# Author Jan Wrede, Rachel Brandt
+# Copyright (c) 2025 nudgebg
+# Licensed under the MIT License. See LICENSE file for details.
 import pandas as pd
 import os
 import numpy as np
@@ -6,7 +10,7 @@ from .studydataset import StudyDataset
 from src.find_periods import find_periods
 from src.pandas_helper import get_df
 from src.date_helper import parse_flair_dates, convert_duration_to_timedelta
-
+from src import pandas_helper
 
 def merge_basal_and_temp_basal(df):
     """
@@ -77,9 +81,9 @@ def disable_basal(df, periods, column):
 class Flair(StudyDataset):
     def __init__(self, study_path: str):
         super().__init__(study_path, 'Flair')
-        self.basals = None
-        self.boluses = None
-        self.cgms = None
+        self.extracted_basals = None
+        self.extracted_bolus = None
+        self.extracted_cgms = None
         self.df_pump = None
         self.df_cgm = None
         self.pump_file = os.path.join(
@@ -94,70 +98,94 @@ class Flair(StudyDataset):
     def _load_data(self, subset) -> tuple[pd.DataFrame, pd.DataFrame]:
         
         if self.df_pump is None and self.df_cgm is None:
-            df_cgm = get_df(self.cgm_file, usecols=['PtID', 'DataDtTm', 'DataDtTm_adjusted', 'CGM'], subset=subset)
-
+            df_cgm = get_df(self.cgm_file, usecols=['PtID', 'DataDtTm', 'DataDtTm_adjusted', 'CGM', 'Unusuable'], subset=subset)
             df_cgm['DateTime'] = df_cgm.loc[df_cgm.DataDtTm.notna(), 'DataDtTm'].transform(parse_flair_dates).astype('datetime64[ns]')
             df_cgm['DateTimeAdjusted'] = df_cgm.loc[df_cgm.DataDtTm_adjusted.notna(), 'DataDtTm_adjusted'].transform(parse_flair_dates).astype('datetime64[ns]')
             self.df_cgm = df_cgm
 
             # Using pump data mock for the data where it is removed
-            df_pump = get_df(self.pump_file, usecols=['PtID', 'DataDtTm', 'BasalRt', 'TempBasalAmt', 'TempBasalType',
+            df_pump = get_df(self.pump_file, usecols=['RecID', 'PtID', 'DataDtTm', 'BasalRt', 'TempBasalAmt', 'TempBasalType',
                                                       'TempBasalDur', 'BolusDeliv', 'ExtendBolusDuration', 'Suspend',
-                                                      'AutoModeStatus', 'TDD'], subset=subset)
+                                                      'AutoModeStatus', 'BolusSource','BolusType', 'TDD'], subset=subset)
             df_pump['DateTime'] = df_pump.loc[df_pump.DataDtTm.notna(), 'DataDtTm'].transform(parse_flair_dates)
             #to datetime required because otherwise pandas provides a Object type which will fail the studydataset validation
             df_pump['DateTime'] = pd.to_datetime(df_pump['DateTime'])
             self.df_pump = df_pump.sort_values('DateTime')
     
     def _extract_bolus_event_history(self):
-        if self.boluses is None:
-            subFrame = self.df_pump.dropna(subset=['BolusDeliv'])
-            #ther are duplicated boluses, we need to remove them
-            subFrame = subFrame[~subFrame.duplicated(subset=['PtID','DateTime', 'BolusDeliv'], keep='first')]
-            boluses = subFrame[['PtID', 'DateTime', 'BolusDeliv', 'ExtendBolusDuration']].copy().astype({'PtID': str})
-            boluses = boluses.rename(columns={'PtID': 'patient_id', 'DateTime': 'datetime', 'BolusDeliv': 'bolus', 'ExtendBolusDuration': 'delivery_duration'})
-            boluses.delivery_duration = boluses.delivery_duration.apply(lambda x: convert_duration_to_timedelta(x) if pd.notnull(x) else pd.Timedelta(0))
-            self.boluses = boluses
-        return self.boluses
+        if self.extracted_bolus is None:
+            subFrame = self.df_pump.dropna(subset=['BolusDeliv']).copy()
+            #convert ExtendBolusDuration to timedelta (do this first so that duplicates can be found)
+            subFrame['ExtendBolusDuration'] = subFrame.ExtendBolusDuration.apply(lambda x: convert_duration_to_timedelta(x) if pd.notnull(x) else pd.Timedelta(0))
+            
+            #the extended boluses are reported upon completion
+            subFrame['DateTime'] = subFrame['DateTime']-subFrame['ExtendBolusDuration']
+
+            #drop zero boluses
+            subFrame = subFrame[subFrame.BolusDeliv != 0]
+            
+            #resolve duplicates:
+            # most rows are duplicates with NaN Bolus Source
+            # most others others are identical but the BolusDeliv value is rounded up by 0.005 
+            # therefore we are using maximum record id (assuming later imports are more accurate)
+            # we include the ExtendBolusDuration in the duplicate check to avoid dropping extended parts that start at the same time
+            _,_,i_drop = pandas_helper.get_duplicated_max_indexes(subFrame, ['PtID', 'DateTime', 'ExtendBolusDuration'],max_col='RecID')
+            subFrame = subFrame.drop(i_drop)
+            
+            #reduce, rename, return
+            subFrame = subFrame[['PtID', 'DateTime', 'BolusDeliv', 'ExtendBolusDuration']].copy().astype({'PtID': str})
+            subFrame = subFrame.rename(columns={'PtID': 'patient_id', 'DateTime': 'datetime', 'BolusDeliv': 'bolus', 'ExtendBolusDuration': 'delivery_duration'})
+            self.extracted_bolus = subFrame
+        return self.extracted_bolus
     
     def _extract_basal_event_history(self):
-        if self.basals is None:
+        if self.extracted_basals is None:
             df_pump_copy = self.df_pump.copy()
 
             #adjust for temp basals
             df_pump_copy['merged_basal'] = df_pump_copy.groupby('PtID').apply(merge_basal_and_temp_basal,include_groups=False).droplevel(0)
-            
+
             #adjust for closed loop periods
             df_pump_copy['basal_adj_cl'] = df_pump_copy.merged_basal
             df_pump_copy.loc[df_pump_copy.AutoModeStatus==True, 'basal_adj_cl'] = 0.0
+            #setting the basal rate from NaN to zero can cause additional temporal duplicates if we already had a non Nan basal rate at the same time
 
             #adjust for pump suspends
             df_pump_copy['basal_adj_cl_spd'] = df_pump_copy.groupby('PtID').apply(lambda x: disable_basal(x, find_periods(x.dropna(subset='Suspend'), 'Suspend', 'DateTime', 
                                                                                                      lambda x: x != 'NORMAL_PUMPING', 
                                                                                                      lambda x: x == 'NORMAL_PUMPING'), 'basal_adj_cl'), include_groups=False).droplevel(0)
+            
 
+            #we drop duplicates after adjusting for temp basals, closed loop periods and pump suspends because these routines can cause additional duplicates
+            #drop duplicates keeping the maximum value
+            _,_,i_drop = pandas_helper.get_duplicated_max_indexes(df_pump_copy.dropna(subset=['basal_adj_cl_spd']), ['PtID','DateTime'], max_col='basal_adj_cl_spd')
+            df_pump_copy = df_pump_copy.drop(i_drop)
+            
             #reduce
             adjusted_basal = df_pump_copy.dropna(subset=['basal_adj_cl_spd'])[['PtID', 'DateTime', 'basal_adj_cl_spd']]
             adjusted_basal = adjusted_basal.rename(columns={'PtID':'patient_id', 'DateTime':'datetime', 'basal_adj_cl_spd':'basal_rate'})
             adjusted_basal['patient_id'] = adjusted_basal['patient_id'].astype(str)
 
-            self.basals = adjusted_basal
-        return self.basals
+            self.extracted_basals = adjusted_basal
+        return self.extracted_basals
     
     def _extract_cgm_history(self):
-        if self.cgms is None:
-            # Use np.where to select DateTimeAdjusted if it's not null, otherwise use DateTime
-            datetime = np.where(self.df_cgm['DateTimeAdjusted'].notnull(),
-                                self.df_cgm['DateTimeAdjusted'],
-                                self.df_cgm['DateTime'])
-            # Select the AdjustedDateTime and CGM columns
-            temp = pd.DataFrame({'patient_id': self.df_cgm['PtID'].astype(str),
-                                'datetime': datetime,
-                                'cgm': self.df_cgm['CGM']})
-            self.cgms = temp
-            #TODO: check for magic number cgms and out of range values
-            
-        return self.cgms
+        if self.extracted_cgms is None:
+            df_cgm = self.df_cgm.copy()
+            # Use DateTimeAdjusted over DateTime
+            df_cgm['DateTime'] = df_cgm.DateTimeAdjusted.fillna(df_cgm.DateTime)
+            #drop unusable cgms
+            df_cgm = df_cgm[~df_cgm.Unusuable]
+            #drop duplicates
+            df_cgm = df_cgm.drop_duplicates(subset=['PtID', 'DateTime'])
+            #reduce, rename return
+            df_cgm = df_cgm[['PtID', 'DateTime', 'CGM']].copy()
+            df_cgm = df_cgm.rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 
+                                        'DateTime': self.COL_NAME_DATETIME,
+                                        'CGM': self.COL_NAME_CGM})
+            df_cgm[self.COL_NAME_PATIENT_ID] = df_cgm[self.COL_NAME_PATIENT_ID].astype(str)
+            self.extracted_cgms = df_cgm
+        return self.extracted_cgms
 
     def get_reported_tdds(self, method='max'):
         """
