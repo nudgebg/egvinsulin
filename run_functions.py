@@ -158,8 +158,8 @@ def main(load_subset=False):
   with tqdm(total=len(matched_paths)*num_steps_per_folder, desc=f"Processing studies", bar_format='Step {n_fmt}/{total_fmt} [{desc}]:|{bar}', unit="step", leave=False) as progress:
     for folder, study_class in matched_paths:
       tqdm.write(f"[{current_time()}] Processing {folder} ...")
-      
-      study_output_path = os.path.join(out_path, folder)
+      output_folder = folder.split('.')[0]
+      study_output_path = os.path.join(out_path, output_folder)
       if not os.path.exists(study_output_path):
           os.makedirs(study_output_path)
       
