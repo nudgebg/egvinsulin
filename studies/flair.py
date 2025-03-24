@@ -106,7 +106,7 @@ class Flair(StudyDataset):
             # Using pump data mock for the data where it is removed
             df_pump = get_df(self.pump_file, usecols=['RecID', 'PtID', 'DataDtTm', 'BasalRt', 'TempBasalAmt', 'TempBasalType',
                                                       'TempBasalDur', 'BolusDeliv', 'ExtendBolusDuration', 'Suspend',
-                                                      'AutoModeStatus', 'BolusSource','BolusType', 'TDD'], subset=subset)
+                                                      'AutoModeStatus', 'TDD'], subset=subset)
             df_pump['DateTime'] = df_pump.loc[df_pump.DataDtTm.notna(), 'DataDtTm'].transform(parse_flair_dates)
             #to datetime required because otherwise pandas provides a Object type which will fail the studydataset validation
             df_pump['DateTime'] = pd.to_datetime(df_pump['DateTime'])
