@@ -10,6 +10,7 @@ import numpy as np
 import os
 from src import pandas_helper, logger
 
+
 class ReplaceBG(StudyDataset):
     def __init__(self, study_path):
         super().__init__(study_path, 'ReplaceBG')
@@ -20,16 +21,18 @@ class ReplaceBG(StudyDataset):
         #imaginary start date we chose since data is relative to enrollment
         enrollment_start = datetime(2015, 1, 1)
         #load data
-        df_basal = pd.read_csv(os.path.join(study_path, 'Data Tables', 'HDeviceBasal.txt'), sep='|',dtype={'PtID':str},
-                       skiprows=lambda x: (x % 10 != 0) & subset)
-        df_bolus = pd.read_csv(os.path.join(study_path, 'Data Tables', 'HDeviceBolus.txt'), sep='|',dtype={'PtID':str},
-                       skiprows=lambda x: (x % 10 != 0) & subset)
-        df_patient = pd.read_csv(os.path.join(study_path, 'Data Tables', 'HPtRoster.txt'), sep='|',dtype={'PtID':str},
-                     skiprows=lambda x: (x % 10 != 0) & subset)
-        df_cgm = pd.read_csv(os.path.join(study_path, 'Data Tables', 'HDeviceCGM.txt'), sep='|',dtype={'PtID':str},
-                     skiprows=lambda x: (x % 10 != 0) & subset)
-        df_uploads = pd.read_csv(os.path.join(study_path, 'Data Tables', 'HDeviceUploads.txt'), sep='|',dtype={'PtId':str}).rename(columns={'PtId':'PtID'})
-        
+        dtype = {'PtID': str}
+        df_basal = pandas_helper.get_df(os.path.join(study_path, 'Data Tables', 'HDeviceBasal.txt'), dtype=dtype,
+                                        subset=subset)
+        df_bolus = pandas_helper.get_df(os.path.join(study_path, 'Data Tables', 'HDeviceBolus.txt'),
+                                        dtype=dtype, subset=subset)
+        df_patient = pandas_helper.get_df(os.path.join(study_path, 'Data Tables', 'HPtRoster.txt'),
+                                        dtype=dtype, subset=subset)
+        df_cgm = pandas_helper.get_df(os.path.join(study_path, 'Data Tables', 'HDeviceCGM.txt'),
+                                        dtype=dtype, subset=subset)
+        df_uploads = pandas_helper.get_df(os.path.join(study_path, 'Data Tables', 'HDeviceUploads.txt'),
+                                        dtype={'PtId':str}, subset=subset).rename(columns={'PtId':'PtID'})
+
         #convert datetimes
         df_basal['datetime'] = enrollment_start + pd.to_timedelta(df_basal['DeviceDtTmDaysFromEnroll'], unit='D') + pd.to_timedelta(df_basal['DeviceTm'])
         df_bolus['datetime'] = enrollment_start + pd.to_timedelta(df_bolus['DeviceDtTmDaysFromEnroll'], unit='D') + pd.to_timedelta(df_bolus['DeviceTm'])
@@ -64,7 +67,7 @@ class ReplaceBG(StudyDataset):
         df_bolus['ExpectedDuration'] = pd.to_timedelta(df_bolus['ExpectedDuration'], unit='ms')
         
         #drop patients that are not in all datasets 
-        patient_ids_to_keep = reduce(np.intersect1d, [df_basal['PtID'].unique(), 
+        patient_ids_to_keep = reduce(np.intersect1d, [df_basal['PtID'].unique(),
                                   df_bolus['PtID'].unique(), 
                                   df_cgm['PtID'].unique()])
         df_basal = df_basal[df_basal['PtID'].isin(patient_ids_to_keep)]

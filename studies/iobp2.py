@@ -5,6 +5,7 @@
 import pandas as pd
 import numpy as np
 from datetime import timedelta
+from src.pandas_helper import get_df
 import os 
 from src.date_helper import parse_flair_dates
 from .studydataset import StudyDataset
@@ -20,11 +21,9 @@ class IOBP2(StudyDataset):
         print("x")
         
     def _load_data(self, subset) -> pd.DataFrame:
-        
-        self.df = pd.read_csv(self.iletFilePath, sep="|", low_memory=False,
-               usecols=['PtID', 'DeviceDtTm', 'CGMVal', 'BasalDelivPrev','BolusDelivPrev','MealBolusDelivPrev'],
-               dtype={'PtID': str, 'CGMVal': float},
-               skiprows=lambda x: (x % 10 != 0) & subset)
+
+        self.df = get_df(self.iletFilePath, usecols=['PtID', 'DeviceDtTm', 'CGMVal', 'BasalDelivPrev','BolusDelivPrev',
+                                                     'MealBolusDelivPrev'], subset=subset, dtype={'PtID': str, 'CGMVal': float})
         
         self.df.rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'DeviceDtTm': self.COL_NAME_DATETIME, 'CGMVal': self.COL_NAME_CGM, 
                         'BasalDelivPrev': self.COL_NAME_BASAL_RATE, 'BolusDelivPrev': self.COL_NAME_BOLUS}, inplace=True)

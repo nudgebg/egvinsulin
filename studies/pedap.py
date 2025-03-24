@@ -6,23 +6,23 @@ from studies.studydataset import StudyDataset
 import os
 import pandas as pd
 from src.date_helper import parse_flair_dates
+from src.pandas_helper import get_df
 
 
 class PEDAP(StudyDataset):
     def _load_data(self, subset):
         data_table_path = os.path.join(self.study_path, 'Data Files')
 
-        df_bolus = pd.read_csv(os.path.join(data_table_path, 'PEDAPTandemBOLUSDELIVERED.txt'), sep="|", 
-                                    usecols=['PtID', 'DeviceDtTm', 'BolusAmount', 'Duration'],
-                                    skiprows=lambda x: (x % 10 != 0) & subset)
-        
-        df_basal = pd.read_csv(os.path.join(data_table_path, 'PEDAPTandemBASALRATECHG.txt'), sep="|", 
-                               usecols=['PtID', 'DeviceDtTm', 'BasalRate'],
-                               skiprows=lambda x: (x % 10 != 0) & subset)
-        
-        df_cgm = pd.read_csv(os.path.join(data_table_path, 'PEDAPTandemCGMDataGXB.txt'), sep="|", 
-                                  usecols=['PtID', 'DeviceDtTm', 'CGMValue'],
-                                  skiprows=lambda x: (x % 10 != 0) & subset)
+        df_bolus = get_df(os.path.join(data_table_path, 'PEDAPTandemBolusDelivered.txt'), usecols=['PtID', 'DeviceDtTm',
+                                                                                                   'BolusAmount',
+                                                                                                   'Duration'],
+                          subset=subset)
+        df_basal = get_df(os.path.join(data_table_path, 'PEDAPTandemBASALRATECHG.txt'), usecols=['PtID', 'DeviceDtTm',
+                                                                                                 'BasalRate'],
+                          subset=subset)
+        df_cgm = get_df(os.path.join(data_table_path, 'PEDAPTandemCGMDATAGXB.txt'), usecols=['PtID', 'DeviceDtTm',
+                                                                                             'CGMValue'],
+                          subset=subset)
         
         # remove duplicated rows
         df_basal = df_basal.drop_duplicates(subset=['PtID','DeviceDtTm','BasalRate'])

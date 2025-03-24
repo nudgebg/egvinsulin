@@ -3,3 +3,4 @@ data/*
 .idea
 site
 __pycache__
+.DS_Store

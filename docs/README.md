@@ -90,8 +90,8 @@ pip install -r requirements.txt
 
 ### Prepare the raw data
  1. Download the study data zip files from [jaeb.org](https://public.jaeb.org/datasets/diabetes) (see [supported studies](#supported-studies)).
- 2. Extract and move the folders inside the `data/raw` directory. Do not rename the folder names, otherwise the `run_functions.py` won't know how to process them.
- 3. Depending on which studies you downloaded, the folder structure should look something like this.
+ 2. Move the files inside the `data/raw` directory. Zipped files can either be used directly or extracted. Do not rename the file/folder names, otherwise the `run_functions.py` won't know how to process them.
+ 3. Depending on which studies you downloaded and whether you have extracted zip files, the folder structure should look something like this:
 ```
     egvinsulin/
     ├── data/
@@ -99,6 +99,8 @@ pip install -r requirements.txt
     │       └── FLAIRPublicDataSet
     │       └── DCLP3 Public Dataset - Release 3 - 2022-08-04
     │       └── IOBP2 RCT Public Dataset
+    │       └── T1DEXI - DATA FOR UPLOAD.zip
+    │       └── T1DEXIP - DATA FOR UPLOAD.zip
     └── run_functions.py
 ```
 

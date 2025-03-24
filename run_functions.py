@@ -115,41 +115,55 @@ def main(load_subset=False):
               'Loop study public dataset 2023-01-31': Loop,
               'T1DEXI': T1DEXI,
               'T1DEXIP': T1DEXIP,
-              'REPLACE-BG Dataset-79f6bdc8-3c51-4736-a39f-c4c0f71d45e5': ReplaceBG}
+              'REPLACE-BG Dataset-79f6bdc8-3c51-4736-a39f-c4c0f71d45e5': ReplaceBG,
+
+              # Alternatively, people might use the unzipped original data
+              'IOBP2 RCT Public Dataset.zip': IOBP2,
+              'FLAIRPublicDataSet.zip': Flair,
+              'PEDAP Public Dataset - Release 3 - 2024-09-25.zip': PEDAP,
+              'DCLP3 Public Dataset - Release 3 - 2022-08-04.zip': DCLP3,
+              'DCLP5_Dataset_2022-01-20-5e0f3b16-c890-4ace-9e3b-531f3687cf53.zip': DCLP5,
+              'Loop study public dataset 2023-01-31.zip': Loop,
+              'T1DEXI - DATA FOR UPLOAD.zip': T1DEXI,
+              'T1DEXIP - DATA FOR UPLOAD.zip': T1DEXIP,
+              'REPLACE-BG Dataset-79f6bdc8-3c51-4736-a39f-c4c0f71d45e5.zip': ReplaceBG,
+              }
 
   # Filter and log folders that cannot be matched
   study_folder_names = [f for f in os.listdir(in_path) if os.path.isdir(os.path.join(in_path, f))]
-  unmatched_folders = []
-  matched_folders = []
+  study_zip_file_names = [f for f in os.listdir(in_path) if f.endswith('.zip')]
 
-  for folder in study_folder_names:
+  unmatched_paths = []
+  matched_paths = []
+
+  for folder in study_folder_names + study_zip_file_names:
       study_class = None
       for pattern, handler in patterns.items():
           if pattern == folder:
               study_class = handler
-              matched_folders.append((folder, study_class))
+              matched_paths.append((folder, study_class))
               break
       if study_class is None:
-          unmatched_folders.append(folder)
-  
-  if unmatched_folders:
-      logger.warning(f"The folders '{unmatched_folders}' are not recognized as a supported studies. Did you accidentally rename them? Please check the documentation for supported studies.")
-  if not matched_folders:
+          unmatched_paths.append(folder)
+
+  if unmatched_paths:
+      logger.warning(f"The folders '{unmatched_paths}' are not recognized as a supported studies. Did you accidentally rename them? Please check the documentation for supported studies.")
+  if not matched_paths:
       logger.error("No supported studies found in the data/raw folder. Exiting.")
       exit()
 
   # Process matched folders with progress indicators
   logger.info(f"Start processing supported study folders:")
-  for i,(folder, study_class) in enumerate(matched_folders):
+  for i,(folder, study_class) in enumerate(matched_paths):
       logger.info(f'\'{folder}\' using {study_class.__name__} class')
   logger.info("")
 
   num_steps_per_folder = 4
-  with tqdm(total=len(matched_folders)*num_steps_per_folder, desc=f"Processing studies", bar_format='Step {n_fmt}/{total_fmt} [{desc}]:|{bar}', unit="step", leave=False) as progress:
-    for folder, study_class in matched_folders:
+  with tqdm(total=len(matched_paths)*num_steps_per_folder, desc=f"Processing studies", bar_format='Step {n_fmt}/{total_fmt} [{desc}]:|{bar}', unit="step", leave=False) as progress:
+    for folder, study_class in matched_paths:
       tqdm.write(f"[{current_time()}] Processing {folder} ...")
-      
-      study_output_path = os.path.join(out_path, folder)
+      output_folder = folder.split('.')[0]
+      study_output_path = os.path.join(out_path, output_folder)
       if not os.path.exists(study_output_path):
           os.makedirs(study_output_path)
       
