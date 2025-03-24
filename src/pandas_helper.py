@@ -4,6 +4,8 @@
 # Licensed under the MIT License. See LICENSE file for details.
 import pandas as pd
 import numpy as np
+import zipfile_deflate64
+import io
 
 def get_duplicated_max_indexes(df, check_cols, max_col):
     """
@@ -254,3 +256,52 @@ def grouped_value_counts(df, group_cols, value_cols):
         })
 
     return df.groupby(group_cols).apply(count_values).reset_index()
+
+import pandas as pd
+import io
+import zipfile_deflate64
+
+import pandas as pd
+import io
+import zipfile_deflate64
+
+def get_df(path, usecols=None, subset=False, dtype=None):
+    """
+    Reads a data file from a given path, handling both standard file formats and files within ZIP archives.
+
+    Parameters:
+        path (str): The file path or a path to a file inside a ZIP archive.
+        usecols (list, optional): List of column names to include in the df.
+        subset (bool, optional): If True, read only a subset of the data for lightweight testing.
+        dtype (dict, optional): Data types to enforce for specific columns.
+
+    Returns:
+        pd.DataFrame: The loaded data as a Pandas DataFrame.
+    """
+    file_ending = path.rsplit('.', 1)[-1]
+    
+    if '.zip' in path:
+        path, file_name = path.rsplit('.zip/', 1)
+        path += '.zip'  # Reattach '.zip' to the first part
+        with zipfile_deflate64.ZipFile(path, 'r') as zip_file:
+            matched_files = [f for f in zip_file.namelist() if f.endswith(file_name)]
+            if not matched_files:
+                raise FileNotFoundError(f"No file ending with '{file_name}' found in the zip archive.")
+            matched_file = matched_files[0]
+            with zip_file.open(matched_file) as f:
+                bio = io.BytesIO(f.read())
+                path = bio  # Use the in-memory buffer instead of a file path
+    
+    skip_fn = (lambda x: (x % 10 != 0)) if subset else None
+    
+    if file_ending in ["csv", "txt"]:
+        return pd.read_csv(path, sep='|', low_memory=False, usecols=usecols, skiprows=skip_fn, dtype=dtype)
+    elif file_ending == "xpt":
+        if subset:
+            chunk_size = 25000
+            df_iter = pd.read_sas(path, format='xport', encoding='latin-1', chunksize=chunk_size)
+            return next(df_iter)
+        else:
+            return pd.read_sas(path, format='xport', encoding='latin-1')
+    else:
+        raise ValueError(f"Unsupported file format: {file_ending}")
