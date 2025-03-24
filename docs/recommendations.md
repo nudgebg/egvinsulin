@@ -49,3 +49,6 @@ Avoid using different units in the same column: For example, Replace BG bolus du
 ### Duplicates
 Many datasets contain duplicates and NaN Values
 It is unclear often how these should be interpreted. Complete duplicates might be dropped but often the dose is different. Or the same value is reported twice within close temporal distance (e.g. T1DEXI basal injections). Then, it is unclear wether these are double injections or duplicate imports. Also, priming doses are not marked as such. Often, MDI doses seem to be missing.
+
+### Zero deliveries
+0 unit deliveries are unnecessary to report in boluses. If possible, these should have already been removed. However, in the case of basal rates, 0  mark basal suspends and should obviously be kept.

@@ -8,6 +8,30 @@ from src.logger import Logger
 logger = Logger.get_logger(__name__)
 
 def validate_bolus_output_dataframe(func):
+    """
+    A decorator to validate the output of a function that returns a pandas DataFrame. It is used to validate the output of the `extract_bolus_event_history` method in the `StudyDataset` class.
+    Subclasses should implement the `_extract_bolus_event_history` method which is called by the `extract_bolus_event_history` method to use this decorator.
+    
+    The DataFrame must have the following  (see output format in the `extract_bolus_event_history` method):
+    - 'patient_id': of type string
+    - 'datetime': of type pandas datetime
+    - 'bolus': of type float
+    - 'delivery_duration': of type pandas timedelta
+
+    Raises:
+        TypeError: If the output is not a pandas DataFrame.
+        ValueError: If the DataFrame does not have the required columns.
+        ValueError: If the 'datetime' column is not of type pandas datetime  (datetime64[ns]).
+        ValueError: If the 'patient_id' column is not of type string.
+        ValueError: If the 'bolus' column is not of type float.
+        ValueError: If the 'delivery_duration' column is not of type pandas timedelta.
+    
+    Args:
+        func (callable): The function to be decorated.
+    
+    Returns:
+        function (function): The wrapped function with validation applied to its output.
+    """
     def wrapper(*args, **kwargs):
         df = func(*args, **kwargs)
         if not isinstance(df, pd.DataFrame):
@@ -27,6 +51,30 @@ def validate_bolus_output_dataframe(func):
     return wrapper
 
 def validate_basal_output_dataframe(func):
+    """
+    A decorator to validate the output of a function to ensure it is a pandas DataFrame with specific required columns and data types. 
+    
+    It is used to validate the output of the `extract_basal_event_history` method in the `StudyDataset` class.
+    Subclasses should implement the `_extract_basal_event_history` method which is called by the `extract_basal_event_history` method to use this decorator.
+
+    The DataFrame must have the following columns (see output format in the `extract_basal_event_history` method):
+    - 'patient_id': of type string
+    - 'datetime': of type pandas datetime (datetime64[ns]).
+    - 'basal_rate': of numeric type
+
+    Raises:
+        TypeError: If the output is not a pandas DataFrame.
+        ValueError: If the DataFrame does not have the required columns.
+        ValueError: If the 'datetime' column is not of type pandas datetime (datetime64[ns]).
+        ValueError: If the 'patient_id' column is not of type string.
+        ValueError: If the 'basal_rate' column is not of numeric type.
+
+    Args:
+        func (function): The function whose output will be validated.
+
+    Returns:
+        function (function): The wrapped function with validation applied to its output.
+    """
     def wrapper(*args, **kwargs):
         df = func(*args, **kwargs)
         if not isinstance(df, pd.DataFrame):
@@ -44,6 +92,30 @@ def validate_basal_output_dataframe(func):
     return wrapper
 
 def validate_cgm_output_dataframe(func):
+    """
+    A decorator to validate the output of a function to ensure it is a pandas DataFrame with specific required columns and data types. 
+    
+    It is used to validate the output of the `extract_cgm_history` method in the `StudyDataset` class.
+    Subclasses should implement the `_extract_cgm_history` method which is called by the `extract_cgm_history` method to use this decorator.
+
+    The DataFrame must have the following columns (see output format in the `extract_cgm_history` method):
+    - 'patient_id': of type string
+    - 'datetime': of type pandas datetime (datetime64[ns]).
+    - 'cgm': of numeric type
+
+    Raises:
+        TypeError: If the output is not a pandas DataFrame.
+        ValueError: If the DataFrame does not have the required columns.
+        ValueError: If the 'datetime' column is not of type pandas datetime (datetime64[ns]).
+        ValueError: If the 'patient_id' column is not of type string.   
+        ValueError: If the 'cgm' column is not of numeric type.
+
+    Args:
+        func (function): The function whose output will be validated.
+    
+    Returns:
+        function (function): The wrapped function with validation applied to its output.
+    """
     def wrapper(*args, **kwargs):
         df = func(*args, **kwargs)
         if not isinstance(df, pd.DataFrame):
@@ -61,39 +133,32 @@ def validate_cgm_output_dataframe(func):
     return wrapper
 
 def save_to_csv(df, file_path, compressed):
+    """
+    Save a pandas DataFrame to a csv file. The file can be compressed using gzip.
+
+    Args:
+        df (pd.DataFrame): The DataFrame to save.
+        file_path (str): The path to the output file.
+        compressed (bool): If True, the output file will be compressed using gzip.
+    """
+
     df.to_csv(file_path + (".csv.gz" if compressed else '.csv'), index=False, 
                 compression='gzip' if compressed else None)
 
 class StudyDataset:
     """
-    The `StudyDataset` class is designed to handle and validate data related to a medical study.
-    It has a member variable `df` which is a pandas DataFrame that holds the data.
-    The class is initialized with a `study_path` which is the path to the study directory
+    The `StudyDataset` class is designed to represent a clinical diabetes dataset with continuous glucose monitoring and insulin delivery data in the form of boluses and basal rates.
+    By subclassing and implementing the required methods, it can be used to extract continuous glucose monitoring (CGM) data, bolus event history, and basal event history from a dataset.
 
-    The class has several methods:
+    The following private methods need to be implemented by subclasses:
+    - `_load_data`: This method should load the data from the study directory. 
+    - `_extract_bolus_event_history`: This method should extract the bolus event history from the dataset. 
+    - `_extract_basal_event_history`: This method should extract the basal event history from the dataset.
+    - `_extract_cgm_history`: This method should extract the CGM measurements from the dataset.
 
-    - `load_data`: This method is automatically called before extracting data. However, it can also be called up-front. After data was loaded 
-        the member variable `data_loaded` is set to True. It calls the `_load_data` method which should be implemented by subclasses.
-    
-    - `extract_bolus_event_history`, `extract_basal_event_history`, and `extract_cgm_history`:
-      These methods are designed to extract specific types of data from the DataFrame.
-      They are decorated with `validate_bolus_output_dataframe`, `validate_basal_output_dataframe`,
-      and `validate_cgm_output_dataframe` respectively, which validate the output data.
-      These methods should not be overridden by subclasses. Instead, subclasses should implement the corresponding `_extract_*` methods.
+    **Output Validation**: While subclasses should implement the private methods, the extraction methods should not be overridden. Instead, the output of these methods is validated using decorators.
+    To extract the data, the `extract_bolus_event_history`, `extract_basal_event_history`, and `extract_cgm_history` methods should be called. These methods will call the private methods and validate the output.
 
-    - `_extract_bolus_event_history`, `_extract_basal_event_history`, and `_extract_cgm_history`:
-      These methods are meant to be overridden by subclasses to extract specific types of data from the DataFrame.
-
-    The returned dataframes are as follows:
-
-    - For bolus event history: The DataFrame should have the columns 'patient_id' (string),
-      'datetime' (pandas datetime), 'bolus' (float), and 'delivery_duration' (pandas timedelta).
-
-    - For basal event history: The DataFrame should have the columns 'patient_id' (string),
-      'datetime' (pandas datetime), and 'basal_rate' (float).
-
-    - For cgm history: The DataFrame should have the columns 'patient_id' (string),
-      'datetime' (pandas datetime), and 'cgm' (float).
     """
 
     COL_NAME_PATIENT_ID = 'patient_id'
@@ -113,73 +178,96 @@ class StudyDataset:
         self.data_loaded = False
 
     def _load_data(self, subset: bool = False):
+        """(Abstract) Load the study data into memory.
+        This method is called by the `load_data` method which ensures that the data is loaded only once and cached for subsequent use. This ensures that we load the data only once. Additionally, keeping the raw data in memory allows for easier debugging and inspection of the data.
+        """
         raise NotImplementedError("Subclasses should implement the _load_data method")
+    
     def _extract_bolus_event_history(self):
+        """(Abstract) Extracts the bolus event history from the dataset. This is a abstract method that should be implemented by subclasses.
+        """
         raise NotImplementedError("Subclasses should implement the _extract_bolus_event_history method")
+    
     def _extract_basal_event_history(self):
+        """(Abstract) Extracts the basal event history from the dataset. This is a abstract method that should be implemented by subclasses.
+        """
         raise NotImplementedError("Subclasses should implement the _extract_basal_event_history method")
+    
     def _extract_cgm_history(self):
+        """(Abstract) Extracts the continuous glucose monitoring (CGM) measurements from the dataset. This is a abstract method that should be implemented by subclasses.
+        """
         raise NotImplementedError("Subclasses should implement the _extract_cgm_history method")
     
-    
     def load_data(self, subset=False):
-        """Method to load the data from the study directory. 
-        
-        This method should be called before extracting any data from the dataset. 
-        This method should not be overridden by subclasses. Instead, subclasses should implement the _load_data method.
-        
+        """Load and cache the study data into memory by calling the `_load_data` method which should be implemented by subclasses. 
+
+        This method is automatically called when calling one of the extraction methods. However, it can also be called up-front. After data was loaded the member variable `data_loaded` is set to True and subsequent calls to this method will not reload the data.
+
+        Notes:  
+         - **Don't override this:** This method does do type checking on the output data and should not be overriden by subclasses. Instead, subclasses should implement the `_extract_bolus_event_history` method.
+         
         Args:
             subset (bool, optional): Should only load a small subset of the data for testing purposes. Defaults to False.
         """
         if not self.data_loaded:
             self._load_data(subset=subset)
             self.data_loaded = True
-
+    
     @validate_bolus_output_dataframe
     def extract_bolus_event_history(self):
-        """ Extract bolus event history from the dataset. 
+        """ Extract bolus event history from the dataset, perform type checking, and cache the result.
         
-        This method does do type checking on the output data and should not be overriden
-        by subclasses. Instead, subclasses should implement the _extract_bolus_event_history method.
-        
-        Returns:
-            bolus_events (pd.DataFrame): A DataFrame containing the bolus event history. The DataFrame should have the following columns:
+        Notes:   
+        For standard boluses the delivery duration is 0 seconds, for extended boluses, these are the duration of the extended delivery.
 
-                - `patient_id`: A string representing the patient ID
-                - `datetime`: A pandas datetime object representing the date and time of the bolus event
-                - `bolus`: A float representing the bolus amount in units
-                - `delivery_duration`: A pandas timedelta object representing the duration of the bolus delivery.
-                For standard boluses the delivery duration is 0 seconds, for extended boluses,
-                these are the duration of the extended delivery.
+        Warning:  
+        **Don't override this:** This method does do type checking on the output data and should not be overriden by subclasses. Instead, subclasses should implement the `_extract_bolus_event_history` method.
+
+         
+        Returns:  
+            bolus_events (pd.DataFrame): The bolus event history with the following columns:
+
+                - `patient_id` (String): the unique patient ID
+                - `datetime` (pandas.datetime): the date and time of the bolus event
+                - `bolus` (float): the bolus amount in units
+                - `delivery_duration` (pandas.timedelta): the duration of the bolus delivery: For standard boluses the delivery duration is 0 seconds, for extended boluses, these are the duration of the extended delivery.
+
         """
         if self.bolus_event_history is None:
             self.load_data()
             self.bolus_event_history = self._extract_bolus_event_history()
         return self.bolus_event_history
-
+    
     @validate_basal_output_dataframe
     def extract_basal_event_history(self):
-        """ Extract basal event history from the dataset. 
-        This method does do type checking on the output data and should not be overriden by subclasses. 
-        Instead, subclasses should implement the _extract_basal_event_history method.
-                
-        Returns:
-            basal_event_history (pd.DataFrame): A DataFrame containing the basal event history. The DataFrame should have the following columns:
+        """ Uses `_extract_basal_event_history` to extract the basal event history, perform type checking, and cache the result.
+        
+        Warning:
+            **Don't override this:** This method does do type checking on the output data and should not be overriden by subclasses. Instead, subclasses should implement the `_extract_basal_event_history` method.
 
-                - `patient_id`: A string representing the patient ID
-                - `datetime`: A pandas datetime object representing the date and time of the basal event
-                - `basal_rate`: A float representing the basal rate in units per hour
+        Notes:
+         - Include zero basal rates: The assumption is that basal rates continue until a new rate is set. Therefore, zero basal rates should be included in the output.
+         - Account for suspend and temporary basal events.
+         - Ensure the datetime object is a pandas datetime object and is of type datetime64[ns], otherwise the validation will fail e.g. by using df.
+        
+        Returns:  
+            basal_event_history (pd.DataFrame): The basal event history with the following columns:    
+            
+             - `patient_id` (String): the unique patient ID
+             - `datetime` (pandas.datetime): the date and time of the basal event
+             - `basal_rate` (float): the basal rate in units per hour. Make sure to include zero basal rates as they mark basal suspends.
         """
         if self.basal_event_history is None:
             self.load_data()
             self.basal_event_history = self._extract_basal_event_history()
         return self.basal_event_history
-
+    
     @validate_cgm_output_dataframe
     def extract_cgm_history(self):
-        """ Extract cgm measurements from the dataset. This method does
-        do type checking on the output data and should not be overriden
-        by subclasses. Instead, subclasses should implement the _extract_cgm_history method.
+        """ Extract cgm measurements from the dataset, perform type checking, and cache the result.
+        
+        Warning:
+            **Don't override this!** This method does do type checking on the output data and should not be overriden by subclasses. Instead, subclasses should implement the `_extract_cgm_history` method.
         
         Returns:
             cgm_measurements (pd.DataFrame): A DataFrame containing the cgm measurements. The DataFrame should have the following columns:
@@ -193,7 +281,6 @@ class StudyDataset:
             self.load_data()
             self.cgm_history = self._extract_cgm_history()
         return self.cgm_history
-    
     
     def save_cgm_to_file(self, out_path,  compressed=False):
         """Save the cgm history to a file.
@@ -227,7 +314,7 @@ class StudyDataset:
         df_cgm[self.COL_NAME_DATETIME] = df_cgm[self.COL_NAME_DATETIME].astype('int64')//10**9
         df_cgm[self.COL_NAME_CGM] = df_cgm[self.COL_NAME_CGM].astype('int')
         save_to_csv(df_cgm, file_path, compressed)    
-        
+    
     def save_bolus_event_history_to_file(self, out_path, compressed=False):
         """
         Save the bolus event history to a file.
@@ -266,7 +353,7 @@ class StudyDataset:
         df_bolus[self.COL_NAME_BOLUS_DELIVERY_DURATION] = df_bolus[self.COL_NAME_BOLUS_DELIVERY_DURATION].dt.total_seconds().astype('int')
         df_bolus[self.COL_NAME_BOLUS] = df_bolus[self.COL_NAME_BOLUS].round(4)
         save_to_csv(df_bolus, file_path, compressed)
-
+    
     def save_basal_event_history_to_file(self, out_path, compressed=False):
         """
         Save the basal event history to a file.
@@ -304,3 +391,4 @@ class StudyDataset:
         df_basal[self.COL_NAME_BASAL_RATE] = df_basal[self.COL_NAME_BASAL_RATE].round(4)
 
         save_to_csv(df_basal, file_path, compressed)
+    
