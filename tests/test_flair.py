@@ -49,7 +49,7 @@ def sample_data_dir_basal_simple(tmpdir):
     
     #add record id
     pump_data['RecID'] = range(1, len(pump_data)+1)
-
+    
     # Create sample CGM data with constant values of 100 every 5 minutes
     cgm_times = pd.date_range(start='2023-01-01 00:00:00', end='2023-01-02 23:59:59', freq='5min')
     cgm_times = list(cgm_times.strftime('%m/%d/%Y %I:%M:%S %p'))
@@ -57,7 +57,7 @@ def sample_data_dir_basal_simple(tmpdir):
     cgm_data = pd.DataFrame({
         'PtID': [1] * len(cgm_times) + [2] * len(cgm_times),
         'DataDtTm': cgm_times + cgm_times,
-        'CGM': cgm_values + cgm_values
+        'CGM': cgm_values + cgm_values,
     })
     cgm_data['DataDtTm_adjusted'] = None
     cgm_data['Unusuable'] = False
@@ -113,7 +113,7 @@ def sample_data_closed_loop(tmpdir):
     cgm_data = pd.DataFrame({
         'PtID': [1] * len(cgm_times) + [2] * len(cgm_times),
         'DataDtTm': cgm_times + cgm_times,
-        'CGM': cgm_values + cgm_values
+        'CGM': cgm_values + cgm_values,
     })
     cgm_data['DataDtTm_adjusted'] = None
     cgm_data['Unusuable'] = False
@@ -127,6 +127,7 @@ def test_sample_data_closed_loop(sample_data_closed_loop):
     flair.load_data()
 
     basal = flair.extract_basal_event_history()
+    print(basal)
     tdd_basal = basal.groupby('patient_id').apply(tdd.calculate_daily_basal_dose, include_groups=False).reset_index().astype({'date': 'datetime64[ns]'})
 
     expected_basal = pd.DataFrame({

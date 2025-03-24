@@ -44,7 +44,7 @@ def test_validate_bolus_output_dataframe_wrong_delivery_duration_datatype():
 
 def test_validate_bolus_output_dataframe_column_name_spelling():
     df = pd.DataFrame({'patient_id': ['1'], 'datetime': [datetime.now()], 'bolus': [1.0], 'delivery_dur': [timedelta(minutes=60)]})
-    with pytest.raises(ValueError, match="DataFrame should have columns 'patient_id', 'datetime' and 'basal_rate'"):
+    with pytest.raises(ValueError, match="DataFrame should have columns 'patient_id', 'datetime', 'bolus' and 'delivery_duration'"):
         mock_extract_bolus_event_history(df)
 
 def test_validate_bolus_output_dataframe_happy_case():
@@ -53,7 +53,7 @@ def test_validate_bolus_output_dataframe_happy_case():
 
 def test_validate_bolus_output_dataframe_additional_column():
     df = pd.DataFrame({'patient_id': ['1'], 'datetime': [datetime.now()], 'bolus': [1.0], 'delivery_duration': [timedelta(minutes=60)], 'extra_column': [1]})
-    with pytest.raises(ValueError, match="DataFrame should have columns 'patient_id', 'datetime' and 'basal_rate'"):
+    with pytest.raises(ValueError, match="DataFrame should have columns 'patient_id', 'datetime', 'bolus' and 'delivery_duration'"):
         mock_extract_bolus_event_history(df)
 
 # Basal validation tests
