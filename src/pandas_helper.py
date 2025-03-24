@@ -4,6 +4,8 @@
 # Licensed under the MIT License. See LICENSE file for details.
 import pandas as pd
 import numpy as np
+import zipfile_deflate64
+import io
 
 def get_duplicated_max_indexes(df, check_cols, max_col):
     """
@@ -254,3 +256,63 @@ def grouped_value_counts(df, group_cols, value_cols):
         })
 
     return df.groupby(group_cols).apply(count_values).reset_index()
+
+
+def get_df(path, usecols=None, subset=False, dtype=None):
+    """
+    Reads a data file from a given path, handling both standard file formats and files within ZIP archives.
+
+    Parameters:
+        path (str): The file path or a path to a file inside a ZIP archive.
+        usecols (list, optional): List of column names to include in the df.
+        subset (bool, optional): If True, we only read the 25k first rows of the data, for lightweight testing.
+        dtype (dict, optional): Data types to enforce for specific columns.
+
+    Returns:
+        pd.DataFrame: The loaded data as a Pandas DataFrame.
+    """
+    file_ending = path.rsplit('.', 1)[-1]
+    if '.zip' in path:
+        path, file_name = path.rsplit('.zip/', 1)
+        path += '.zip'  # Reattach '.zip' to the first part
+        with zipfile_deflate64.ZipFile(path, 'r') as zip_file:
+            matched_files = [f for f in zip_file.namelist() if f.endswith(file_name)]
+            if not matched_files:
+                raise FileNotFoundError(f"No file ending with '{file_name}' found in the zip archive.")
+            matched_file = matched_files[0]
+            with zip_file.open(matched_file) as f:
+                with io.BytesIO(f.read()) as bio:
+                    return get_df_from_filepath_or_buffer(bio, file_ending, usecols=usecols, subset=subset, dtype=dtype)
+    else:
+        return get_df_from_filepath_or_buffer(path, file_ending, usecols=usecols, subset=subset, dtype=dtype)
+
+
+def get_df_from_filepath_or_buffer(filepath_or_buffer, file_ending, usecols=None, subset=False, dtype=None):
+    """
+    Reads a data file from a given file path or buffer and returns it as a Pandas DataFrame.
+
+    Parameters:
+        filepath_or_buffer (str or buffer): File path or in-memory buffer.
+        file_ending (str): The file extension indicating format (e.g., 'csv', 'xpt').
+        usecols (list, optional): List of column names to include in the df.
+        subset (bool, optional): If True, we only read the 25k first rows of the data, for lightweight testing.
+        dtype (dict, optional): Data types for specific columns.
+
+    Returns:
+        pd.DataFrame: The loaded data.
+    """
+    skip_fn = (lambda x: (x % 10 != 0)) if subset else None
+
+    if file_ending in ["csv", "txt"]:
+        return pd.read_csv(filepath_or_buffer, sep='|', low_memory=False, usecols=usecols, skiprows=skip_fn, dtype=dtype)
+    elif file_ending == "xpt":
+        # if subset, read only the first 25k Rows
+        if subset:
+            chunk_size = 25000
+            df_iter = pd.read_sas(filepath_or_buffer, format='xport', encoding='latin-1', chunksize=chunk_size)
+            return next(df_iter)
+        else:
+            return pd.read_sas(filepath_or_buffer, format='xport', encoding='latin-1', )
+    else:
+        raise ValueError(f"Unsupported file format: {file_ending}")
+

@@ -6,8 +6,21 @@ import pandas as pd
 from dask import dataframe as dd
 from src.logger import Logger
 import os 
+import zipfile_deflate64
 
 from .studydataset import StudyDataset
+
+def unzip_folder(zip_path, extract_to):
+    """
+    Extracts all contents of a ZIP archive to the specified directory.
+
+    Parameters:
+        zip_path (str): Path to the ZIP file.
+        extract_to (str): Directory where the contents should be extracted.
+    """
+    with zipfile_deflate64.ZipFile(zip_path, 'r') as zip_ref:
+        zip_ref.extractall(extract_to)
+
 
 class Loop(StudyDataset):
 
@@ -37,6 +50,13 @@ class Loop(StudyDataset):
             self.logger.debug(f"CSV files converted to parquet file {parquet_path}")
 
     def _load_data(self, subset: bool = False):
+        if '.zip' in self.study_path:
+            path = self.study_path.split('.zip')[0]
+            os.mkdir(path)
+            unzip_folder(self.study_path, extract_to=path)
+            self.study_path = path
+            self.temp_dir = os.path.join(path, '..', '..', 'temp')
+
         self.df_patient = pd.read_csv(os.path.join(self.study_path, 'Data Tables',  'PtRoster.txt'), sep='|')
         self.load_subset = subset
         

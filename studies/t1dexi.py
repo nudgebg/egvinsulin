@@ -7,20 +7,15 @@ import os
 import numpy as np
 from datetime import datetime, timedelta
 import isodate
+import io
+import zipfile_deflate64
 
 from studies.studydataset import StudyDataset
 from src.logger import Logger
-from src.pandas_helper import get_duplicated_max_indexes
+from src.pandas_helper import get_duplicated_max_indexes, get_df
 
 def load_facm(path, subset):
-        
-        #if subset, read only the first 25k Rows
-        if subset:
-            chunk_size = 25000 
-            facm_iter = pd.read_sas(path, encoding='latin-1', chunksize=chunk_size)
-            facm = next(facm_iter)
-        else:
-            facm = pd.read_sas(path,encoding='latin-1',)
+        facm = get_df(path, subset=subset)
         facm = facm.replace('', np.nan).astype({'USUBJID': 'str', 'FAORRES': 'float'})
 
         #drop columns with no additional, duplicated or corrupt information
@@ -42,20 +37,15 @@ def load_facm(path, subset):
         facm = facm.drop_duplicates()
         return facm.sort_values('FADTC')
 
+
 def load_dx(path):
-        dx = pd.read_sas(path, encoding='latin-1').replace('', np.nan)
+        dx = get_df(path).replace('', np.nan)
         dx = dx.drop(columns=['DXSCAT','DXPRESP','STUDYID','DOMAIN','SPDEVID','DXSEQ','DXCAT','DXSCAT','DXSTRTPT','DXDTC','DXENRTPT','DXEVINTX','VISIT'])
         return dx
 
+
 def load_lb(path, subset):
-    #if subset, read only the first 25k Rows
-    if subset:
-        chunk_size = 25000 
-        lb_iter = pd.read_sas(path, encoding='latin-1', chunksize=chunk_size)
-        lb = next(lb_iter)
-    else:
-        lb = pd.read_sas(path,encoding='latin-1',)
-    
+    lb = get_df(path, subset=subset)
     lb = lb.replace('', np.nan).astype({'USUBJID': 'str'})[['USUBJID','LBCAT','LBORRES','LBDTC']]
     #drop hab1c readings and keep only CGM readings
     lb = lb.loc[lb.LBCAT=='CGM']
@@ -63,7 +53,8 @@ def load_lb(path, subset):
     lb['LBDTC'] = lb['LBDTC'].apply(lambda x: datetime(1960, 1, 1) + timedelta(seconds=x) if pd.notnull(x) else pd.NaT)
     lb.drop(columns='LBCAT',inplace=True)
     return lb
-     
+
+
 def overlaps(df):
     assert df.FADTC.is_monotonic_increasing
     end = df.FADTC + df.FADUR  
