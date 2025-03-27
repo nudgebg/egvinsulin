@@ -18,7 +18,6 @@ class IOBP2(StudyDataset):
         self.bolus_extracted = None
         self.cgm_extracted = None
         self.basal_extracted = None
-        print("x")
         
     def _load_data(self, subset) -> pd.DataFrame:
 

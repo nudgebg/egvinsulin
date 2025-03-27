@@ -145,6 +145,30 @@ def save_to_csv(df, file_path, compressed):
     df.to_csv(file_path + (".csv.gz" if compressed else '.csv'), index=False, 
                 compression='gzip' if compressed else None)
 
+def save_to_parquet_partitioned(df, base_path, study_name, data_type):
+    """
+    Save a pandas DataFrame to Parquet files, partitioned by specified columns.
+
+    The output structure will be:
+    `<base_path>/<study_name>/<data_type>/patient_id=<value>/part-*.parquet`
+    Args:
+        df (pd.DataFrame): The DataFrame to save.
+        base_path (str): The base directory for the output files.
+        study_name (str): The name of the study.
+        data_type (str): The type of data being saved.
+    """
+
+    # Save the DataFrame as partitioned Parquet files
+    df = df.assign(study_name=study_name, data_type=data_type)
+    df.to_parquet(
+        base_path,
+        index=False,
+        partition_cols=['study_name', 'data_type', 'patient_id'],
+        engine="pyarrow",  # Ensure compatibility with partitioning
+        compression="snappy"
+    )
+
+
 class StudyDataset:
     """
     The `StudyDataset` class is designed to represent a clinical diabetes dataset with continuous glucose monitoring and insulin delivery data in the form of boluses and basal rates.
@@ -282,53 +306,71 @@ class StudyDataset:
             self.cgm_history = self._extract_cgm_history()
         return self.cgm_history
     
-    def save_cgm_to_file(self, out_path,  compressed=False):
-        """Save the cgm history to a file.
-        This method extracts the cgm history, processes it to reduce file size,
+    def save_cgm_to_file(self, out_path, output_format="csv", compressed=False):
+        """
+        Save the CGM history to a file in the specified format (CSV or Parquet).
+
+        This method extracts the CGM history, processes it to reduce file size (for CSV),
         and saves it to a specified output directory. If the directory does not exist,
-        it will be created. The filenames follow the pattern <study_name>_cgm_history.csv(.gz)
+        it will be created. For Parquet format, the data is partitioned by `patient_id`
+        and stored in a subdirectory named after the `study_name`.
 
-        The output csv format is as follows:
+        CSV Output Format:
         - patient_id: A string representing the patient ID
-        - datetime: integer representing the local timestamp in seconds since epoch
-        - cgm: A integer representing the cgm value in mg/dL
+        - datetime: Integer representing the local timestamp in seconds since epoch
+        - cgm: An integer representing the CGM value in mg/dL
 
-        Example csv output:   
+        Example CSV Output:
         ```
         patient_id,datetime,cgm
         10,1524150016,88
         10,1524150270,85
         10,1524150568,81
         ```
+        Parquet Output:
+        - The data is partitioned by `patient_id` and stored in a directory structure:
+            `<out_path>/<study_name>/data_type=cgm/patient_id=<value>/part-*.parquet`
 
         Args:
-            out_path (str): The path to the output directory where the file will be saved.
-            compressed (bool, optional): If True, the output file will be compressed. Defaults to False.
+            out_path (str): The base directory for the output files.
+            output_format (str, optional): The output format ('csv' or 'parquet'). Defaults to 'csv'.
+            compressed (bool, optional): If True, stores the file in compressed format (.gzip for CSV). Defaults to False.
         """
-        if not os.path.exists(out_path):
-            logger.warning(f"Output directory {out_path} does not exist. Creating it now.")
-            os.makedirs(out_path)
-        file_path = os.path.join(out_path, f"{self.study_name}_cgm_history")
         df_cgm = self.extract_cgm_history().copy()
-        #reduce file size
-        df_cgm[self.COL_NAME_DATETIME] = df_cgm[self.COL_NAME_DATETIME].astype('int64')//10**9
-        df_cgm[self.COL_NAME_CGM] = df_cgm[self.COL_NAME_CGM].astype('int')
-        save_to_csv(df_cgm, file_path, compressed)    
-    
-    def save_bolus_event_history_to_file(self, out_path, compressed=False):
+
+        if output_format == "csv":
+            # Reduce file size for CSV
+            df_cgm[self.COL_NAME_DATETIME] = df_cgm[self.COL_NAME_DATETIME].astype("int64") // 10**9 #from ns to s
+            df_cgm[self.COL_NAME_CGM] = df_cgm[self.COL_NAME_CGM].astype("int")
+            file_path = os.path.join(out_path, f"{self.study_name}_cgm_history")
+            save_to_csv(df_cgm, file_path, compressed)
+        elif output_format == "parquet":
+            # Save as partitioned Parquet files
+            save_to_parquet_partitioned(
+                df_cgm,
+                base_path=out_path,
+                study_name=self.study_name,
+                data_type="cgm"
+            )
+        else:
+            raise ValueError("Invalid output format. Supported formats are 'csv' and 'parquet'.")
+
+    def save_bolus_event_history_to_file(self, out_path, output_format="csv", compressed=False):
         """
-        Save the bolus event history to a file.
-        This method extracts the bolus event history, processes it to reduce file size,
+        Save the bolus event history to a file in the specified format (CSV or Parquet).
+
+        This method extracts the bolus event history, processes it to reduce file size (for CSV),
         and saves it to a specified output directory. If the directory does not exist,
-        it will be created. The filenames follow the pattern <study_name>_bolus_event_history.csv(.gz)
+        it will be created. For Parquet format, the data is partitioned by `patient_id`
+        and stored in a subdirectory named after the [study_name](http://_vscodecontentref_/4).
 
-        The output csv format is as follows:
+        CSV Output Format:
         - patient_id: A string representing the patient ID
-        - datetime: integer representing the local timestamp in seconds since epoch
-        - bolus: A float representing the bolus amount in units (2 decimal places)
-        - delivery_duration: integer representing the duration of the bolus delivery in seconds
+        - datetime: Integer representing the local timestamp in seconds since epoch
+        - bolus: A float representing the bolus amount in units (rounded to 4 decimal places)
+        - delivery_duration: Integer representing the duration of the bolus delivery in seconds
 
-        Example csv output:   
+        Example CSV Output:
         ```
         patient_id,datetime,bolus,delivery_duration
         10,1522847353,0.1,0
@@ -336,59 +378,81 @@ class StudyDataset:
         10,1523040411,4.449,7200
         ```
 
-        Parameters:
-            out_path (str): The path to the output directory where the file will be saved.
-            compressed (bool): If True, the output file will be compressed. Default is False.
-        Returns:
-            None
-        """
+        Parquet Output:
+        - The data is partitioned by `patient_id` and stored in a directory structure:
+            `<out_path>/<study_name>/data_type=bolus/patient_id=<value>/part-*.parquet`
 
-        if not os.path.exists(out_path):
-            logger.warning(f"Output directory {out_path} does not exist. Creating it now.")
-            os.makedirs(out_path)
-        file_path = os.path.join(out_path, f"{self.study_name}_bolus_event_history")
+        Args:
+            out_path (str): The base directory for the output files.
+            output_format (str, optional): The output format ('csv' or 'parquet'). Defaults to 'csv'.
+            compressed (bool, optional): If True, compress the output file (for CSV). Defaults to False.
+        """
         df_bolus = self.extract_bolus_event_history().copy()
-        # Reduce file size
-        df_bolus[self.COL_NAME_DATETIME] = df_bolus[self.COL_NAME_DATETIME].astype('int64') // 10**9
-        df_bolus[self.COL_NAME_BOLUS_DELIVERY_DURATION] = df_bolus[self.COL_NAME_BOLUS_DELIVERY_DURATION].dt.total_seconds().astype('int')
-        df_bolus[self.COL_NAME_BOLUS] = df_bolus[self.COL_NAME_BOLUS].round(4)
-        save_to_csv(df_bolus, file_path, compressed)
-    
-    def save_basal_event_history_to_file(self, out_path, compressed=False):
+
+        if output_format == "csv":
+            # Reduce file size for CSV
+            df_bolus[self.COL_NAME_DATETIME] = df_bolus[self.COL_NAME_DATETIME].astype("int64") // 10**9
+            df_bolus[self.COL_NAME_BOLUS_DELIVERY_DURATION] = df_bolus[self.COL_NAME_BOLUS_DELIVERY_DURATION].dt.total_seconds().astype("int")
+            df_bolus[self.COL_NAME_BOLUS] = df_bolus[self.COL_NAME_BOLUS].round(4)
+            file_path = os.path.join(out_path, f"{self.study_name}_bolus_event_history")
+            save_to_csv(df_bolus, file_path, compressed)
+        elif output_format == "parquet":
+            # Save as partitioned Parquet files
+            save_to_parquet_partitioned(
+                df_bolus,
+                base_path=out_path,
+                study_name=self.study_name,
+                data_type="bolus"
+            )
+        else:
+            raise ValueError("Invalid output format. Supported formats are 'csv' and 'parquet'.")
+
+    def save_basal_event_history_to_file(self, out_path, output_format="csv", compressed=False):
         """
-        Save the basal event history to a file.
-        This method extracts the basal event history, processes it to reduce file size,
+        Save the basal event history to a file in the specified format (CSV or Parquet).
+
+        This method extracts the basal event history, processes it to reduce file size (for CSV),
         and saves it to a specified output directory. If the directory does not exist,
-        it will be created. The filenames follow the pattern <study_name>_basal_event_history.csv(.gz) 
+        it will be created. For Parquet format, the data is partitioned by `patient_id`
+        and stored in a subdirectory named after the [study_name](http://_vscodecontentref_/5).
 
-        The output format is as follows: csv file with the following columns:
+        CSV Output Format:
         - patient_id: A string representing the patient ID
-        - datetime: integer representing the local timestamp in seconds since epoch
-        - basal_rate: A float representing the basal rate in units per hour
+        - datetime: Integer representing the local timestamp in seconds since epoch
+        - basal_rate: A float representing the basal rate in units per hour (rounded to 4 decimal places)
 
-        Example csv output:   
+        Example CSV Output:
         ```
         patient_id,datetime,basal_rate
         10,1522846361,2.0
         10,1522846661,0.0
         10,1522872700,1.0
         ```
-        
-        Parameters:
-            out_path (str): The path to the output directory where the file will be saved.
-            compressed (bool): If True, the output file will be compressed. Default is False.
-        Returns:
-            None
+
+        Parquet Output:
+        - The data is partitioned by `patient_id` and stored in a directory structure:
+            `<out_path>/<study_name>/data_type=basal/patient_id=<value>/part-*.parquet`
+
+        Args:
+            out_path (str): The base directory for the output files.
+            output_format (str, optional): The output format ('csv' or 'parquet'). Defaults to 'csv'.
+            compressed (bool, optional): If True, compress the output file (for CSV). Defaults to False.
         """
-
-        if not os.path.exists(out_path):
-            logger.warning(f"Output directory {out_path} does not exist. Creating it now.")
-            os.makedirs(out_path)
-        file_path = os.path.join(out_path, f"{self.study_name}_basal_event_history")
         df_basal = self.extract_basal_event_history().copy()
-        # Reduce file size
-        df_basal[self.COL_NAME_DATETIME] = df_basal[self.COL_NAME_DATETIME].astype('int64') // 10**9
-        df_basal[self.COL_NAME_BASAL_RATE] = df_basal[self.COL_NAME_BASAL_RATE].round(4)
 
-        save_to_csv(df_basal, file_path, compressed)
-    
+        if output_format == "csv":
+            # Reduce file size for CSV
+            df_basal[self.COL_NAME_DATETIME] = df_basal[self.COL_NAME_DATETIME].astype("int64") // 10**9
+            df_basal[self.COL_NAME_BASAL_RATE] = df_basal[self.COL_NAME_BASAL_RATE].round(4)
+            file_path = os.path.join(out_path, f"{self.study_name}_basal_event_history")
+            save_to_csv(df_basal, file_path, compressed)
+        elif output_format == "parquet":
+            # Save as partitioned Parquet files
+            save_to_parquet_partitioned(
+                df_basal,
+                base_path=out_path,
+                study_name=self.study_name,
+                data_type="basal"
+            )
+        else:
+            raise ValueError("Invalid output format. Supported formats are 'csv' and 'parquet'.")
