@@ -149,8 +149,8 @@ def save_to_parquet_partitioned(df, base_path, study_name, data_type):
     """
     Save a pandas DataFrame to Parquet files, partitioned by specified columns.
 
-    The output structure will be:
-    `<base_path>/<study_name>/<data_type>/patient_id=<value>/part-*.parquet`
+    The output structure will be using Hive style partitioning, for example:
+    `<base_path>/study_name=Flair/data_type=basal/patient_id=1/9ce850a3b57e49d5a01ca1153db0fb40-0.parquet`
     Args:
         df (pd.DataFrame): The DataFrame to save.
         base_path (str): The base directory for the output files.
@@ -165,9 +165,9 @@ def save_to_parquet_partitioned(df, base_path, study_name, data_type):
         index=False,
         partition_cols=['study_name', 'data_type', 'patient_id'],
         engine="pyarrow",  # Ensure compatibility with partitioning
-        compression="snappy"
+        compression="snappy",
+        existing_data_behavior='delete_matching'
     )
-
 
 class StudyDataset:
     """
