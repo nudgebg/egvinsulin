@@ -61,8 +61,7 @@ For each study, the dataframes are saved in the `data/out/<study-name>/` folder:
 
 """
 import os
-from studies import IOBP2,Flair,PEDAP,DCLP3,DCLP5,Loop,StudyDataset,T1DEXI,T1DEXIP, ReplaceBG
-
+from studies import StudyDataset, dataset_initializer
 import src.postprocessing as pp
 from src.logger import Logger
 from datetime import datetime
@@ -75,118 +74,68 @@ logger = Logger.get_logger(__file__)
 def current_time():
   return datetime.now().strftime("%H:%M:%S")
 
-
-def main(load_subset=False):
+def main(load_subset=False, output_format="parquet", compressed=False, input_dir=None, output_dir=None):
   """
   Main function to process study data folders.
 
   Args:
-    load_subset (bool): If True, runs the script on a limited amount of data (e.g. skipping rows)
+    load_subset (bool): If True, runs the script on a limited amount of data (e.g. skipping rows).
+    output_format (str): The format to save the output files ('csv' or 'parquet').
+    compressed (bool): Whether to compress the output files.
+    input_dir (str): Custom input directory path. Defaults to 'data/raw'.
+    output_dir (str): Custom output directory path. Defaults to 'data/out'.
   
   Logs:
     - Information about the current working directory and paths being used.
     - Warnings for folders that do not match any known study patterns.
     - Errors if no supported studies are found.
     - Progress of processing each matched study folder.
-  
-  The function performs the following steps:
-    1. Determines the input and output paths based on the `test` flag.
-    2. Identifies study folders in the input path.
-    3. Matches study folders to predefined patterns and logs unmatched folders.
-    4. Processes each matched study folder and logs the progress using `tqdm`.
   """
-
-  #run_time = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
   current_dir = os.getcwd()
-  in_path = os.path.join(current_dir, 'data/raw')
-  out_path = os.path.join(current_dir, 'data/out')
+  in_path = input_dir if input_dir else os.path.join(current_dir, 'data', 'raw')
+  out_path = output_dir if output_dir else os.path.join(current_dir, 'data', 'out')
 
+  if not os.path.exists(out_path):
+    os.makedirs(out_path)
+      
   if load_subset:
      logger.warning(f"ATTENTION: --test was provided: Running in test mode using a subset of the data.")
 
-  logger.info(f"Looking for study folders in {in_path} and saving results to {out_path}")
-
-  #define how folders are identified and processed
-  patterns = {'IOBP2 RCT Public Dataset': IOBP2,
-              'FLAIRPublicDataSet': Flair,
-              'PEDAP Public Dataset - Release 3 - 2024-09-25': PEDAP,
-              'DCLP3 Public Dataset - Release 3 - 2022-08-04': DCLP3,
-              'DCLP5_Dataset_2022-01-20-5e0f3b16-c890-4ace-9e3b-531f3687cf53': DCLP5,
-              'Loop study public dataset 2023-01-31': Loop,
-              'T1DEXI': T1DEXI,
-              'T1DEXIP': T1DEXIP,
-              'REPLACE-BG Dataset-79f6bdc8-3c51-4736-a39f-c4c0f71d45e5': ReplaceBG,
-
-              # Alternatively, people might use the unzipped original data
-              'IOBP2 RCT Public Dataset.zip': IOBP2,
-              'FLAIRPublicDataSet.zip': Flair,
-              'PEDAP Public Dataset - Release 3 - 2024-09-25.zip': PEDAP,
-              'DCLP3 Public Dataset - Release 3 - 2022-08-04.zip': DCLP3,
-              'DCLP5_Dataset_2022-01-20-5e0f3b16-c890-4ace-9e3b-531f3687cf53.zip': DCLP5,
-              'Loop study public dataset 2023-01-31.zip': Loop,
-              'T1DEXI - DATA FOR UPLOAD.zip': T1DEXI,
-              'T1DEXIP - DATA FOR UPLOAD.zip': T1DEXIP,
-              'REPLACE-BG Dataset-79f6bdc8-3c51-4736-a39f-c4c0f71d45e5.zip': ReplaceBG,
-              }
-
-  # Filter and log folders that cannot be matched
-  study_folder_names = [f for f in os.listdir(in_path) if os.path.isdir(os.path.join(in_path, f))]
-  study_zip_file_names = [f for f in os.listdir(in_path) if f.endswith('.zip')]
-
-  unmatched_paths = []
-  matched_paths = []
-
-  for folder in study_folder_names + study_zip_file_names:
-      study_class = None
-      for pattern, handler in patterns.items():
-          if pattern == folder:
-              study_class = handler
-              matched_paths.append((folder, study_class))
-              break
-      if study_class is None:
-          unmatched_paths.append(folder)
-
-  if unmatched_paths:
-      logger.warning(f"The folders '{unmatched_paths}' are not recognized as a supported studies. Did you accidentally rename them? Please check the documentation for supported studies.")
-  if not matched_paths:
-      logger.error("No supported studies found in the data/raw folder. Exiting.")
-      exit()
+  logger.info(f"Looking for studies in  {in_path}")
+  logger.info(f"Output will be saved to {out_path}")
+  initialized_studies = list(dataset_initializer.initialize_datasets(in_path).values())
 
   # Process matched folders with progress indicators
-  logger.info(f"Start processing supported study folders:")
-  for i,(folder, study_class) in enumerate(matched_paths):
-      logger.info(f'\'{folder}\' using {study_class.__name__} class')
-  logger.info("")
-
+  logger.info(f"Start processing:")
+  
   num_steps_per_folder = 4
-  with tqdm(total=len(matched_paths)*num_steps_per_folder, desc=f"Processing studies", bar_format='Step {n_fmt}/{total_fmt} [{desc}]:|{bar}', unit="step", leave=False) as progress:
-    for folder, study_class in matched_paths:
-      tqdm.write(f"[{current_time()}] Processing {folder} ...")
-      output_folder = folder.split('.')[0]
-      study_output_path = os.path.join(out_path, output_folder)
-      if not os.path.exists(study_output_path):
-          os.makedirs(study_output_path)
-      
+  
+  with tqdm(total=len(initialized_studies)*num_steps_per_folder, desc=f"Processing studies", bar_format='Step {n_fmt}/{total_fmt} [{desc}]:|{bar}', unit="step", leave=False) as progress:
+    global_start_time = time()
+    for study in initialized_studies:
+      tqdm.write(f"[{current_time()}] {study.study_name} ...")
+    
       start_time = time()
-      study = study_class(study_path=os.path.join(in_path, folder))
-      process_folder(study, study_output_path, progress, load_subset=load_subset)
-      tqdm.write(f"[{current_time()}] {folder} completed in {time() - start_time:.2f} seconds.")
+      process_folder(study, out_path, progress, load_subset=load_subset, output_format=output_format, compressed=compressed)
+      tqdm.write(f"[{current_time()}] {study.study_name} completed in {time() - start_time:.2f} seconds.")
 
-    tqdm.write("Processing complete.")
+    tqdm.write(f"Processing completed in {time() - global_start_time:.2f} seconds.")
 
-def process_folder(study: StudyDataset, out_path_study, progress, load_subset):
+def process_folder(study: StudyDataset, out_path_study, progress, load_subset, output_format, compressed):
       """Processes the data for a given study by loading, extracting, and resampling bolus, basal, and glucose events.
 
         Args:
           study (object): An instance of a study class that contains methods to load and extract data.
           out_path_study (str): The output directory path where the processed data will be saved.
           progress (tqdm): A tqdm progress bar object to display the progress of the processing steps.
+          output_format (str): The format to save the output files ('csv' or 'parquet').
+          compressed (bool): Whether to compress the output files.
         
         Steps:
           1. Loads the study data.
-          2. Extracts bolus event history and saves it as a CSV file.
-          3. Extracts basal event history and saves it as a CSV file.
-          4. Extracts continuous glucose monitoring (CGM) history and saves it as a CSV file.
+          2. Extracts bolus event history and saves it as a file.
+          3. Extracts basal event history and saves it as a file.
+          4. Extracts continuous glucose monitoring (CGM) history and saves it as a file.
           Each step updates the progress bar and logs the current status.
         """
       progress.set_description_str(f"{study.__class__.__name__}: (Loading data)")
@@ -196,24 +145,35 @@ def process_folder(study: StudyDataset, out_path_study, progress, load_subset):
 
       #boluses
       progress.set_description_str(f"{study.__class__.__name__}: Extracting boluses")
-      study.save_bolus_event_history_to_file(out_path_study,True)
+      study.save_bolus_event_history_to_file(out_path_study, output_format, compressed=compressed)
       progress.update(1)
       tqdm.write(f"[{current_time()}] [x] Boluses extracted"); 
 
       #basals
       progress.set_description_str(f"{study.__class__.__name__}: Extracting basals")
-      study.save_basal_event_history_to_file(out_path_study, True)
+      study.save_basal_event_history_to_file(out_path_study, output_format, compressed=compressed)
       progress.update(1)
       tqdm.write(f"[{current_time()}] [x] Basal extracted"); 
 
       #cgm
       progress.set_description_str(f"{study.__class__.__name__}: Extracting glucose")
-      study.save_cgm_to_file(out_path_study, True)
+      study.save_cgm_to_file(out_path_study, output_format, compressed=compressed)
       progress.update(1); tqdm.write(f"[{current_time()}] [x] CGM extracted"); 
       
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Run data normalization on raw study data.")
   parser.add_argument('--test', action='store_true', help="Run the script in test mode using test data.")
+  parser.add_argument('--output-format', choices=['csv', 'parquet'], default='parquet', help="Specify the output file format (csv or parquet).")
+  parser.add_argument('--compressed', action='store_true', help="Enable compression for the output files.")
+  parser.add_argument('--input-dir', type=str, help="Specify a custom input directory. Defaults to 'data/raw'.")
+  parser.add_argument('--output-dir', type=str, help="Specify a custom output directory. Defaults to 'data/out'.")
   args = parser.parse_args()
-  main(load_subset=args.test)
+
+  logger.info(f"Using arguments:")
+  logger.info(f"  test={args.test}")
+  logger.info(f"  output_format={args.output_format}")
+  logger.info(f"  compressed={args.compressed}")
+  logger.info(f"  input_dir={args.input_dir}")
+  logger.info(f"  output_dir={args.output_dir}")
+  main(load_subset=args.test, output_format=args.output_format, compressed=args.compressed, input_dir=args.input_dir, output_dir=args.output_dir)
