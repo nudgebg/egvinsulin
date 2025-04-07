@@ -98,8 +98,8 @@ def main(load_subset=False):
 
   #run_time = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
   current_dir = os.getcwd()
-  in_path = os.path.join(current_dir, 'data/raw')
-  out_path = os.path.join(current_dir, 'data/out')
+  in_path = os.path.join(current_dir, 'data','raw')
+  out_path = os.path.join(current_dir, 'data','out')
 
   if load_subset:
      logger.warning(f"ATTENTION: --test was provided: Running in test mode using a subset of the data.")
