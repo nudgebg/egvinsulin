@@ -306,7 +306,7 @@ class StudyDataset:
             self.cgm_history = self._extract_cgm_history()
         return self.cgm_history
     
-    def save_cgm_to_file(self, out_path, output_format="csv", compressed=False):
+    def save_cgm_to_file(self, out_path, output_format, compressed=False):
         """
         Save the CGM history to a file in the specified format (CSV or Parquet).
 
@@ -355,7 +355,7 @@ class StudyDataset:
         else:
             raise ValueError("Invalid output format. Supported formats are 'csv' and 'parquet'.")
 
-    def save_bolus_event_history_to_file(self, out_path, output_format="csv", compressed=False):
+    def save_bolus_event_history_to_file(self, out_path, output_format, compressed=False):
         """
         Save the bolus event history to a file in the specified format (CSV or Parquet).
 
@@ -407,7 +407,7 @@ class StudyDataset:
         else:
             raise ValueError("Invalid output format. Supported formats are 'csv' and 'parquet'.")
 
-    def save_basal_event_history_to_file(self, out_path, output_format="csv", compressed=False):
+    def save_basal_event_history_to_file(self, out_path, output_format, compressed=False):
         """
         Save the basal event history to a file in the specified format (CSV or Parquet).
 
