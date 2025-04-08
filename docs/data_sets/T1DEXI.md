@@ -97,9 +97,11 @@ In summary, we treat the FAORRESS orphans as normal boluses and assign them to I
 
 ### Basal Rates
 For all patients, basal is reported in two duplicate ways:
-    - FATEST==BASAL INSULIN are basal deliveries, the FAORRES contains the total insulin (U)
-    - FATES==BASAL FLOW RATE: are basal rates and FAORRESS contains a delivery rate (U/hr)
-    - In both cases the FADUR is equal and contains the delivery duration
+
+- FATEST==BASAL INSULIN are basal deliveries, the FAORRES contains the total insulin (U)   
+- FATES==BASAL FLOW RATE: are basal rates and FAORRESS contains a delivery rate (U/hr)
+- In both cases the FADUR is equal and contains the delivery duration
+
 Deliveries are probably calculated from the flow rates. Since both contain redundant information, we only focus on the flow rates. 
 Some durations are too long and overlap with subsequent deliveries and therefore need to be recalcualted.  Using the flow rates does not require recalculation of the dose. 
 

@@ -47,8 +47,11 @@ The structure of T1DEXI and T1DEXIP are almost identical. However, the T1DExiP d
 The figure below shows that flow rates don't exceed large values and basal durations are maximum 24 hours.
 
 ### AID Labels
-- It looks like only the Tandem T:SLIM X2 with control IQ was really running in AID mode. In the figure we can see that only this pump shows significanly more than 100 events/day (as an arbitary cut-off between CSII and AID).
 ![](assets/t1dexip_daily_events_by_device.png)
+In the figure above we see there are we can see that only this pump shows significanly more than 100 events/day (as an arbitary cut-off between CSII and AID).In contrast to T1DEXi, we see many more pumps that show surprisingly little number of events for AID pumps. It looks like only the 760G and Tandem were actually running in AID mode which is confirmed by looking at the CDFs. 
+![](assets/t1dexip_bolus_amounts_AID_pumps.png)
+
+It is quite surprising that the 2 Omnipod users don't seem to be using AID mode and have a relatively flat basal of around 1U.
 
 ### Suspends
 - suspend events are all zero values, and no NaNs (no need to replace)
