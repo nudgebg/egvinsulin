@@ -39,6 +39,7 @@ These are csv files ("|" separator) and host many columns related to the Tandem 
 
 ### CGM
 There are three CGM files mentioned in the glossary:  
+
  - DCLP5DexcomClarityCGM (actual name **DexcomClarityCGM**.txt): CGM readings from Dexcom Clarity (G5) files -- Final table with duplicates removed
  - DCLP5OtherCGM (actual name: **OtherCGM.txt**): List of CGM readings from CGM file types for which loading processes have not been set up (e.g. Tandem CGM hourly report, or CGM tab from Diasend file saved as csv, etc)
  - Pump_CGMGlucoseValue (actual name: **DCLP5TandemCGMDATAGXB_b**): CGM glucose value recorded on the pump
@@ -63,6 +64,7 @@ There are three CGM files mentioned in the glossary:
  
 ## DCLP5 vs. 3 (Datafiles)
 This is an overview of file names and glossary discreptancies within and between DCLP3 and 5. Test that ~~crossed through~~ are names were incorrect.
+
 || DCLP3| DCLP5|
 | - | - | - |
 | Clarity | **DexcomClarityCGM**<br>M readings from Dexcom Clarity files| **DCLP5DexcomClarityCGM**<br>CGM readings from Dexcom Clarity (G5) files -- Final table with duplicates removed|
@@ -115,6 +117,7 @@ There is no need to filter patient data as all patients have complete data.
 In Flair and PEDAP datetime strings were reported in inconsistent time formats: time components were missing at midnights which required special handling.
 
 We see that:
+
  - there are no missing datetimes
  - As in Flair, datetimes sometimes miss the time component, even if it is only a few instances
  - The date formats are different from DCLP3 and PEDAP 

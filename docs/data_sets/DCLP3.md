@@ -9,7 +9,7 @@ The full analysis of this dataset is provided in: `notebooks/understand-dclp3-da
 - **Study Devices:** t:slim X2 with Control-IQ and Dexcom G6 system
 - **Study Population:** Teens and adults with type 1 diabetes ages 14 and older
 - **Total Data:** There are roughly 19,700 days of data from 112 participants
-
+- **Study Design**: Parallel study with two groups. 2:1 randomization to closed loop control (2) and sensor augmented pump therpy (1).
 ## Data
 From the DataGlossary.rtf file, the following relevant files were identified which are stored in the **Data Tables** subfolder. These are text files ("|" separator) and host many columns related to the Tandem pump events and the Dexcom CGM Data. The glossary provides information about each column. Below are the relevant columns contained in each text file.
 

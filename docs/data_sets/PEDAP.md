@@ -49,7 +49,7 @@ These are csv files ("|" separator) and host many columns related to the Tandem 
 
 - some mismatching counts for boluses (some nan values?) --> inspect
 
-## Datetime Handline 
+## Datetime Handling
 As in `Flair`, the reported datetime strings miss the time component at midnight. Therefore, automatic parsing is slow. We therefore split the dataset in those with and without datetime strings and then parse the datetimestrings using two different datetime prototypes:
 
 ```python
@@ -88,3 +88,16 @@ In summary extracting bolus events is an easy task:
 From the data glossary it was not clear if basal rate events only represent changes from the standard basal rate or changes to the basal rate. To verify, we took a look at the structually very similar `DCLP3` dataset which also comes with a `InsulinPumpSettings_a` file that contians the standard basal rates. We then checked if the PumpBasalRateChange events are reported when standard basal rate change. Visually we could confirm that basal rate changes are reported when standard basal rate changes (overlapping darker scatter points).
 
 In summary, `PEDAPTandemBASALRATECHG.txt` should contain all basal rate change events.
+
+
+### CGM Special Values
+From the data glossary we know that 0 cgm values are either below or above range based on the `HighLowIndicator`:
+>0 = CGMValue contains the glucose reading  
+>1 = The glucose reading is high~ CGMValue set to 0  
+>2 = The glucose reading is low~ CGMValue set to 0
+
+We decided that replacing CGM value with the respective measurement range boundary makes most sense for now but other ways to extrapolate, or introduce special flags, could be employed later on.
+
+```python
+df_cgm.loc[i_zero, 'cgm'] = df_cgm.HighLowIndicator.loc[i_zero].replace({ 2: 40, 1: 400 })
+```
