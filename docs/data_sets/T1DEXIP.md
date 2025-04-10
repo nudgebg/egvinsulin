@@ -34,12 +34,13 @@ euglycemia during and after exercise in youth with type 1 diabetes
 
 The structure of T1DEXI and T1DEXIP are almost identical. However, the T1DExiP dataset appears slightly cleaner than the T1DExi dataset: Here are some of the differences:
 
- ### Basal Flow rates
- - MDI has no flow rates
- - No NaN FAORRES or NaN duraitons: no need to fill with zeros
- - basal flow rates and basal deliveries are almost identical but overall deviate a little more (70 Units overall)
+### Basal Flow rates
+
+- MDI has no flow rates
+- No NaN deliveries (FAORRES) or NaN durations: no need to fill with zeros
+- Basal flow rates and basal deliveries are almost identical but overall deviate a little more (negligible)
 - There are no extreme basal durations (all below 24h) and no resulting extreme basal flow rates
- - These are likely true Basal rates that are set for a whole day 
+- These are likely true Basal rates that are set for a whole day 
 
 ![](assets/t1dexip_basal_max_rates.png)
 ![](assets/t1dexip_basal_max_durations.png)
@@ -48,10 +49,9 @@ The figure below shows that flow rates don't exceed large values and basal durat
 
 ### AID Labels
 ![](assets/t1dexip_daily_events_by_device.png)
-In the figure above we see there are we can see that only this pump shows significanly more than 100 events/day (as an arbitary cut-off between CSII and AID).In contrast to T1DEXi, we see many more pumps that show surprisingly little number of events for AID pumps. It looks like only the 760G and Tandem were actually running in AID mode which is confirmed by looking at the CDFs. 
-![](assets/t1dexip_bolus_amounts_AID_pumps.png)
+In the figure above we see that only a single pump shows significanly more than 100 events/day (as an arbitary cut-off between CSII and AID). In contrast to T1DEXi, we see many more pumps that show surprisingly little number of events for AID pumps. It is quite surprising that the 2 Omnipod users don't seem to be using AID mode and have a relatively flat basal of around 1U.
 
-It is quite surprising that the 2 Omnipod users don't seem to be using AID mode and have a relatively flat basal of around 1U.
+![](assets/t1dexip_bolus_amounts_AID_pumps.png)
 
 ### Suspends
 - suspend events are all zero values, and no NaNs (no need to replace)

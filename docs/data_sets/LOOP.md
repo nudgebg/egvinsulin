@@ -52,7 +52,8 @@ The following lists all relevant columns. Other columns were considered irreleva
 | SuprDuration | Suppressed duration |Unclear|
 | SuprRate | Suppressed rate | Unclear|
 
-Example (first row):  
+Example (first row):   
+
 | PtID   | UTCDtTm| **BasalType** | Duration | ExpectedDuration | Percnt | Rate  | **SuprBasalType** | SuprDuration | SuprRate | TmZnOffset | 
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1082 | 2018-05-29 10:02:56| **temp**| 244000   ||| 1.475 | **scheduled**|| 1.600|| 
@@ -94,14 +95,17 @@ We asked JAEB:
  - [1]:DeviceDtTm and TmZnOffset are only available for a fraction of patients. Therefore, we rely on UTCDtTm and patient roster PtTimezoneOffset to obtain local time. 
  - [2]: Loop has no extended boluses, check what this is
 
-Note: After the analysis we found out that the information about the source can be derived from the LoopDeviceUploads.txt. However, this was not done at the time of analysis and is a left-open todo.
+Note: After the analysis we found out that LoopDeviceUploads.txt also provides time zone information. However, this relates to the upload location and it is not clear if this actually reflects the patient location and was therefore dismissed as a viable option.
 
 ### Todos:  
-Boluses:  
+Boluses:    
+
  - Need to check if the Normal portion is the actual delivered by comparing the values (<= in all cases would prove this to be true).
  - Check if there are extended boluses
  - Can we determine the delivery duration (ms or minutes) based on the data source?
-Basals:
+
+Basals:  
+
  - Need to double check if the Suppressed values are already factored in and if standard basal rates are reported as well.
  - Check potential values for columns like basal type (value-counts)
 
@@ -198,17 +202,18 @@ We found that sometimes boluses are drastically different. We don't know why tha
 ### Dual wave Boluses
 We know there are some dual wave and extended boluses. Since Loop does not support these natively, these were likey initiated by the user from the pump or during open loop mode.
 
-0.43% of boluses are extended
-In 100.0% of all rows, it is either extended and duration are filled or neither
+ - 0.43% of boluses are extended
+ - These always have a duration
+
 #### Bolus Duration
-From the glossary we know that the duration is either in ms or minutes.  However, it appears that only milliseconds are present. 
+From the glossary we know that the duration is either in ms or minutes.
 
 ![](assets/loop-bolus-duration-hours.png)
 
 However, it does not look like the data would be split in ms and minutes (there is no skewed peak around 0). 
+**Todo: Double check if there are imports from Diasend.**
 
 We know that duration values refer to the extended bolus duration. Therefore these rows need to be split in an immediate and an extended part. This is different to other datasets where we had to merge rows or subtract delivery durations to obtain delivery start and delivery durations.
-
 
 #### Requested vs. Delivered
 There seem to be only delivered events, no requested.
@@ -218,8 +223,6 @@ There seem to be only delivered events, no requested.
 * There are some duplicated (in time) Boluses ~3% 
 * These boluses are mostly equal but in rare cases significantly different (reason unclear)
 * Extended boluses exist and should be separted, it appears that Duration is always given in milliseconds
-
-
 
 
 ## Basal Rates
@@ -284,5 +287,6 @@ However, what we found is that our calculated TDDs are much higher than those pr
  - Why do we see bolus duplicates shifted by one hour?
 
 ## Open Todos
- - As menttioned above: During the time of the analysis, we weren't aware that the LoopDeviceUploads.txt continas information about the data source (Tidepool vs. Diasend) which should be used to treat extended bolus durations as ms (Tidepool) or minutes (Diasend). This is a left-open item.
 
+ - Double check if there are imports from Diasend.
+ - Clarify if basal rates remain active or if we should trust the duration (in other datasets durations can not be trusted as it seems to be retrospecively calculated).

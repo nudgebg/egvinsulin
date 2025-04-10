@@ -21,7 +21,7 @@ From the ReadMe.rtf file, the following relevant files were identified which are
 
 | File Name| Description| Note|
 |------|-----|-----|
-| HDeviceCGM,.txt| One record per CGM reading | Similar to what we've seen in Loop (Tidepool structure) |
+| HDeviceCGM.txt| One record per CGM reading | Similar to what we've seen in Loop (Tidepool structure) |
 | HDeviceBasal.txt| | Not included in the JAEB file anymore. Similar to what we've seen in Loop (Tidepool structure)|
 | HDeviceBolus.txt| One record per bolus reading from a pump | Similar to what we've seen in Loop (Tidepool structure)|
 | HPtRoster.txt|One record per Protocol H PtID obtained |  |
@@ -75,7 +75,8 @@ Note: As in the Loop study dataset, we assume that the Bolus columns: ExpectedNo
 
 #### Summary
 The tables mostly follow the Tidepool structure which we know from previous tudies (e.g. Loop) 
-Differences:
+Differences:  
+
 - Timestamps are given relative (day and HH:MM:SS) to enrollment start (which is not provided)
 - Insulin and InsValue columns exist, however always empty
 - CGM values in mgdl not mmol/dL
@@ -86,17 +87,7 @@ Differences:
  1. Check if Dexcom times exist and if they are needed
  2. Check if duration is in milliseconds (Bolus)
 
-
-## General Observation (first Glance)
- - ...
- - ...
-
-## Data Integrity
-
-### Missing Data
-    - Check for null values across columns.
-
-### Incomplete Patients
+## Incomplete Patients
 There are 226 unique patients in the patient roster
 There are 224 unique patients in the bolus table
 There are 208 unique patients in the basal table
@@ -166,6 +157,7 @@ A few examples (same time and rate). Split by which combination of basal types e
 ![](assets/replacebg_basal_dups_time_duration_by_basal_types.png)
 
 When there are temporal duplicates in time and duration we could make the following assuptions:
+
  1. (scheduled or temp) and suspends: prioritize the suspend, set Rate to 0 (using fillna)
  2. scheduled and temp: prioritize temp row
  3. only scheduled: use the maximum value
@@ -176,6 +168,7 @@ Duplicates with different durations cause more confusion. Many duplicate sets co
 
 
 While the above approaches might seem plausible, we can't really say that it is correct because
+
  1. We don't know why there are duplicates
  2. We don't know if we can judge the right row by the duration
  3. We don't know if a suspend really overpowers a scheduled event
@@ -187,6 +180,7 @@ Other approaches might be even better such as using the import date etc. However
 
 ### Basal Durations 
 We observed many very large basal durations. 
+
  - Often, long durations have a zero basal rate
  - Mostly the durations match the data gap of 1 or more days until next basal rate
  - However, some overlap with the next datetime

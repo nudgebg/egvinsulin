@@ -47,6 +47,7 @@ The files are in .xpt format (SAS Transport) files which are often used in clini
 Device Exposure: DX domain contains records for participant indicated insulin modality selected at screening, and additional **information about the pump or closed loop system in use at baseline** if one of these modalities were indicated by participant.
 
 Relevant columns:
+
 - DXTRT = Device, USUBJID (patient id)
 - The file contains two rows per patient: One with DXTRT being the pump name or *MULTIPLE DAILY INJECTIONS* and another one with the generic treatment type (INSULIN PUMP, CLOSED LOOP INSULIN PUMP, or MULTIPLE DAILY INJECTIONS). There is some question about whether the generic types are correct for all patients.
 
@@ -68,7 +69,8 @@ Background: FACM structure: **FATEST** variables typically refer to Findings Tes
 | `INSNMBOL`       | Normal bolus part.|  Often missing, especially for basal values. `FAORRES` needs to be used when this is missing. |
 | `INSEXBOL`       | Extended bolus part. | When this value is not empty, it is associated with a `FADUR` value. |
 
-Notes on other Columns
+Notes on other Columns:
+
 | **Column Name** | **Description** | **Notes** |
 |------------------|-----------------|-----------|
 | `FACAT`          | Insulin Category | Distinguishes between *BASAL* and *BOLUS* deliveries. Not needed, as it is consistent with `FATEST`. |
@@ -118,15 +120,17 @@ We did a quick check to see if Basal and Pump deliveries are in fact different i
 ![](assets/t1dexi_mdi_vs_pump_bolus_doses.png)
 Bolus and Basal doses in MDI are of much larger value indicating injections which confirms that the data is consistent and flow rates can be discarded.
 
-However, we found that in MULTIPLE DAILY INJECTIONS
+However, we found that in MULTIPLE DAILY INJECTIONS  
+
  - BASAL INSULIN have NaN duration (probably because nobody wanted to make an assumption about the duration of insulin action)
  - All BASAL FLOW RATE are NaN valued (the basal injection couldn;t be converted to a flow rate due to missing duration)
  - All these flow rates (16% of the MDI data) are compltely NaN valued
 
 The time between injections could be taken as insulin action times.
-![](assets/t1dexi_mdi_basal_durations.png)]
+![](assets/t1dexi_mdi_basal_durations.png)
 
 As we can see there are several groups:
+
  1. around 0 hours (could be priming doses)
  2. <102h (half day insulin like levimir)
  3. around 24h (1 time injections like glargine)
@@ -150,6 +154,7 @@ We also see some patients (1149, 1386, 255,475,987) that have the same MDI basal
 
 
 **What we found**:  
+
  - ~0.1 % duplicates
     - dominated by a handful of patients
  - Only basal duplicates (2 bolus exceptions) 
@@ -160,14 +165,14 @@ We also see some patients (1149, 1386, 255,475,987) that have the same MDI basal
     - Dose: The BASAL deliveries then also have a wrong entry with a zero FAORRES (amount) value (cant divide by zero)
 
 How to deal with duplicates?
-    - Only two bolsues, ignore.
-    - Keep those with maximum duration. 
 
+    - For Boluses: Therea are only 2 duplicates, ignore.
+    - For Basals: Keep those with maximum duration. 
 
- #### Basal Overlaps
- An overlap occurs when the `FADTC` of one basal insulin entry falls within the time range (`FADTC` to `End_Time`) of another basal insulin entry. NetIOB Script [4] corrects these overlaps.
+#### Basal Overlaps
+An overlap occurs when the `FADTC` of one basal insulin entry falls within the time range (`FADTC` to `End_Time`) of another basal insulin entry. NetIOB Script [4] corrects these overlaps.
  
- What we found:
+What we found:
 
 - Basal overlaps happen extremely rarely. 
 - Why that is we don't know.
@@ -201,7 +206,8 @@ These findings were not surprising and consistent with what we know about the sy
 #### Missing Durations?
 In the net iob scripts, the 770G Basal (FACAT == Basal) duration (FADUR) was calculated manually as if it is missing.
 
-**What we found is**  
+**What we found is**:
+
 - All durations, except for MDI have durations. 
 - Durations, don't need to be calculated manually.
 - MDI durations need to be dropped.
@@ -214,6 +220,7 @@ Example from the NetIOB Script [4] (here code from the cunking method) showing d
 **770G basal:** ```(main_df['FATEST'] == 'BASAL INSULIN')```
 
 **What we found is:**  
+
 - 770g has no insulin subtype
     - mostly boluses (does the AID system modulate it differently?)
     - Even 770g without "IN AUTO MODE" suffix (also in AID)?
@@ -254,14 +261,16 @@ We found that the number of suspends varies quite a bit between pumps. Even for 
 We took a look at how the suspend events look in context by plotting the surrounding data (the red markers indicate suspend events).
 ![](assets/t1dexi_suspend_example.png)
 
-What we found:
+What we found:   
+
 - percentage of suspends is drastically different
     - highest in Tandem "with Basal IQ"
 - insulin type suspend only exists for deliveries, but not in the flow rates.
     - However, suspends are also reflected in the flow rates.
 - suspend FAORRESS values are are NaN or 0
 
-How to work with Suspends:  
+**How to work with Suspends:**    
+
 1. Don't need to be manually calculated
 2. NaN values need to be replaced with zeros
 
@@ -273,7 +282,8 @@ The NetIOB Script [4] removes some patient and date combinations. We investigate
 ![](assets/t1dexi_tdd_per_patient.png)
 
 
-What we found:
+What we found:  
+
 - The selected dates show a lot of gaps (either no basal or only limited basal, some have a few boluses)
 - Some of the patients stand out with very little data and very high TDDs
 - The high TDDs, could be traced to extremely high delivery durations (DAFUR > 1 day) 
@@ -286,7 +296,8 @@ What we found:
 However, other dates and patients show similar trends
     - We believe these dates and patients were surprise findings and there is no general rule to apply here
 
-**Conclusion**  
+**Conclusion** 
+
  - There is no general trend that would support removing these patients or dates, they seem to be surprise findings
  - The number of days or datapoints/patient could be a better criterion to exclude patients
  - Extremely long durations might need to be removed
@@ -294,12 +305,14 @@ However, other dates and patients show similar trends
 
 ### Glucose Data
 LB.xpt is a very simple dataframe:  
-It contains CGM and Hba1c without any nan values.
+- It contains CGM and Hba1c without any NaN values
 - Glucose is in local time
 - All in mg/dl
 - No nan values 
 - Hb1A1c must be dropped: `lb = lb.loc[lb.LBCAT=='CGM']`
 - Only a couple temporal duplicates which are dropped (using first) as they correlate perfectly
+- 0.15 % of the values are below 41
+- 0.22 % of the values are above 400
 
 ### Summary
 #### Glucose

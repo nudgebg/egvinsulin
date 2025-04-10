@@ -15,7 +15,8 @@ with a PID algorithm enhanced with a Fuzzy Logic algorithm.
 Fuzzy Logic) pump with the Guardian Sensor (3) continuous glucose
 monitoring sensor.
 
-## Data Description:
+## Data Description
+
 The study data folder is named **FLAIRPublicDataSet**
 From the DataGlossary.rtf file, the following relevant files were identified which are stored in the **Data Tables** subfolder.
 
@@ -47,10 +48,11 @@ These are csv files ("|" separator) and host many columns related to the Medtron
 * **TempBasalDur**: Temp basal duration (h:mm:ss) - The length of time for the temporary basal insulin delivery
 * **Suspend**: State "Suspend" when the pump is suspended and "Resumed" when the pump is resumed 
 
-# Analysis of the Data
+## Analysis of the Data
 The study data was analyzed to understand which data is relevant, and how it must be manipulated and interpreted in order to obtain the true delivered insulin amounts. The results are mostly based on the analysis in the jupyter notebook `understand-flair-dataset.ipynb`. Later, a second notebook was added: `understand-flair-dataset/2024-08-12 - Modularize-Flair.ipynb` that added details to TDDs and closed loop modes focusing on improving the match between reported and calcualted TDDs.
 
-**Leading Questions**: 
+**Leading Questions**:  
+
 * Do we need to track DataDtTm_adjusted or can we rely on DataDtTm?
 * How often do NewDeviceDtTm** events happen and do we need to account for these or is DataDtTm sufficient?
 * How often do BasalRtUnKnown** events happen and how should we handle these?
@@ -75,7 +77,8 @@ The study data was analyzed to understand which data is relevant, and how it mus
 
 ## Basal Rates
 ### Basal Rate Duplicates
-We found that temporal basal duplicates
+We found temporal basal duplicates:  
+
  - in many cases have equal rate
  - About 1/3 differ by 0.005 (rounded?, similar as we found in bolus duplicates)
  - The rest differ by more 
@@ -181,7 +184,7 @@ Suspend Before / At Low will suspend basal and cancel an extended bolus.
  * One way to check this would be to identify boluses that overlap with a suspend event.
 
 
-# Boluses:
+## Boluses:
 * **Normal bolus**: provides a single immediate dose of insulin.
 * **Square Wave bolus**: delivers a single bolus evenly over an extended period of time from 30 minutes up to 8 hours.
 * **Dual Wave bolus**: delivers a combination of an immediate normal bolus followed by a Square Wave bolus.
@@ -208,7 +211,8 @@ In `notebooks/understand-flair-dataset/2024-07-12 - Understanding TDD Discrepanc
 
 During this analysis we forgot to deal with temporal duplicates (only equal datetime). This analysis was added March 19th 2025 to the main notebook. 
 
-What we found: 
+What we found:  
+
 - ~9.2% bolus *rows* are duplicates
 - half of these have equal amounts (as we've seen before)
   - mostly ebcause the BolusSource differs (e.g. CL_ vs. CLOSED_LOOP, or NaN)
