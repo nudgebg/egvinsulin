@@ -171,10 +171,34 @@ def drawMovingAverage(ax, df, datetime_col, value_col, aggregator='mean', **kwar
 
     args =  {'color':'darkgray', 'marker':'o', 's':10, 'label': f'MA of {value_col}'}
     args.update(kwargs)
-    #if not ax:
-    #    f,ax = create_axis()
     ax.scatter(ma['hod'], ma[value_col], **args)
     ax.set_xlabel('Hour of Day')
     ax.set_xticks(np.arange(0,24,4))
     ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x):02d}:00'))
     ax.legend()
+
+
+def draw_presence_matrix(ax, df, x_col, y_col, offset=0, **kwargs):
+    """
+    Scatter plots unique available x_values for y_col groups in a DataFrame.
+    Args:
+        ax (matplotlib.axes.Axes): The matplotlib Axes object to plot on. 
+        df (pd.DataFrame): The input DataFrame containing the data to plot.
+        x_col (str): The column name in the DataFrame representing the x-axis values (e.g., datetime).
+        y_col (str): The column name in the DataFrame representing the y-axis values used for grouping (e.g., patient IDs).
+        offset (int, optional): An offset to apply to the y-axis values. Defaults to 0.
+        **kwargs: Additional keyword arguments to pass to the `ax.scatter` method.
+    Returns:
+        None
+    """
+    
+    availability = df.groupby([y_col])[x_col].unique().reset_index().explode(x_col)
+
+    # Plot with scatter
+    args = {'color': 'blue', 's': 1}
+    args.update(kwargs)
+    ax.scatter(availability[x_col], availability[y_col] + offset, **args)
+    
+    #add y ticks for all values
+    y_tick_positions = availability[y_col].unique().astype('float')
+    ax.set_yticks(y_tick_positions)
