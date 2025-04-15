@@ -11,5 +11,6 @@ Gaps in data are typically not reported. While we consider basal rates as active
 ## Patient ids are strings
 Sometimes confusion occurs when the patient ID is compared to an integer because we use strings to be compatible with data sources whose patient IDs are not numerical. It is important to ensure that patient IDs are always treated as strings to avoid any potential issues with data compatibility and integrity.
 
-
+## Patient ids are maintained 
+We don't change the original patient ID (even if they are non-numerical). Therefore, there is no guarantee that patient IDs are monotonically increasing from 1.
 

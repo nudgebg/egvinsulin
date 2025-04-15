@@ -17,6 +17,9 @@ This is the [official project documentation](https://nudgebg.github.io/egvinsuli
 
 ## Supported Studies
 
+![](assets/data_days_per_study.png)
+Figure: Days worth of **complete** data including cgm, basal and bolus data for supported studies. Overall, we have approximately normalized and extracted half a million days of data.
+
 The goal is to work with as many clinical diabetes trial datasets as possible. At the moment, the following datasets from the diabetes [JAEB database](https://public.jaeb.org/datasets/diabetes) are supported. 
 
 For each of these studies, we've spent hundreds of hours analyzing the data to ensure that the class correctly loads and extracts the data. Please refer to the study analysis pages for a summary of the analysis and findings that went into each dataset. While we operated with great care, some asumptions had to be made and other details remain unknown which are also documented.
