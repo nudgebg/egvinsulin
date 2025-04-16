@@ -108,15 +108,19 @@ def main(load_subset=False, output_format="parquet", compressed=False, input_dir
   # Process matched folders with progress indicators
   logger.info(f"Start processing:")
   
-  num_steps_per_folder = 4
   
-  with tqdm(total=len(initialized_studies)*num_steps_per_folder, desc=f"Processing studies", bar_format='Step {n_fmt}/{total_fmt} [{desc}]:|{bar}', unit="step", leave=False) as progress:
+  with tqdm(total=len(initialized_studies), desc=f"Processing studies", bar_format='Study {n_fmt}/{total_fmt} [{desc}]:|{bar}', unit="studies", leave=False) as progress:
     global_start_time = time()
     for study in initialized_studies:
       tqdm.write(f"[{current_time()}] {study.study_name} ...")
-    
+      
       start_time = time()
-      process_folder(study, out_path, progress, load_subset=load_subset, output_format=output_format, compressed=compressed)
+      try:
+         process_folder(study, out_path, progress, load_subset=load_subset, output_format=output_format, compressed=compressed)
+      except Exception as e:
+          tqdm.write(f"[{current_time()}] Error processing {study.study_name}: {e}")
+          logger.error(f"Error processing {study.study_name}: {e}")
+      progress.update(1)
       tqdm.write(f"[{current_time()}] {study.study_name} completed in {time() - start_time:.2f} seconds.")
 
     tqdm.write(f"Processing completed in {time() - global_start_time:.2f} seconds.")
@@ -140,25 +144,22 @@ def process_folder(study: StudyDataset, out_path_study, progress, load_subset, o
         """
       progress.set_description_str(f"{study.__class__.__name__}: (Loading data)")
       study.load_data(subset=load_subset)
-      progress.update(1)
       tqdm.write(f"[{current_time()}] [x] Data loaded"); 
 
       #boluses
       progress.set_description_str(f"{study.__class__.__name__}: Extracting boluses")
       study.save_bolus_event_history_to_file(out_path_study, output_format, compressed=compressed)
-      progress.update(1)
       tqdm.write(f"[{current_time()}] [x] Boluses extracted"); 
 
       #basals
       progress.set_description_str(f"{study.__class__.__name__}: Extracting basals")
       study.save_basal_event_history_to_file(out_path_study, output_format, compressed=compressed)
-      progress.update(1)
       tqdm.write(f"[{current_time()}] [x] Basal extracted"); 
 
       #cgm
       progress.set_description_str(f"{study.__class__.__name__}: Extracting glucose")
       study.save_cgm_to_file(out_path_study, output_format, compressed=compressed)
-      progress.update(1); tqdm.write(f"[{current_time()}] [x] CGM extracted"); 
+      tqdm.write(f"[{current_time()}] [x] CGM extracted"); 
       
 
 if __name__ == "__main__":
