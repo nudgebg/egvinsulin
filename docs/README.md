@@ -13,7 +13,7 @@ To add to this, public available data is not stored with consistent methods or f
 ### Last Mile Problem
 Babelbetes addresses this “last mile” problem by developing a publicly available set of tools to normalize clinical diabetes trial datasets, focusing on continuous glucose monitoring and insulin pump delivery. Babelbetes also provides recommendations on a normalized data set format to ensure future activities provide shovel-ready data for researchers and developers.
 
-This is the [official project documentation](https://nudgebg.github.io/egvinsulin)
+This is the [official project documentation](https://nudgebg.github.io/babelbetes)
 
 ## Supported Studies
 
@@ -80,7 +80,7 @@ Here, we explain how to install the toolbox and how to use the `run_functions.py
 ### Installation
 1. **Clone the repository:**
     ```sh
-    git clone git@github.com:nudgebg/egvinsulin.git
+    git clone git@github.com:nudgebg/babelbetes.git
     ```
 2. Install all dependencies
 * In your terminal, navigate to the repository
@@ -96,7 +96,7 @@ pip install -r requirements.txt
  2. Move the files inside the `data/raw` directory. Zipped files can either be used directly or extracted. Do not rename the file/folder names, otherwise the `run_functions.py` won't know how to process them.
  3. Depending on which studies you downloaded and whether you have extracted zip files, the folder structure should look something like this:
 ```
-    egvinsulin/
+    babelbetes/
     ├── data/
     │   └── raw/
     │       └── FLAIRPublicDataSet

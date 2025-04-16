@@ -19,7 +19,7 @@ Before you start implementing, we advice your to
 
 If you encounter problems, bugs, or see ways to improve the toolbox, we are there to help. We use github to maintain an overview of open todos, bugs and next steps. Therefore, we encourage you to:  
 
- - Open github ([issues](https://github.com/nudgebg/egvinsulin/issues) or start a [discussion](https://github.com/nudgebg/egvinsulin/discussions))
+ - Open github ([issues](https://github.com/nudgebg/babelbetes/issues) or start a [discussion](https://github.com/nudgebg/babelbetes/discussions))
  - Create pull requests (PR) to suggest changes
  - Become an active github collaborator (reach out to us directly)
 
@@ -45,8 +45,8 @@ Our findings highlight the complexities of working with different study datasets
 
 For problems with the toolbox, please **first** consult the github issues and discussions pages:   
 
- 1. Create github ([issues](https://github.com/nudgebg/egvinsulin/issues) for bugs, suggestions
- 2. Start github [discussion](https://github.com/nudgebg/egvinsulin/discussions)) for feedback, questions etc.
+ 1. Create github ([issues](https://github.com/nudgebg/babelbetes/issues) for bugs, suggestions
+ 2. Start github [discussion](https://github.com/nudgebg/babelbetes/discussions)) for feedback, questions etc.
 
 For further questions or discussions, feel free to reach out to us at [info@nudgebg.com](mailto:info@nudgebg.com).
 
