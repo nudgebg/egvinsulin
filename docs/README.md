@@ -31,10 +31,10 @@ For each of these studies, we've spent hundreds of hours analyzing the data to e
 |[DCLP5](./data_sets/DCLP5.md)|[JAEB](https://public.jaeb.org/dataset/535)|April 17th, 2024|DCLP5_Dataset_2022-01-20-5e0f3b16-c890-4ace-9e3b-531f3687cf53|-|
 |[IOBP2](./data_sets/IOBP2.md)|[JAEB](https://public.jaeb.org/dataset/579)|April 17th, 2024|IOBP2 RCT Public Dataset|-|
 |[PEDAP](./data_sets/PEDAP.md)|[JAEB](https://public.jaeb.org/dataset/599)|September, 26th, 2024|PEDAP Public Dataset - Release 3 - 2024-09-25|Our investigation resulted in this updated version with corrected patient ids.|
-|[T1DEXI](./data_sets/T1DEXI.md)|[JAEB](https://public.jaeb.org/dataset/589)|October 1st, 2022|T1DEXI|Currently, the toolbox requires all datatables to be extracted and be placed in the T1DEXI folder|
-|[T1DEXIP](./data_sets/T1DEXIP.md)|[JAEB](https://public.jaeb.org/dataset/590)|March 16th, 2023|T1DEXIP|Currently, the toolbox requires all datatables to be extracted and be placed in the the T1DEXIP folder|
+|[T1DEXI](./data_sets/T1DEXI.md)|[JAEB](https://public.jaeb.org/dataset/589)|October 1st, 2022|T1DEXI||
+|[T1DEXIP](./data_sets/T1DEXIP.md)|[JAEB](https://public.jaeb.org/dataset/590)|March 16th, 2023|T1DEXIP||
 |[REPLACE BG](./data_sets/REPLACE_BG.md)|[JAEB](https://public.jaeb.org/dataset/546)|February 2nd, 2025|REPLACE-BG Dataset-79f6bdc8-3c51-4736-a39f-c4c0f71d45e5|The currently hosted version misses the Basal file.|
-|[Loop](./data_sets/LOOP.md)|[JAEB](https://public.jaeb.org/dataset/560)|September 2nd, 2024|Loop study public dataset 2023-01-31|-|
+|[Loop](./data_sets/LOOP.md)|[JAEB](https://public.jaeb.org/dataset/560)|September 2nd, 2024|Loop study public dataset 2023-01-31|Due to the extensive file sizes, convert the csv files to a parquet format to allow parallel processing of the results and avoid out of memory problems.|
 
 \* We have only tested our code on the respective versions. Therefore, the folder names are currently hard-coded and should match with the names above
 
@@ -93,16 +93,16 @@ pip install -r requirements.txt
 
 ### Prepare the raw data
  1. Download the study data zip files from [jaeb.org](https://public.jaeb.org/datasets/diabetes) (see [supported studies](#supported-studies)).
- 2. Move the files inside the `data/raw` directory. Zipped files can either be used directly or extracted. Do not rename the file/folder names, otherwise the `run_functions.py` won't know how to process them.
- 3. Depending on which studies you downloaded and whether you have extracted zip files, the folder structure should look something like this:
+ 2. Move the files inside the `data/raw` directory. Zipped files can either be used directly or unzipped. Do not rename the file/folder names, otherwise the `run_functions.py` won't know how to process them.
+ 3. Depending on which studies you downloaded and whether you have .zip archives (or unzipped folders), the folder structure should look like this:
 ```
     babelbetes/
     ├── data/
     │   └── raw/
-    │       └── FLAIRPublicDataSet
+    │       └── FLAIRPublicDataSet.zip
     │       └── DCLP3 Public Dataset - Release 3 - 2022-08-04
     │       └── IOBP2 RCT Public Dataset
-    │       └── T1DEXI - DATA FOR UPLOAD.zip
+    │       └── T1DEXI - DATA FOR UPLOAD
     │       └── T1DEXIP - DATA FOR UPLOAD.zip
     └── run_functions.py
 ```
@@ -151,7 +151,7 @@ These are approximate execution times
 
 
 ## Troubleshooting
-- Ensure the raw data folders are named correctly to match the patterns in the script. You shouldn't need to rename the folders after you extracted the study datasets from jaeb.
+- Ensure the raw data folders are named correctly to match the patterns in the script. You shouldn't need to rename the folders or zip archivesafter you downloaded the datasets.
 - Check the console output for any warning or error messages.
 
 
