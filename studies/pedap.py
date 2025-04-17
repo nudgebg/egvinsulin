@@ -6,21 +6,21 @@ from studies.studydataset import StudyDataset
 import os
 import pandas as pd
 from src.date_helper import parse_flair_dates
-from src.pandas_helper import get_df
+from src import pandas_helper as ph
 
 
 class PEDAP(StudyDataset):
     def _load_data(self, subset):
         data_table_path = os.path.join(self.study_path, 'Data Files')
 
-        df_bolus = get_df(os.path.join(data_table_path, 'PEDAPTandemBolusDelivered.txt'), usecols=['PtID', 'DeviceDtTm',
+        df_bolus = ph.get_df(os.path.join(data_table_path, 'PEDAPTandemBolusDelivered.txt'), usecols=['PtID', 'DeviceDtTm',
                                                                                                    'BolusAmount',
                                                                                                    'Duration'],
                           subset=subset)
-        df_basal = get_df(os.path.join(data_table_path, 'PEDAPTandemBASALRATECHG.txt'), usecols=['PtID', 'DeviceDtTm',
+        df_basal = ph.get_df(os.path.join(data_table_path, 'PEDAPTandemBASALDELIVERY.txt'), usecols=['PtID', 'DeviceDtTm',
                                                                                                  'BasalRate'],
                           subset=subset)
-        df_cgm = get_df(os.path.join(data_table_path, 'PEDAPTandemCGMDATAGXB.txt'), usecols=['PtID', 'DeviceDtTm',
+        df_cgm = ph.get_df(os.path.join(data_table_path, 'PEDAPTandemCGMDATAGXB.txt'), usecols=['PtID', 'DeviceDtTm',
                                                                                              'CGMValue','HighLowIndicator'],
                           subset=subset)
         
@@ -32,13 +32,6 @@ class PEDAP(StudyDataset):
         #remove missing DeviceDtTm for the bolus dataset (there are 4 entries)
         df_bolus = df_bolus.dropna(subset=['DeviceDtTm'])
 
-        # get patient ids with data in all 3 datasets
-        intersecting_patient_ids = set(df_cgm.PtID.unique()).intersection(set(df_bolus.PtID.unique())).intersection(set(df_basal.PtID.unique()))
-        
-        df_bolus = df_bolus[df_bolus.PtID.isin(intersecting_patient_ids)]
-        df_basal = df_basal[df_basal.PtID.isin(intersecting_patient_ids)]
-        df_cgm = df_cgm[df_cgm.PtID.isin(intersecting_patient_ids)]
-        df_basal.drop
         df_bolus['DeviceDtTm'] = parse_flair_dates(df_bolus['DeviceDtTm'])
         df_basal['DeviceDtTm'] = parse_flair_dates(df_basal['DeviceDtTm'])
         df_cgm['DeviceDtTm'] = parse_flair_dates(df_cgm['DeviceDtTm'])
@@ -51,29 +44,41 @@ class PEDAP(StudyDataset):
         super().__init__(study_path, 'PEDAP')
 
     def _extract_basal_event_history(self):
-        temp = self.df_basal[['PtID', 'BasalRate', 'DeviceDtTm']].astype({'PtID':str}).copy()
-        #to pass the data set validaiton
+        temp = self.df_basal.copy()
+
+        #force datetime, needed for vectorized operations and to pass the data set validaiton
         temp['DeviceDtTm'] = pd.to_datetime(temp.DeviceDtTm)
+
+        # Drop duplicates (majority are identical) while for those with identical time, keeping the maximum basal rate.
+        _,_,i_drop = ph.get_duplicated_max_indexes(temp, ['PtID', 'DeviceDtTm'], 'BasalRate')
+        temp = temp.drop(i_drop)
+
+        #remove repetitive values (there are many)
+        temp = ph.drop_repetitive_values(temp, 'DeviceDtTm', 'BasalRate')
+
+        #reduce rename return
+        temp = temp[['PtID', 'BasalRate', 'DeviceDtTm']].astype({'PtID':str})
         temp = temp.rename(columns={'PtID': 'patient_id', 'DeviceDtTm': 'datetime', 'BasalRate': 'basal_rate'})
         return temp
 
     def _extract_bolus_event_history(self):
-        # keep only tandem patients (having data in all 3 datasets)
-        temp = self.df_bolus[['PtID', 'DeviceDtTm', 'BolusAmount', 'Duration']].astype({'PtID':str}).copy()
+        temp = self.df_bolus.copy()
 
         #force datetime, needed for vectorized operations and to pass the data set validaiton
         temp['DeviceDtTm'] = pd.to_datetime(temp.DeviceDtTm)
 
         # convert to adjust start delivery times (only affects extended boluses)
-        temp['Duration'] = pd.to_timedelta(self.df_bolus.Duration, unit='m')
+        temp['Duration'] = pd.to_timedelta(temp.Duration, unit='m')
         temp['DeviceDtTm'] = temp.DeviceDtTm - temp.Duration
-        
+
+        #reduce rename return
+        temp = temp[['PtID', 'DeviceDtTm', 'BolusAmount', 'Duration']].astype({'PtID':str})
         temp = temp.rename(columns={'PtID': 'patient_id', 'DeviceDtTm': 'datetime',
                            'BolusAmount': 'bolus', 'Duration': 'delivery_duration'})
         return temp
 
     def _extract_cgm_history(self):
-        temp = self.df_cgm.astype({'PtID':str}).copy()
+        temp = self.df_cgm.copy()
 
         # replace 0 CGMs with lower upper bounds
         b_zero = temp.CGMValue == 0

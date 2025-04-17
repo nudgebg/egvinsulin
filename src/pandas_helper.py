@@ -305,3 +305,20 @@ def get_df(path, usecols=None, subset=False, dtype=None):
             return pd.read_sas(path, format='xport', encoding='latin-1')
     else:
         raise ValueError(f"Unsupported file format: {file_ending}")
+
+
+def drop_repetitive_values(df, datetime_column, value_column):
+    """
+    Drops rows with repetitive values in the specified column, keeping only rows where the value changes.
+
+    Parameters:
+        df (pd.DataFrame): The input DataFrame.
+        column (str): The column to check for repetitive values.
+
+    Returns:
+        pd.DataFrame: A DataFrame with repetitive values dropped.
+    """
+    df = df.sort_values(datetime_column)  # Ensure the DataFrame is sorted by datetime
+    df['diff'] = df[value_column].diff()  # Calculate the difference between consecutive rows
+    result = df.loc[df['diff'] != 0].drop(columns=['diff'])  # Keep rows where the value changes
+    return result
