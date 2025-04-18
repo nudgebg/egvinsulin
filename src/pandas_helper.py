@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import zipfile_deflate64
 import io
+from datetime import timedelta
 
 def get_duplicated_max_indexes(df, check_cols, max_col):
     """
@@ -128,17 +129,6 @@ def _combine_and_backward_fill(df, date_column, value_column, gap=float('inf')):
     filled = df[value_column].where(bSignificantGap, df[value_column].bfill())
     return filled
 
-
-if __name__ == '__main__':
-    df = pd.DataFrame({
-            'PtID':     [1, 1, 1,  2, 2, 2,  3, 3, 3,  1],
-            'DataDtTm': [1, 2, 3,  1, 2, 2,  1, 1, 1,  2],
-            'CGMValue': [1, 2, 3,  1, 2, 3,  4, 2, 3,  3]
-        })
-    dup_indexes, max_indexes, drop_indexes = get_duplicated_max_indexes(df, ['PtID', 'DataDtTm'], 'CGMValue')
-    print(df.drop(drop_indexes).sort_values(['PtID', 'DataDtTm']))
-
-
 def head_tail(df,n=2):
     """
     Returns the first n rows and the last n rows of a DataFrame.
@@ -161,7 +151,6 @@ def get_min_max_duplicates(df,dup_cols,val_col):
     results = dups.groupby(dup_cols)[val_col].agg(['min','max'])
     return results
 
-
 def overlaps(df, datetime_col, duration_col):
     """
     Check for overlapping intervals in a DataFrame.
@@ -179,7 +168,6 @@ def overlaps(df, datetime_col, duration_col):
     next = df[datetime_col].shift(-1)
     overlap = (next < end)
     return overlap
-
 
 def count_differences_in_duplicates(df, subset):
     """
@@ -203,7 +191,6 @@ def count_differences_in_duplicates(df, subset):
     
     return diff_counts
 
-
 def extract_surrounding_rows(df, index, n, sort_by):
     """
     Extracts rows surrounding a given index after sorting the DataFrame by a subset of columns.
@@ -226,7 +213,6 @@ def extract_surrounding_rows(df, index, n, sort_by):
     end = min(i_loc + n + 1, len(sorted_df))
     
     return sorted_df.iloc[start:end]
-
 
 def grouped_value_counts(df, group_cols, value_cols):
     """
@@ -256,14 +242,6 @@ def grouped_value_counts(df, group_cols, value_cols):
         })
 
     return df.groupby(group_cols).apply(count_values).reset_index()
-
-import pandas as pd
-import io
-import zipfile_deflate64
-
-import pandas as pd
-import io
-import zipfile_deflate64
 
 def get_df(path, usecols=None, subset=False, dtype=None):
     """
@@ -306,19 +284,43 @@ def get_df(path, usecols=None, subset=False, dtype=None):
     else:
         raise ValueError(f"Unsupported file format: {file_ending}")
 
-
-def drop_repetitive_values(df, datetime_column, value_column):
+def drop_repetitive_values(df, datetime_column, value_column, max_gap=None):
     """
-    Drops rows with repetitive values in the specified column, keeping only rows where the value changes.
-
-    Parameters:
-        df (pd.DataFrame): The input DataFrame.
-        column (str): The column to check for repetitive values.
-
+    Drop repetitive values in a DataFrame based on a datetime column and a value column.
+    Args:
+        df (pd.DataFrame): The DataFrame to process.
+        datetime_column (str): The name of the datetime column.
+        value_column (str): The name of the value column.
+        max_gap (timedelta, optional): The maximum time gap to consider for dropping repetitive values.
     Returns:
-        pd.DataFrame: A DataFrame with repetitive values dropped.
+        pd.DataFrame: The DataFrame with repetitive values dropped.
     """
-    df = df.sort_values(datetime_column)  # Ensure the DataFrame is sorted by datetime
-    df['diff'] = df[value_column].diff()  # Calculate the difference between consecutive rows
-    result = df.loc[df['diff'] != 0].drop(columns=['diff'])  # Keep rows where the value changes
-    return result
+    _, _, i_drop = get_repetitive_indexes(df, datetime_column, value_column, max_diff=max_gap)
+    return df.drop(i_drop)
+
+def get_repetitive_indexes(df, datetime_col, value_col, max_diff=None):
+    """
+    Get the indexes of repetitive values in a DataFrame based on a datetime column and a value column.
+    Args:
+        df (pd.DataFrame): The DataFrame to process.
+        datetime_col (str): The name of the datetime column.
+        value_col (str): The name of the value column.
+        max_diff (timedelta, optional): The maximum time gap to consider for dropping repetitive values.
+    Returns:
+        tuple: A tuple containing three elements:
+            - i_all_rep (np.array): Indexes of all repetitive values.
+            - i_keep (np.array): Indexes of the first occurence of repetitive values.
+            - i_drop (np.array): Indexes of values to drop (to remove repetitive values after the first occurence).
+    """
+    temp = df.sort_values(datetime_col).copy()
+    
+    b_not_repetitive = temp[value_col].diff()!=0
+    if max_diff is not None:
+        b_not_repetitive = b_not_repetitive | (temp[datetime_col].diff() >= max_diff)
+    temp['grp'] = b_not_repetitive.cumsum()
+
+    all_repetitives = temp.groupby('grp').filter(lambda x: len(x) > 1)
+    i_all_rep = all_repetitives.index.values
+    i_keep = all_repetitives.groupby('grp').head(1).index
+    i_drop = np.setdiff1d(i_all_rep, i_keep)
+    return i_all_rep, i_keep, i_drop
