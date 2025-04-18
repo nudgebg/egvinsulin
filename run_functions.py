@@ -119,7 +119,13 @@ def main(load_subset=False, output_format="parquet", compressed=False, input_dir
          process_folder(study, out_path, progress, load_subset=load_subset, output_format=output_format, compressed=compressed)
       except Exception as e:
           tqdm.write(f"[{current_time()}] Error processing {study.study_name}: {e}")
-          logger.error(f"Error processing {study.study_name}: {e}")
+          logger.error(f"Error processing {study.study_name}: {e} \n" \
+                       "Please make sure that you have the supported study dataset release. \n" \
+                        "In some cases, newer or older versions of the data are incomtaible. \n" \
+                        "Please check the README file for supported study datasets and releases. \n" \
+                        "If you continue having issues, we are happy to help.")
+          
+          
       progress.update(1)
       tqdm.write(f"[{current_time()}] {study.study_name} completed in {time() - start_time:.2f} seconds.")
 

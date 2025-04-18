@@ -39,3 +39,35 @@ def test_split_sequences():
     df = pd.DataFrame({'label': ['A', 'A', 'B', 'B', 'B', 'A', 'A', 'C', 'C', 'A']})
     actual_sequences = pandas_helper.split_sequences(df, 'label')
     pd.testing.assert_series_equal(actual_sequences, pd.Series([1, 1, 2, 2, 2, 3, 3, 4, 4, 5], name='label'))
+
+
+def test_drop_repetitive_values():
+    # Create a sample DataFrame with unsorted datetime and repetitive values
+    data = {
+        'datetime': ['2025-04-17 10:01:00',
+                     '2025-04-17 10:00:00', '2025-04-17 09:00:00', 
+                     '2025-04-17 11:00:00', '2025-04-17 10:29:00', '2025-04-17 10:30:00', #three times
+                     '2025-04-17 12:00:00', '2025-04-17 12:00:00',
+                     '2025-04-17 10:05:00',],#duplicate
+        'value': [4,
+                  1, 1, 
+                  2, 2, 2,
+                  3, 3,
+                  4]
+    }
+    df = pd.DataFrame(data)
+    df['datetime'] = pd.to_datetime(df['datetime'])  # Convert datetime column to pandas datetime
+
+    # Call the function
+    result = pandas_helper.drop_repetitive_values(df, 'datetime', 'value')
+    print(result)
+    # Expected DataFrame after dropping repetitive values
+    expected_data = {
+        'datetime': ['2025-04-17 09:00:00', '2025-04-17 10:01:00','2025-04-17 10:29:00', '2025-04-17 12:00:00'],
+        'value': [1,4, 2,3]
+    }
+    expected_df = pd.DataFrame(expected_data)
+    expected_df['datetime'] = pd.to_datetime(expected_df['datetime'])
+
+    # Assert that the result matches the expected DataFrame
+    pd.testing.assert_frame_equal(result.reset_index(drop=True), expected_df.reset_index(drop=True))
