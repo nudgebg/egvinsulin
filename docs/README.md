@@ -22,21 +22,23 @@ Figure: Days worth of **complete** data including cgm, basal and bolus data for 
 
 The goal is to work with as many clinical diabetes trial datasets as possible. At the moment, the following datasets from the diabetes [JAEB database](https://public.jaeb.org/datasets/diabetes) are supported. 
 
-For each of these studies, we've spent hundreds of hours analyzing the data to ensure that the class correctly loads and extracts the data. Please refer to the study analysis pages for a summary of the analysis and findings that went into each dataset. While we operated with great care, some asumptions had to be made and other details remain unknown which are also documented.
+For each of these studies, we've spent hundreds of hours analyzing the data to ensure that the class correctly loads and extracts the data. Please refer to the study analysis pages for a summary of the analysis and findings that went into each dataset. While we operated with great care, some assumptions had to be made and other details remain unknown which are also documented.
 
-|**Analysis & Documentation**|Link|Retrieval Date|Folder Name *|Note|
+|**Analysis & Documentation**|Link|Supported Version/Retrieval Date|Folder Name *|Note|
 |-|-|-|-|-|
-|[Flair](./data_sets/FLAIR.md)|[JAEB](https://public.jaeb.org/dataset/566)| April 17th, 2024|FLAIRPublicDataSet|In the newest version (September, 2024) JAEB insulin pump data was removed from the study dataset.|
-|[DCLP3](./data_sets/DCLP3.md)|[JAEB](https://public.jaeb.org/dataset/573)|April 17th, 2024|DCLP3 Public Dataset - Release 3 - 2022-08-04 |-|
-|[DCLP5](./data_sets/DCLP5.md)|[JAEB](https://public.jaeb.org/dataset/535)|April 17th, 2024|DCLP5_Dataset_2022-01-20-5e0f3b16-c890-4ace-9e3b-531f3687cf53|-|
-|[IOBP2](./data_sets/IOBP2.md)|[JAEB](https://public.jaeb.org/dataset/579)|April 17th, 2024|IOBP2 RCT Public Dataset|-|
-|[PEDAP](./data_sets/PEDAP.md)|[JAEB](https://public.jaeb.org/dataset/599)|September, 26th, 2024|PEDAP Public Dataset - Release 3 - 2024-09-25|Our investigation resulted in this updated version with corrected patient ids.|
-|[T1DEXI](./data_sets/T1DEXI.md)|[JAEB](https://public.jaeb.org/dataset/589)|October 1st, 2022|T1DEXI||
-|[T1DEXIP](./data_sets/T1DEXIP.md)|[JAEB](https://public.jaeb.org/dataset/590)|March 16th, 2023|T1DEXIP||
-|[REPLACE BG](./data_sets/REPLACE_BG.md)|[JAEB](https://public.jaeb.org/dataset/546)|February 2nd, 2025|REPLACE-BG Dataset-79f6bdc8-3c51-4736-a39f-c4c0f71d45e5|The currently hosted version misses the Basal file.|
-|[Loop](./data_sets/LOOP.md)|[JAEB](https://public.jaeb.org/dataset/560)|September 2nd, 2024|Loop study public dataset 2023-01-31|Due to the extensive file sizes, convert the csv files to a parquet format to allow parallel processing of the results and avoid out of memory problems.|
+|[Flair](./data_sets/FLAIR.md)|[JAEB](https://public.jaeb.org/dataset/566)|-/April 17th, 2024|FLAIRPublicDataSet.zip|⚠️We don't support the newest version (September, 2024) where insulin pump data was removed from the dataset.|
+|[DCLP3](./data_sets/DCLP3.md)|[JAEB](https://public.jaeb.org/dataset/573)|Release 3 / 2022-08-04|DCLP3 Public Dataset - Release 3 - 2022-08-04.zip|-|
+|[DCLP5](./data_sets/DCLP5.md)|[JAEB](https://public.jaeb.org/dataset/535)|-/April 17th, 2024|DCLP5_Dataset_2022-01-20-5e0f3b16-c890-4ace-9e3b-531f3687cf53.zip|-|
+|[IOBP2](./data_sets/IOBP2.md)|[JAEB](https://public.jaeb.org/dataset/579)|-/April 17th, 2024|IOBP2 RCT Public Dataset.zip|-|
+|[PEDAP](./data_sets/PEDAP.md)|[JAEB](https://public.jaeb.org/dataset/599)|Release 4/2025-04-10|PEDAP Public Dataset - Release 4 - 2025-04-10.zip|Our investigation resulted in two updated version: Release 3 (updated patient ids), Release 4 with complete basal date.|
+|[T1DEXI](./data_sets/T1DEXI.md)|[JAEB](https://public.jaeb.org/dataset/589)|-/October 1st, 2022|T1DEXI - DATA FOR UPLOAD.zip||
+|[T1DEXIP](./data_sets/T1DEXIP.md)|[JAEB](https://public.jaeb.org/dataset/590)|-/March 16th, 2023|T1DEXIP - DATA FOR UPLOAD.zip||
+|[REPLACE BG](./data_sets/REPLACE_BG.md)|[JAEB](https://public.jaeb.org/dataset/546)|-/February 2nd, 2025|REPLACE-BG Dataset-79f6bdc8-3c51-4736-a39f-c4c0f71d45e5|⚠️The currently hosted version misses the Basal file.|
+|[Loop](./data_sets/LOOP.md)|[JAEB](https://public.jaeb.org/dataset/560)|2023-01-31|Loop study public dataset 2023-01-31.zip|Due to the extensive file sizes, we convert the csv files to parquet files in a temporary folder to allow parallel processing of the results and avoid out of memory problems. You can delete this folder afterwards.|
 
-\* We have only tested our code on the respective versions. Therefore, the folder names are currently hard-coded and should match with the names above
+\* We have only tested our code on the respective versions. 
+
+>If you are encountering problems with running the datasets, feel free to reach out to us.
 
 ## How to Contribute
 BabelBetes was funded to be freely available, helping researchers and companies save costs and time, and supercharge innovation in diabetes care. 
@@ -127,7 +129,7 @@ Example terminal output:
 [15:26:56] [x] Boluses extracted
 [15:27:00] [x] Basal extracted
 [15:27:12] [x] CGM extracted
-[15:27:12] T1DEXI completed in 49.96 seconds.
+[15:27:12] T1DEXI completed in 37.43 seconds.
 ...
 Processing complete.
 ```
@@ -137,17 +139,18 @@ These are approximate execution times
 
 ||MacBook Pro M3|
 |----|----|
-|Flair|97.80 seconds|
-|IOBP2|103.07 seconds|
-|PEDAP|35.07 seconds|
-|DCLP3|36.16 seconds|
-|DCLP5|54.64 seconds|
-|T1DEXI|49.96 seconds|
-|T1DEXIP|9.99 seconds|
-|Replace BG|61.38 seconds|
-|Loop|587.22 seconds*|
+|Flair  |58 seconds|
+|IOBP2  |26 seconds|
+|PEDAP  |34 seconds|
+|DCLP3  |15 seconds|
+|DCLP5  |23 seconds|
+|T1DEXI |37 seconds|
+|T1DEXIP|7 seconds|
+|Replace BG|30 seconds|
+|Loop|151 seconds*|
+|**Total**|**~383 seconds**|
 
-\* Loop raw data files are very large which requires the use of `dask`. `dask` builds upon pandas and processes chunks of the data in parallel. However, the routine to save the data to csv - at the moment - still requires the whole dataframe to be loaded before storing it which might fail if your machine has insufficient memory. We will change this in the future.
+\* Loop raw data files are very large which requires the use of `dask`. `dask` builds upon pandas and processes chunks of the data in parallel. However, the routine to save the data to csv - at the moment - still requires the whole dataframe to be loaded into memory before storing it which might fail if your machine has insufficient memory.
 
 
 ## Troubleshooting

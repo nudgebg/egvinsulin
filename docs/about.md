@@ -3,3 +3,5 @@ BabelBetes is a [nudgebg.com](http://www.nudgebg.com) project funded by [Breakth
 [Lane Desborough](https://www.linkedin.com/in/lanedesborough)  
 [Jan Wrede](https://www.linkedin.com/in/janwrede/)  
 [Rachel Brandt](https://www.linkedin.com/in/brandtre)
+
+Feel free to reach out to us at info@nudgebg.com
