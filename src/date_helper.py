@@ -8,19 +8,16 @@ from datetime import timedelta
 def get_hour_of_day(datetime_series):
         return datetime_series.dt.hour + datetime_series.dt.minute/60 + datetime_series.dt.second/3600
 
-def parse_flair_dates(dates, format_date = '%m/%d/%Y', format_time = '%I:%M:%S %p'):
-    """Parse date strings separately for those with/without time component, interpret those without as midnight (00AM)
-    Args:
-        dates (pd.DataFrame): datetimes (string) either in in the %m/%d/%Y or %m/%d/%Y %I:%M:%S %p format
-    Returns:
-        pandas series: with parsed dates
-    """
-    #make sure to only parse dates if the value is not null
-    only_date = dates.apply(len) <=10
-    dates_copy = dates.copy()
-    dates_copy.loc[only_date] = pd.to_datetime(dates.loc[only_date], format=format_date)
-    dates_copy.loc[~only_date] = pd.to_datetime(dates.loc[~only_date], format=f'{format_date} {format_time}')
-    return dates_copy.astype('datetime64[ns]')
+def parse_flair_dates(dates, format_date='%m/%d/%Y', format_time='%I:%M:%S %p'):
+    """Optimized parsing of date strings with or without time components."""
+    # Try parsing with the full datetime format first
+    parsed_dates = pd.to_datetime(dates, format=f'{format_date} {format_time}', errors='coerce')
+    
+    # Fill in the remaining unparsed dates using the date-only format
+    missing_dates = parsed_dates.isna()
+    parsed_dates[missing_dates] = pd.to_datetime(dates[missing_dates], format=format_date, errors='coerce')
+    
+    return parsed_dates.astype('datetime64[ns]')
 
 def convert_duration_to_timedelta(duration):
     """
