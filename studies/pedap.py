@@ -54,7 +54,7 @@ class PEDAP(StudyDataset):
         temp = temp.drop(i_drop)
 
         #remove repetitive values (there are many)
-        temp = ph.drop_repetitive_values(temp, 'DeviceDtTm', 'BasalRate')
+        temp = temp.groupby('PtID').apply(lambda x: ph.drop_repetitive_values(x, 'DeviceDtTm', 'BasalRate')).reset_index(drop=True)
 
         #reduce rename return
         temp = temp[['PtID', 'BasalRate', 'DeviceDtTm']].astype({'PtID':str})
