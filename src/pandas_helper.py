@@ -298,6 +298,37 @@ def drop_repetitive_values(df, datetime_column, value_column, max_gap=None):
     _, _, i_drop = get_repetitive_indexes(df, datetime_column, value_column, max_diff=max_gap)
     return df.drop(i_drop)
 
+
+def split_large_groups(dt: pd.Series, max_diff: timedelta) -> pd.Series:
+    """
+    Splits a series of datetime values into groups based on a maximum time difference.
+    Args:
+        dt (pd.Series): The series of datetime values to split.
+        max_diff (timedelta): The maximum time since start of the group to be considered as part of the same group.
+        When the time to the start or to the next value is larger than this, a new group is created.
+        This makes sure that we drop repetitive values but also ensure we have sufficient points around larger gaps
+    Returns:
+        numpy.ndarray: An array of group IDs, where each group ID corresponds to a unique group of datetime values.
+    Example:
+        dt = pd.Series(pd.date_range('2025-04-17', periods=10, freq='H'))
+        max_diff = pd.Timedelta(hours=2)
+        groups = split_large_groups(dt, max_diff)
+        print(groups)
+        # Output: [0 0 1 1 2 2 3 3 4 4]
+    """ 
+    last_split_datetime = dt.iloc[0]
+    b_split = np.array([False] * len(dt))
+    for i, datetime in enumerate(dt):
+        next_datetime = dt.iloc[i + 1] if i + 1 < len(dt) else None
+        if i == 0:
+            continue
+        #add new subgroup if more than max_diff time has passed
+        if ((datetime - last_split_datetime) > max_diff) or \
+            (next_datetime is not None and (next_datetime - datetime) > max_diff):
+            b_split[i] = True
+            last_split_datetime = datetime
+    return np.cumsum(b_split)
+
 def get_repetitive_indexes(df, datetime_col, value_col, max_diff=None):
     """
     Get the indexes of repetitive values in a DataFrame based on a datetime column and a value column.
@@ -305,22 +336,33 @@ def get_repetitive_indexes(df, datetime_col, value_col, max_diff=None):
         df (pd.DataFrame): The DataFrame to process.
         datetime_col (str): The name of the datetime column.
         value_col (str): The name of the value column.
-        max_diff (timedelta, optional): The maximum time gap to consider for dropping repetitive values.
+        max_diff (timedelta, optional): The maximum time gap allowed to consider as repetitive value. Values later than this will not be considered a repetition and not be dropped.
+    
     Returns:
         tuple: A tuple containing three elements:
             - i_all_rep (np.array): Indexes of all repetitive values.
-            - i_keep (np.array): Indexes of the first occurence of repetitive values.
-            - i_drop (np.array): Indexes of values to drop (to remove repetitive values after the first occurence).
+            - i_keep (np.array): Indexes of the first occurrence of repetitive values.
+            - i_drop (np.array): Indexes of values to drop (to remove repetitive values after the first occurrence).
     """
     temp = df.sort_values(datetime_col).copy()
-    
-    b_not_repetitive = temp[value_col].diff()!=0
-    if max_diff is not None:
-        b_not_repetitive = b_not_repetitive | (temp[datetime_col].diff() >= max_diff)
+
+    # Identify repetitive groups
+    b_not_repetitive = temp[value_col].diff() != 0
     temp['grp'] = b_not_repetitive.cumsum()
 
-    all_repetitives = temp.groupby('grp').filter(lambda x: len(x) > 1)
-    i_all_rep = all_repetitives.index.values
-    i_keep = all_repetitives.groupby('grp').head(1).index
+    # Filter groups with more than one element
+    repetitive_groups = temp.groupby('grp').filter(lambda x: len(x) > 1).copy()
+    
+    if len(repetitive_groups) > 0:
+        # Split groups into smaller chunks based on max_diff
+        if max_diff is not None:
+            repetitive_groups['grp'] = repetitive_groups['grp'] *10000 + repetitive_groups.groupby('grp')[datetime_col].transform(split_large_groups, max_diff)
+        # Keep last value always by modifying the DataFrame directly
+        repetitive_groups.loc[repetitive_groups.index[-1], 'grp'] += 1
+
+    # Recalculate indexes
+    i_all_rep = repetitive_groups.index.values
+    i_keep = repetitive_groups.groupby('grp').head(1).index
     i_drop = np.setdiff1d(i_all_rep, i_keep)
+
     return i_all_rep, i_keep, i_drop
