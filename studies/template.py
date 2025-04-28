@@ -11,8 +11,7 @@ class ConcreteStudyDataset(StudyDataset):
     
     def _load_data(self, subset: bool = False):
         # Implement the logic to load data here
-        # For now, we'll just set the data_loaded flag to True
-        self.data_loaded = True
+        pass
 
     def _extract_bolus_event_history(self):
         # Return an empty DataFrame with the required columns
