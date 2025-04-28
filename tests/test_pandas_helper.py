@@ -32,62 +32,85 @@ def test_split_sequences():
     df = pd.DataFrame({'label': ['A', 'A', 'B', 'B', 'B', 'A', 'A', 'C', 'C', 'A']})
     actual_sequences = pandas_helper.split_sequences(df, 'label')
     pd.testing.assert_series_equal(actual_sequences, pd.Series([1, 1, 2, 2, 2, 3, 3, 4, 4, 5], name='label'))
-
-
-def test_drop_repetitive_values():
+    
+def test_repetitive():
     data = {
-        'datetime': ['2025-04-17 06:00:00', '2025-04-17 07:00:00','2025-04-17 08:00:00', #only last one should be dropped (first ones are interrupted by "4" value that interrupts 1 streak)
-                     '2025-04-17 10:00:00','2025-04-17 11:00:00','2025-04-17 12:00:00',#all different values, keep
-                     '2025-04-18 10:00:00','2025-04-18 11:00:00','2025-04-18 12:00:00',#all equal, drop last two
-                     '2025-04-19 10:00:00','2025-04-19 10:00:00',#duplicate should also be dropped
-                     '2025-04-17 06:30:00'],# prevents first entry from being dropped
-        'value': [1, 1, 1,  10, 20, 30,  1, 1, 1,   3, 3,  4]
-    }
+            'datetime': ['2025-04-17 06:00:00', '2025-04-17 07:00:00','2025-04-17 08:00:00', #only last one should be dropped (first ones are interrupted by "4" value that interrupts 1 streak)
+                        '2025-04-17 10:00:00','2025-04-17 11:00:00','2025-04-17 12:00:00',#all different values, keep
+                        '2025-04-18 10:00:00','2025-04-18 11:00:00','2025-04-18 12:00:00',#all equal, drop last two
+                        '2025-04-19 10:00:00','2025-04-19 10:00:00',#duplicate should also be dropped
+                        '2025-04-17 06:30:00'],# prevents first entry from being dropped
+            'value': [1, 1, 1,  10, 20, 30,  1, 1, 1,   3, 3,  4]
+        }
     df = pd.DataFrame(data)
     df['datetime'] = pd.to_datetime(df['datetime'])  # Convert datetime column to pandas datetime
-    result = pandas_helper.drop_repetitive_values(df, 'datetime', 'value')
-    expected_df = df.loc[[0,1,3,4,5,6,9,11]]
-    pd.testing.assert_frame_equal(result.sort_index(), expected_df.sort_index())
+    i_all_repetitives, i_keep, i_drop = pandas_helper.repetitive(df, 'datetime', 'value', None)
+    np.testing.assert_array_equal(i_all_repetitives, [1,2,6,7,8,9,10])
+    np.testing.assert_array_equal(i_keep, [0,11,1,3,4,5,6,9])
+    np.testing.assert_array_equal(i_drop, [2,7,8,10])
 
-def test_drop_repetitive_values_with_max_gap():
-    """
-    Test drop_repetitive_values with max_gap. Ensure repetitive values with a gap > max_gap are not removed.
-    """
-    data = {
-        'datetime': [
-            '2025-04-17 10:00:00', '2025-04-17 15:00:00','2025-04-17 20:00:00', #keep all
-            '2025-04-18 10:00:00', '2025-04-18 11:00:00','2025-04-18 12:00:00', #keep only first
-            '2025-04-19 10:00:00', '2025-04-19 12:00:00','2025-04-19 14:00:00','2025-04-19 14:00:01','2025-04-19 18:00:00','2025-04-19 18:00:02', #time duration > 4h, keep intermediates
-        ],
-        'value': [1, 1, 1, 2,2,2, 3,3,3,3,3,3]
-    }
-    df = pd.DataFrame(data)
-    df['datetime'] = pd.to_datetime(df['datetime'])  # Convert datetime column to pandas datetime
-    result = pandas_helper.drop_repetitive_values(df.sample(frac=1), 'datetime', 'value', max_gap=pd.Timedelta(hours=4))
-    print(result.sort_index())
-    expected_df = df.loc[[0,1,2,  3,  6,9,11]]
-    print(expected_df.sort_index())
-    pd.testing.assert_frame_equal(result.sort_index(), expected_df.sort_index())
+def test_repetitive_max_gap():
+    #test if it behaves the same as the original function
+    df = pd.DataFrame({"value":[1]*10,'datetime':pd.date_range('2025-04-17', periods=10, freq='1h')})
+    df = df.sample(frac=1)
+    i_all_repetitives, i_keep, i_drop = pandas_helper.repetitive(df, 'datetime', 'value', pd.Timedelta(hours=10))
+    
+    expected_all = np.arange(0, 10)
+    expected_keep = [0,9]
+    expected_drop = np.setdiff1d(expected_all, expected_keep)
+    
+    np.testing.assert_array_equal(i_all_repetitives, expected_all)
+    np.testing.assert_array_equal(i_keep, expected_keep)
+    np.testing.assert_array_equal(i_drop, expected_drop)
 
-def test_split_large_groups():
-    # Test case 1: All within max_diff
-    dt = pd.Series(pd.date_range('2025-04-17', periods=10, freq='1h'))
-    max_diff = pd.Timedelta(hours=10)
-    expected = [0,0,0,0,0,0,0,0,0,0]
-    actual_groups = pandas_helper.split_large_groups(dt, max_diff)
-    np.testing.assert_array_equal(actual_groups, expected)
+def test_repetitive_using_max_gap_simple():
+    #using max gap intermediate points should be kept
+    df = pd.DataFrame({"value":[1]*10,'datetime':pd.date_range('2025-04-17', periods=10, freq='1h')})
+    df = df.sample(frac=1)
+    i_all_repetitives, i_keep, i_drop = pandas_helper.repetitive(df, 'datetime', 'value', pd.Timedelta(hours=4))
+    
+    expected_all = np.arange(0, 10)
+    expected_keep = [0,4,8,9]
+    expected_drop = np.setdiff1d(expected_all, expected_keep)
+    
+    np.testing.assert_array_equal(i_all_repetitives, expected_all)
+    np.testing.assert_array_equal(i_keep, expected_keep)
+    np.testing.assert_array_equal(i_drop, expected_drop)
 
-    # Test case 2: Within max_diff but overall duration exceeds max_diff
-    dt = pd.Series(pd.date_range('2025-04-17', periods=10, freq='1h'))
-    max_diff = pd.Timedelta(hours=5)
-    expected = [0,0,0,0,0,0,1,1,1,1]
-    actual_groups = pandas_helper.split_large_groups(dt, max_diff)
-    np.testing.assert_array_equal(actual_groups, expected)
+def test_repetitive_using_max_gap_simple_shuffled():
+    #using max gap intermediate points should be kept
+    df = pd.DataFrame({"value":[1]*10,
+                       'datetime':pd.date_range('2025-04-17', periods=10, freq='1h')})
+    df_expected = df.loc[[0, 4, 8, 9]].reset_index(drop=True)
 
-    # Test case 3: 3 within max diff last one too far
-    dt = pd.Series(pd.date_range('2025-04-17', periods=3, freq='2h'))
-    dt = pd.concat([dt, pd.Series([dt.iloc[-1] + pd.Timedelta(hours=5), dt.iloc[-1] + pd.Timedelta(hours=7)])], ignore_index=True)
-    max_diff = pd.Timedelta(hours=2)
-    expected = [0,0,1,2,2]
-    actual_groups = pandas_helper.split_large_groups(dt, max_diff)
-    np.testing.assert_array_equal(actual_groups, expected)
+    df = df.sample(frac=1).reset_index(drop=True)
+    _, i_keep, _ = pandas_helper.repetitive(df, 'datetime', 'value', pd.Timedelta(hours=4))
+    
+    df_kept = df.loc[i_keep].sort_values('datetime').reset_index(drop=True)
+
+    pd.testing.assert_frame_equal(df_kept, df_expected)
+
+def test_repetitivtest_repetitive_using_max_gap_keepall():
+    start_date = '2023-01-01'
+    values = (
+        [0,1,0,1] * 1 + 
+        [0] * 4 + 
+        [0.5] * 4 + 
+        [1] * 4 + 
+        [np.nan] * 10 + 
+        [0.5] * 20 + 
+        [1]*10+
+        [0.5]*1+
+        [np.nan] * 10 +
+        [0.5]*1
+    )
+    date_range = pd.date_range(start=start_date, periods=len(values), freq='1h')
+
+    df = pd.DataFrame({
+        'datetime': date_range,
+        'basal_rate': values
+    }).dropna()
+    df = df.sample(frac=1)
+    _, i_keep, i_drop = pandas_helper.repetitive(df, 'datetime', 'basal_rate', pd.Timedelta(hours=8))
+    expected_keep = [0,1,2,3,4,8,12,26,34,42,46,54,56,67]
+    np.testing.assert_array_equal(i_keep, expected_keep)
