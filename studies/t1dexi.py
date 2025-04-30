@@ -97,7 +97,6 @@ class T1DEXI(StudyDataset):
         self.facm = facm
         self.dx = dx
         self.lb = lb
-        self.data_loaded = True
 
     def _extract_bolus_event_history(self):
         bolus_rows = self.facm.loc[self.facm.FATEST=='BOLUS INSULIN'].copy()

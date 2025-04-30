@@ -64,6 +64,7 @@ import os
 from studies import StudyDataset, dataset_initializer
 import src.postprocessing as pp
 from src.logger import Logger
+from src.file_saver import save_dataframe
 from datetime import datetime
 from tqdm import tqdm
 import argparse
@@ -74,7 +75,7 @@ logger = Logger.get_logger(__file__)
 def current_time():
   return datetime.now().strftime("%H:%M:%S")
 
-def main(load_subset=False, output_format="parquet", compressed=False, input_dir=None, output_dir=None):
+def main(load_subset=False, remove_repetitive=True, output_format="parquet", compressed=False, input_dir=None, output_dir=None):
   """
   Main function to process study data folders.
 
@@ -116,7 +117,7 @@ def main(load_subset=False, output_format="parquet", compressed=False, input_dir
       
       start_time = time()
       try:
-         process_folder(study, out_path, progress, load_subset=load_subset, output_format=output_format, compressed=compressed)
+         process_folder(study, out_path, progress, load_subset=load_subset, remove_repetitive=remove_repetitive, output_format=output_format, compressed=compressed)
       except Exception as e:
           tqdm.write(f"[{current_time()}] Error processing {study.study_name}: {e}")
           logger.error(f"Error processing {study.study_name}: {e} \n" \
@@ -131,7 +132,7 @@ def main(load_subset=False, output_format="parquet", compressed=False, input_dir
 
     tqdm.write(f"Processing completed in {time() - global_start_time:.2f} seconds.")
 
-def process_folder(study: StudyDataset, out_path_study, progress, load_subset, output_format, compressed):
+def process_folder(study: StudyDataset, out_path_study, progress, load_subset, remove_repetitive, output_format, compressed):
       """Processes the data for a given study by loading, extracting, and resampling bolus, basal, and glucose events.
 
         Args:
@@ -154,17 +155,24 @@ def process_folder(study: StudyDataset, out_path_study, progress, load_subset, o
 
       #boluses
       progress.set_description_str(f"{study.__class__.__name__}: Extracting boluses")
-      study.save_bolus_event_history_to_file(out_path_study, output_format, compressed=compressed)
+      df = study.extract_bolus_event_history()
+      save_dataframe(df, out_path_study, output_format, compressed, study.study_name, 'bolus')
       tqdm.write(f"[{current_time()}] [x] Boluses extracted"); 
 
       #basals
       progress.set_description_str(f"{study.__class__.__name__}: Extracting basals")
-      study.save_basal_event_history_to_file(out_path_study, output_format, compressed=compressed)
+      df = study.extract_basal_event_history()
+      if remove_repetitive:
+         progress.set_description_str(f"{study.__class__.__name__}: Removing repetitive basals")
+         df = df.groupby(StudyDataset.COL_NAME_PATIENT_ID).apply(pp.drop_repetitive_basals,include_groups=False).reset_index(level=0)
+      save_dataframe(df, out_path_study, output_format, compressed, study.study_name, 'basal')
       tqdm.write(f"[{current_time()}] [x] Basal extracted"); 
 
       #cgm
       progress.set_description_str(f"{study.__class__.__name__}: Extracting glucose")
-      study.save_cgm_to_file(out_path_study, output_format, compressed=compressed)
+      #study.save_cgm_to_file(out_path_study, output_format, compressed=compressed)
+      df = study.extract_cgm_history()
+      save_dataframe(df, out_path_study, output_format, compressed, study.study_name, 'cgm')
       tqdm.write(f"[{current_time()}] [x] CGM extracted"); 
       
 
@@ -175,12 +183,10 @@ if __name__ == "__main__":
   parser.add_argument('--compressed', action='store_true', help="Enable compression for the output files.")
   parser.add_argument('--input-dir', type=str, help="Specify a custom input directory. Defaults to 'data/raw'.")
   parser.add_argument('--output-dir', type=str, help="Specify a custom output directory. Defaults to 'data/out'.")
+  parser.add_argument('--remove-repetitive', action='store_true', help="Remove repetitive values from the basal output dataframes.")
   args = parser.parse_args()
 
   logger.info(f"Using arguments:")
-  logger.info(f"  test={args.test}")
-  logger.info(f"  output_format={args.output_format}")
-  logger.info(f"  compressed={args.compressed}")
-  logger.info(f"  input_dir={args.input_dir}")
-  logger.info(f"  output_dir={args.output_dir}")
-  main(load_subset=args.test, output_format=args.output_format, compressed=args.compressed, input_dir=args.input_dir, output_dir=args.output_dir)
+  for arg, value in vars(args).items():
+      logger.info(f"  {arg}: {value}")
+  main(load_subset=args.test, remove_repetitive=args.remove_repetitive, output_format=args.output_format, compressed=args.compressed, input_dir=args.input_dir, output_dir=args.output_dir)

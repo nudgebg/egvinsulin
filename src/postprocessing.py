@@ -11,6 +11,8 @@ import pandas as pd
 import numpy as np
 from datetime import timedelta
 from src.logger import Logger
+from src.pandas_helper import repetitive
+from studies import StudyDataset
 logger = Logger.get_logger(__name__)
 
 # Function to split the bolus into multiple deliveries
@@ -110,3 +112,41 @@ def basal_transform(basal_data):
     resampled = resample_closest(series)
     resampled = resampled.ffill(limit=24*12-1).rename(columns={'basal_rate':'basal_delivery'}) / 12.0
     return resampled.reset_index()
+
+def drop_repetitive_basals(df, max_duration=timedelta(hours=4)):
+    _, _, i_drop = repetitive(df, StudyDataset.COL_NAME_DATETIME, StudyDataset.COL_NAME_BASAL_RATE, max_duration)
+    return df.drop(i_drop)
+
+
+def compress_dataframe_storage(df):
+    """
+    Reduces DataFrame size by converting columns to appropriate types.
+    This function is useful for optimizing memory usage when saving DataFrames to disk.
+
+    Args:
+        df (pd.DataFrame): The DataFrame to save.
+        out_path (str): The base directory for the output files.
+        output_format (str): The output format ('csv' or 'parquet').
+        compressed (bool): If True, compress the output file (for CSV).
+        study_name (str): The name of the study.
+        data_type (str): The type of data being saved (e.g., 'cgm', 'bolus', 'basal').
+    
+    Example CSV Output for cgm:   
+        ```
+        patient_id,datetime,cgm
+        10,1524150016,88
+        10,1524150270,85
+        10,1524150568,81
+        ```
+    """
+    if StudyDataset.COL_NAME_DATETIME in df.columns:
+        df[StudyDataset.COL_NAME_DATETIME] = df[StudyDataset.COL_NAME_DATETIME].astype("int64") // 10**9  # Convert from ns to seconds
+    if StudyDataset.COL_NAME_CGM in df.columns:
+        df[StudyDataset.COL_NAME_CGM] = df[StudyDataset.COL_NAME_CGM].astype("int")
+    if StudyDataset.COL_NAME_BOLUS in df.columns:
+        df[StudyDataset.COL_NAME_BOLUS] = df[StudyDataset.COL_NAME_BOLUS].round(4)
+    if StudyDataset.COL_NAME_BOLUS_DELIVERY_DURATION in df.columns:
+        df[StudyDataset.COL_NAME_BOLUS_DELIVERY_DURATION] = df[StudyDataset.COL_NAME_BOLUS_DELIVERY_DURATION].dt.total_seconds().astype("int")
+    if StudyDataset.COL_NAME_BASAL_RATE in df.columns:
+        df[StudyDataset.COL_NAME_BASAL_RATE] = df[StudyDataset.COL_NAME_BASAL_RATE].round(4)
+    return df

@@ -86,7 +86,6 @@ class ReplaceBG(StudyDataset):
         self.df_cgm = df_cgm
         self.df_uploads = df_uploads
 
-        self.data_loaded = True
 
     def _extract_bolus_event_history(self):
 

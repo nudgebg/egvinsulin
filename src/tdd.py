@@ -39,6 +39,16 @@ def combine_and_forward_fill(df, colname_date, col_name_value, gap: timedelta):
     combined_df.loc[bSmallGap, col_name_value] = combined_df.temp
     return combined_df.drop(columns=['temp'])
 
+def total_delivered(df, datetime_col, rate_col):
+    """Calculate the total delivered insulin over the time intervals in the given DataFrame."""
+    x = (df[datetime_col].diff().dt.total_seconds()/3600)[1:]
+    y = df[rate_col][:-1]
+    if len(x) == 0:
+        r= np.nan
+    else:
+        r = np.sum(x.values * y.values)
+    return r
+
 
 def calculate_daily_basal_dose(df):
     """
@@ -84,17 +94,7 @@ def calculate_daily_basal_dose(df):
     copy = copy.loc[~copy.date.isin([copy.date.max(),copy.date.min()])]
     #display(copy)
 
-    #calcualte tdd
-    def tdd(df):
-        x = (df.datetime.diff().dt.total_seconds()/3600)[1:]
-        y = df['basal_rate'][:-1]
-        if len(x) == 0:
-            r= np.nan
-        else:
-            r = np.sum(x.values * y.values)
-        return r
-
-    tdds = copy.groupby('date').apply(tdd).to_frame().rename(columns={0:'basal'})
+    tdds = copy.groupby('date').apply(total_delivered,'datetime','basal_rate').to_frame().rename(columns={0:'basal'})
 
     #exclude invalid days
     tdds.loc[valid_days.index[~valid_days]] = np.nan

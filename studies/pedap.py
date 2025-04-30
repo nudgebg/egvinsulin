@@ -53,9 +53,6 @@ class PEDAP(StudyDataset):
         _,_,i_drop = ph.get_duplicated_max_indexes(temp, ['PtID', 'DeviceDtTm'], 'BasalRate')
         temp = temp.drop(i_drop)
 
-        #remove repetitive values (there are many)
-        temp = ph.drop_repetitive_values(temp, 'DeviceDtTm', 'BasalRate')
-
         #reduce rename return
         temp = temp[['PtID', 'BasalRate', 'DeviceDtTm']].astype({'PtID':str})
         temp = temp.rename(columns={'PtID': 'patient_id', 'DeviceDtTm': 'datetime', 'BasalRate': 'basal_rate'})
