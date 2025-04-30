@@ -49,7 +49,7 @@ Learn more about [how to contribute](./contribute.md).
 
 ## Key Features of the Toolbox
  
- **1. Analaysis scripts and and documentation**: You can learn about the datasets and what challenges came with normalizing tem by consulting the dataset summaries. You might also consult and review the jupyter notebooks that document our analysis.
+ **1. Analaysis scripts and documentation**: You can learn about the datasets and what challenges came with normalizing tem by consulting the dataset summaries. You might also consult and review the jupyter notebooks that document our analysis.
 
  **2. Python modules**: You can use the python modules to extract standardized continuous glucose monitor (CGM) and insulin pump data from the supported study datasets. Reuse the helper and drawing functions to work with the data.
   - Extend the functionality of existing study classes or add new implementations of the StudyDataset base class to support additional study datasets. 

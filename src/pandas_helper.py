@@ -295,7 +295,6 @@ def repetitive(df, datetime_col, value_col, max_duration):
         value_col (str): The name of the value column.
         max_duration (timedelta, optional): To prevent long gaps between values, this parameter is used define the max duration for which consecutive values are dropped. At least one value will be kept whenever duration exceeds tha map_duration.
     
-    
     Returns:
         tuple: A tuple containing three elements:
             - i_all_rep (np.array): Indexes of all repetitive values.
@@ -321,8 +320,9 @@ def repetitive(df, datetime_col, value_col, max_duration):
         dur = (df.datetime-df.datetime.iloc[0])
         dur = dur - dur.groupby(grp).transform('first')#within group duration
         sub_grp = dur//max_duration
-        assert np.all(sub_grp<=1000)
-        final_grp = 1000*grp + sub_grp
+        #assert np.all(sub_grp<=1000)
+        #final_grp = 1000*grp + sub_grp #this could break TODO: Change final_grp to ensure unique values e.g. using tuples
+        final_grp = pd.concat([grp, sub_grp], axis=1).apply(tuple, axis=1)
     else:
         final_grp = grp
     

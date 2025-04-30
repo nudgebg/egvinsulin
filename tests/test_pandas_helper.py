@@ -38,15 +38,15 @@ def test_repetitive():
             'datetime': ['2025-04-17 06:00:00', '2025-04-17 07:00:00','2025-04-17 08:00:00', #only last one should be dropped (first ones are interrupted by "4" value that interrupts 1 streak)
                         '2025-04-17 10:00:00','2025-04-17 11:00:00','2025-04-17 12:00:00',#all different values, keep
                         '2025-04-18 10:00:00','2025-04-18 11:00:00','2025-04-18 12:00:00',#all equal, drop last two
-                        '2025-04-19 10:00:00','2025-04-19 10:00:00',#duplicate should also be dropped
+                        '2025-04-19 10:00:00','2025-04-19 10:00:00','2025-04-19 11:00:00',#duplicate should also be dropped, last one should be always kept
                         '2025-04-17 06:30:00'],# prevents first entry from being dropped
-            'value': [1, 1, 1,  10, 20, 30,  1, 1, 1,   3, 3,  4]
+            'value': [1, 1, 1,  10, 20, 30,  1, 1, 1,   3, 3, 3,  4]
         }
     df = pd.DataFrame(data)
     df['datetime'] = pd.to_datetime(df['datetime'])  # Convert datetime column to pandas datetime
     i_all_repetitives, i_keep, i_drop = pandas_helper.repetitive(df, 'datetime', 'value', None)
-    np.testing.assert_array_equal(i_all_repetitives, [1,2,6,7,8,9,10])
-    np.testing.assert_array_equal(i_keep, [0,11,1,3,4,5,6,9])
+    np.testing.assert_array_equal(i_all_repetitives, [1,2,6,7,8,9,10,11])
+    np.testing.assert_array_equal(i_keep, [0,12,1,3,4,5,6,9,11])
     np.testing.assert_array_equal(i_drop, [2,7,8,10])
 
 def test_repetitive_max_gap():

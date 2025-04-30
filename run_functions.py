@@ -187,9 +187,6 @@ if __name__ == "__main__":
   args = parser.parse_args()
 
   logger.info(f"Using arguments:")
-  logger.info(f"  test={args.test}")
-  logger.info(f"  output_format={args.output_format}")
-  logger.info(f"  compressed={args.compressed}")
-  logger.info(f"  input_dir={args.input_dir}")
-  logger.info(f"  output_dir={args.output_dir}")
+  for arg, value in vars(args).items():
+      logger.info(f"  {arg}: {value}")
   main(load_subset=args.test, remove_repetitive=args.remove_repetitive, output_format=args.output_format, compressed=args.compressed, input_dir=args.input_dir, output_dir=args.output_dir)
