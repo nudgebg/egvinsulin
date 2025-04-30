@@ -164,7 +164,7 @@ def process_folder(study: StudyDataset, out_path_study, progress, load_subset, r
       df = study.extract_basal_event_history()
       if remove_repetitive:
          progress.set_description_str(f"{study.__class__.__name__}: Removing repetitive basals")
-         df = df.groupby('patient_id').apply(pp.drop_repetitive_basals)
+         df = df.groupby(StudyDataset.COL_NAME_PATIENT_ID).apply(pp.drop_repetitive_basals,include_groups=False).reset_index(level=0)
       save_dataframe(df, out_path_study, output_format, compressed, study.study_name, 'basal')
       tqdm.write(f"[{current_time()}] [x] Basal extracted"); 
 
