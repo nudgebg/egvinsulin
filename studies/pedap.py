@@ -10,6 +10,9 @@ from src import pandas_helper as ph
 
 
 class PEDAP(StudyDataset):
+    def __init__(self, study_path):
+        super().__init__(study_path, 'PEDAP')
+
     def _load_data(self, subset):
         data_table_path = os.path.join(self.study_path, 'Data Files')
 
@@ -36,15 +39,12 @@ class PEDAP(StudyDataset):
         df_basal['DeviceDtTm'] = parse_flair_dates(df_basal['DeviceDtTm'])
         df_cgm['DeviceDtTm'] = parse_flair_dates(df_cgm['DeviceDtTm'])
 
-        self.df_bolus = df_bolus
-        self.df_basal = df_basal
-        self.df_cgm = df_cgm
-    
-    def __init__(self, study_path):
-        super().__init__(study_path, 'PEDAP')
+        self._df_bolus = df_bolus
+        self._df_basal = df_basal
+        self._df_cgm = df_cgm
 
     def _extract_basal_event_history(self):
-        temp = self.df_basal.copy()
+        temp = self._df_basal.copy()
 
         #force datetime, needed for vectorized operations and to pass the data set validaiton
         temp['DeviceDtTm'] = pd.to_datetime(temp.DeviceDtTm)
@@ -59,7 +59,7 @@ class PEDAP(StudyDataset):
         return temp
 
     def _extract_bolus_event_history(self):
-        temp = self.df_bolus.copy()
+        temp = self._df_bolus.copy()
 
         #force datetime, needed for vectorized operations and to pass the data set validaiton
         temp['DeviceDtTm'] = pd.to_datetime(temp.DeviceDtTm)
@@ -75,7 +75,7 @@ class PEDAP(StudyDataset):
         return temp
 
     def _extract_cgm_history(self):
-        temp = self.df_cgm.copy()
+        temp = self._df_cgm.copy()
 
         # replace 0 CGMs with lower upper bounds
         b_zero = temp.CGMValue == 0

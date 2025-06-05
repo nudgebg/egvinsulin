@@ -159,10 +159,10 @@ class StudyDataset:
     def __init__(self, study_path, study_name):
         self.study_path = study_path
         self.study_name = study_name
-        self.bolus_event_history = None
-        self.basal_event_history = None
-        self.cgm_history = None
-        self.data_loaded = False
+        self._bolus_event_history = None
+        self._basal_event_history = None
+        self._cgm_history = None
+        self._data_loaded = False
 
     def _load_data(self, subset: bool = False):
         """(Abstract) Load the study data into memory.
@@ -196,9 +196,9 @@ class StudyDataset:
         Args:
             subset (bool, optional): Should only load a small subset of the data for testing purposes. Defaults to False.
         """
-        if not self.data_loaded:
+        if not self._data_loaded:
             self._load_data(subset=subset)
-            self.data_loaded = True
+            self._data_loaded = True
     
     @validate_bolus_output_dataframe
     def extract_bolus_event_history(self):
@@ -220,10 +220,10 @@ class StudyDataset:
                 - `delivery_duration` (pandas.timedelta): the duration of the bolus delivery: For standard boluses the delivery duration is 0 seconds, for extended boluses, these are the duration of the extended delivery.
 
         """
-        if self.bolus_event_history is None:
+        if self._bolus_event_history is None:
             self.load_data()
-            self.bolus_event_history = self._extract_bolus_event_history()
-        return self.bolus_event_history
+            self._bolus_event_history = self._extract_bolus_event_history()
+        return self._bolus_event_history
     
     @validate_basal_output_dataframe
     def extract_basal_event_history(self):
@@ -244,10 +244,10 @@ class StudyDataset:
              - `datetime` (pandas.datetime): the date and time of the basal event
              - `basal_rate` (float): the basal rate in units per hour. Make sure to include zero basal rates as they mark basal suspends.
         """
-        if self.basal_event_history is None:
+        if self._basal_event_history is None:
             self.load_data()
-            self.basal_event_history = self._extract_basal_event_history()
-        return self.basal_event_history
+            self._basal_event_history = self._extract_basal_event_history()
+        return self._basal_event_history
     
     @validate_cgm_output_dataframe
     def extract_cgm_history(self):
@@ -264,7 +264,7 @@ class StudyDataset:
                 - `cgm`: A float representing the cgm value in mg/dL
         
         """
-        if self.cgm_history is None:
+        if self._cgm_history is None:
             self.load_data()
-            self.cgm_history = self._extract_cgm_history()
-        return self.cgm_history
+            self._cgm_history = self._extract_cgm_history()
+        return self._cgm_history

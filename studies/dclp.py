@@ -46,33 +46,32 @@ class DCLP3(StudyDataset):
         df_bolus['PtID'] = df_bolus.PtID.astype(str)
         df_basal['PtID'] = df_basal.PtID.astype(str)
 
-        self.datetime_col = 'datetime'
         #setting datetimes (using the adjusted datetime if available)
-        df_bolus[self.datetime_col] = pd.to_datetime(df_bolus.DataDtTm_adjusted.fillna(df_bolus.DataDtTm))
-        df_basal[self.datetime_col] = pd.to_datetime(df_basal.DataDtTm_adjusted.fillna(df_basal.DataDtTm))
-        df_cgm[self.datetime_col] = pd.to_datetime(df_cgm.DataDtTm_adjusted.fillna(df_cgm.DataDtTm))
+        df_bolus['datetime'] = pd.to_datetime(df_bolus.DataDtTm_adjusted.fillna(df_bolus.DataDtTm))
+        df_basal['datetime'] = pd.to_datetime(df_basal.DataDtTm_adjusted.fillna(df_basal.DataDtTm))
+        df_cgm['datetime'] = pd.to_datetime(df_cgm.DataDtTm_adjusted.fillna(df_cgm.DataDtTm))
 
         df_cgm.drop(columns=['DataDtTm', 'DataDtTm_adjusted'], inplace=True)
         df_bolus.drop(columns=['DataDtTm', 'DataDtTm_adjusted'], inplace=True)
         df_basal.drop(columns=['DataDtTm', 'DataDtTm_adjusted'], inplace=True)
         
-        self.df_bolus = df_bolus.sort_values(by=['PtID',self.datetime_col])
-        self.df_basal = df_basal.sort_values(by=['PtID',self.datetime_col])
-        self.df_cgm = df_cgm.sort_values(by=['PtID',self.datetime_col])
+        self._df_bolus = df_bolus.sort_values(by=['PtID','datetime'])
+        self._df_basal = df_basal.sort_values(by=['PtID','datetime'])
+        self._df_cgm = df_cgm.sort_values(by=['PtID','datetime'])
     
-    def __init__(self, study_path):
-        super().__init__(study_path, 'DCLP3')
+    def __init__(self, study_path, study_name='DCLP3'):
+        super().__init__(study_path, study_name)
 
     def _extract_basal_event_history(self):
-        temp = self.df_basal.copy()
-        temp = temp[['PtID', self.datetime_col, 'CommandedBasalRate']].rename(columns={'PtID': 'patient_id', 'CommandedBasalRate': 'basal_rate'})
+        temp = self._df_basal.copy()
+        temp = temp[['PtID', 'datetime', 'CommandedBasalRate']].rename(columns={'PtID': 'patient_id', 'CommandedBasalRate': 'basal_rate'})
         return temp
 
     def _extract_bolus_event_history(self):
-        temp = self.df_bolus.copy()
+        temp = self._df_bolus.copy()
         
         #Match standard and extended boluses (this will incorrectly match purely extended boluses to standard boluses)
-        periods = temp.groupby('PtID').apply(lambda x: find_periods(x,'BolusType',self.datetime_col, lambda x: x == 'Standard',  lambda x: x == 'Extended', use_last_start_occurence=True))
+        periods = temp.groupby('PtID').apply(lambda x: find_periods(x,'BolusType','datetime', lambda x: x == 'Standard',  lambda x: x == 'Extended', use_last_start_occurence=True))
         periods = periods[periods.apply(lambda x: len(x)>0)] 
         periods = pd.DataFrame(periods.explode(),columns=['Periods'])
         pt_ids_copy = periods.index
@@ -86,30 +85,30 @@ class DCLP3(StudyDataset):
         periods.loc[periods.delivery_duration>timedelta(hours=8), 'delivery_duration'] = timedelta(minutes=55)
         temp['delivery_duration'] = timedelta(0)
         #use .values here, otherwise will try to assign by index
-        temp.loc[periods.index_end, self.datetime_col] = (periods.time_end - periods.delivery_duration).values
+        temp.loc[periods.index_end, 'datetime'] = (periods.time_end - periods.delivery_duration).values
         temp.loc[periods.index_end, 'delivery_duration'] = periods.delivery_duration.values
         
         temp['delivery_duration'] = pd.to_timedelta(temp.delivery_duration)
 
-        temp = temp[['PtID', self.datetime_col, 'BolusAmount', 'delivery_duration']].rename(columns={'PtID': 'patient_id', 'BolusAmount': 'bolus'})
+        temp = temp[['PtID', 'datetime', 'BolusAmount', 'delivery_duration']].rename(columns={'PtID': 'patient_id', 'BolusAmount': 'bolus'})
         return temp
 
     def _extract_cgm_history(self):
-        df_cgm = self.df_cgm.copy()
+        df_cgm = self._df_cgm.copy()
         
         # replace 0 CGMs with lower upper bounds
         b_zero = df_cgm.CGMValue == 0
         df_cgm.loc[b_zero, 'CGMValue'] = df_cgm.HighLowIndicator.loc[b_zero].replace({ 2: 40, 1: 400 })
         
         #reduce, rename, return
-        df_cgm = df_cgm[['PtID',self.datetime_col,'CGMValue']]
+        df_cgm = df_cgm[['PtID','datetime','CGMValue']]
         df_cgm = df_cgm.rename(columns={'PtID': 'patient_id', 'CGMValue': 'cgm'})
         return df_cgm
 
 class DCLP5(DCLP3):
-    def __init__(self, study_path):
-        super().__init__(study_path)
-        self.study_name = 'DCLP5'
+    def __init__(self, study_path, study_name='DCLP5'):
+        super().__init__(study_path, study_name)
+        #self.study_name = 'DCLP5' #super sets it to DCLP3, so we override it here
     
     def _load_data(self, subset):
         df_bolus = pandas_helper.get_df(os.path.join(self.study_path, 'DCLP5TandemBolus_Completed_Combined_b.txt'),
@@ -135,15 +134,14 @@ class DCLP5(DCLP3):
         df_basal['PtID'] = df_basal.PtID.astype(str)
 
         #setting datetimes (using the adjusted datetime if available)
-        self.datetime_col = 'datetime'
-        df_bolus[self.datetime_col] = df_bolus.DataDtTm_adjusted.fillna(df_bolus.DataDtTm).transform(parse_flair_dates, format_date='%m/%d/%Y', format_time='%I:%M:%S %p')
-        df_basal[self.datetime_col] = df_basal.DataDtTm_adjusted.fillna(df_basal.DataDtTm).transform(parse_flair_dates, format_date='%m/%d/%Y', format_time='%I:%M:%S %p')
-        df_cgm[self.datetime_col] = df_cgm.DataDtTm_adjusted.fillna(df_cgm.DataDtTm).transform(parse_flair_dates, format_date='%m/%d/%Y', format_time='%I:%M:%S %p')
+        df_bolus['datetime'] = df_bolus.DataDtTm_adjusted.fillna(df_bolus.DataDtTm).transform(parse_flair_dates, format_date='%m/%d/%Y', format_time='%I:%M:%S %p')
+        df_basal['datetime'] = df_basal.DataDtTm_adjusted.fillna(df_basal.DataDtTm).transform(parse_flair_dates, format_date='%m/%d/%Y', format_time='%I:%M:%S %p')
+        df_cgm['datetime'] = df_cgm.DataDtTm_adjusted.fillna(df_cgm.DataDtTm).transform(parse_flair_dates, format_date='%m/%d/%Y', format_time='%I:%M:%S %p')
 
         df_cgm.drop(columns=['DataDtTm', 'DataDtTm_adjusted'], inplace=True)
         df_bolus.drop(columns=['DataDtTm', 'DataDtTm_adjusted'], inplace=True)
         df_basal.drop(columns=['DataDtTm', 'DataDtTm_adjusted'], inplace=True)
         
-        self.df_bolus = df_bolus
-        self.df_basal = df_basal
-        self.df_cgm = df_cgm
+        self._df_bolus = df_bolus
+        self._df_basal = df_basal
+        self._df_cgm = df_cgm

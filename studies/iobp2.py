@@ -14,20 +14,20 @@ class IOBP2(StudyDataset):
 
     def __init__(self, study_path: str):
         super().__init__(study_path, "IOBP2")
-        self.iletFilePath = os.path.join(study_path, 'Data Tables', 'IOBP2DeviceiLet.txt')
+        self._iletFilePath = os.path.join(study_path, 'Data Tables', 'IOBP2DeviceiLet.txt')
         
     def _load_data(self, subset) -> pd.DataFrame:
-        self.df = get_df(self.iletFilePath, usecols=['PtID', 'DeviceDtTm', 'CGMVal', 'BasalDelivPrev','BolusDelivPrev',
+        self._df = get_df(self._iletFilePath, usecols=['PtID', 'DeviceDtTm', 'CGMVal', 'BasalDelivPrev','BolusDelivPrev',
                                                      'MealBolusDelivPrev'], subset=subset, dtype={'PtID': str, 'CGMVal': float})
         
-        self.df.rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'DeviceDtTm': self.COL_NAME_DATETIME, 'CGMVal': self.COL_NAME_CGM, 
+        self._df.rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'DeviceDtTm': self.COL_NAME_DATETIME, 'CGMVal': self.COL_NAME_CGM, 
                         'BasalDelivPrev': self.COL_NAME_BASAL_RATE, 'BolusDelivPrev': self.COL_NAME_BOLUS}, inplace=True)
         
         #date time strings wiithout time component are assumed to be midnight
-        self.df[self.COL_NAME_DATETIME] = self.df[self.COL_NAME_DATETIME].transform(parse_flair_dates).astype('datetime64[ns]')
+        self._df[self.COL_NAME_DATETIME] = self._df[self.COL_NAME_DATETIME].transform(parse_flair_dates).astype('datetime64[ns]')
 
     def _extract_bolus_event_history(self):
-        df_bolus = self.df.dropna(subset=[self.COL_NAME_BOLUS, 'MealBolusDelivPrev']).copy()
+        df_bolus = self._df.dropna(subset=[self.COL_NAME_BOLUS, 'MealBolusDelivPrev']).copy()
         
         #Bolus delivery is separated into two different columns: bolus and meal bolus. 
         df_bolus[self.COL_NAME_BOLUS] = df_bolus[self.COL_NAME_BOLUS] + df_bolus['MealBolusDelivPrev'] 
@@ -48,7 +48,7 @@ class IOBP2(StudyDataset):
 
     def _extract_cgm_history(self):
         #get only cgms
-        df_cgm = self.df.dropna(subset=[self.COL_NAME_CGM]).copy()
+        df_cgm = self._df.dropna(subset=[self.COL_NAME_CGM]).copy()
 
         # replace magic numbers 39,401 with 40,400
         df_cgm[self.COL_NAME_CGM] = df_cgm[self.COL_NAME_CGM].replace({ 39: 40, 401: 400 })
@@ -61,7 +61,7 @@ class IOBP2(StudyDataset):
         return df_cgm
     
     def _extract_basal_event_history(self):
-        df_basal = self.df.dropna(subset=[self.COL_NAME_BASAL_RATE]).copy()
+        df_basal = self._df.dropna(subset=[self.COL_NAME_BASAL_RATE]).copy()
         
         #insulin delivery is reported as the previous amount delivered. Therefore data is shifted to to align with algorithm announcement
         df_basal[self.COL_NAME_DATETIME] = (df_basal[self.COL_NAME_DATETIME] - timedelta(minutes=5))

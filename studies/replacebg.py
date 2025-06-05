@@ -80,17 +80,17 @@ class ReplaceBG(StudyDataset):
         df_cgm = df_cgm.sort_values(by=['PtID', 'datetime'])
 
         # Assign to self
-        self.df_basal = df_basal
-        self.df_bolus = df_bolus
-        self.df_patient = df_patient
-        self.df_cgm = df_cgm
-        self.df_uploads = df_uploads
+        self._df_basal = df_basal
+        self._df_bolus = df_bolus
+        self._df_patient = df_patient
+        self._df_cgm = df_cgm
+        self._df_uploads = df_uploads
 
 
     def _extract_bolus_event_history(self):
 
         #drop actual duplicates
-        df_bolus = self.df_bolus.copy()
+        df_bolus = self._df_bolus.copy()
         df_bolus = df_bolus.drop_duplicates(subset=['PtID', 'datetime','BolusType','Normal','Extended','Duration'])
 
         #drop temporal duplciates keeping the maximum RecID row 
@@ -126,7 +126,7 @@ class ReplaceBG(StudyDataset):
         return df_bolus
 
     def _extract_basal_event_history(self):
-        df_basal = self.df_basal.copy()
+        df_basal = self._df_basal.copy()
 
         #drop duplicates with same duration and rate
         _,_,i_drop = pandas_helper.get_duplicated_max_indexes(df_basal, ['PtID', 'datetime'], 'RecID')
@@ -144,7 +144,7 @@ class ReplaceBG(StudyDataset):
         return df_basal
 
     def _extract_cgm_history(self):
-        df_cgm = self.df_cgm.copy()
+        df_cgm = self._df_cgm.copy()
 
         df_cgm = df_cgm.drop_duplicates(subset=['PtID', 'datetime','RecordType','GlucoseValue'])
 

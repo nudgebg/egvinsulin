@@ -63,8 +63,8 @@ def overlaps(df):
     return overlap
 
 class T1DEXI(StudyDataset):
-    def __init__(self, study_path, drop_mdi=False):
-        super().__init__(study_path, 'T1DEXI')
+    def __init__(self, study_path, study_name='T1DEXI', drop_mdi=False):
+        super().__init__(study_path, study_name)
         self.drop_mdi = drop_mdi
     
     
@@ -94,12 +94,12 @@ class T1DEXI(StudyDataset):
         facm = pd.merge(facm, dx.loc[~dx.DXTRT.isin(['INSULIN PUMP','CLOSED LOOP INSULIN PUMP'])], on='USUBJID',how='left')
         facm = facm.astype({'USUBJID': 'str'})
 
-        self.facm = facm
-        self.dx = dx
-        self.lb = lb
+        self._facm = facm
+        self._dx = dx
+        self._lb = lb
 
     def _extract_bolus_event_history(self):
-        bolus_rows = self.facm.loc[self.facm.FATEST=='BOLUS INSULIN'].copy()
+        bolus_rows = self._facm.loc[self._facm.FATEST=='BOLUS INSULIN'].copy()
 
         #assign FAORRES values to INSNMBOL when both INSMBOL and INSEXBOL are empty (treat as normal bolus)
         bolus_rows.loc[(bolus_rows.FATEST=='BOLUS INSULIN') & bolus_rows[['INSEXBOL','INSNMBOL']].isna().all(axis=1),'INSMNBL'] = bolus_rows.FAORRES
@@ -128,7 +128,7 @@ class T1DEXI(StudyDataset):
         return bolus_rows
 
     def _extract_basal_event_history(self):
-        basal_rows = self.facm.loc[self.facm.FATEST.isin(['BASAL INSULIN','BASAL FLOW RATE'])].copy()
+        basal_rows = self._facm.loc[self._facm.FATEST.isin(['BASAL INSULIN','BASAL FLOW RATE'])].copy()
         
         #drop mdi basal flow rates (these are empty)
         basal_rows = basal_rows.loc[~ ((basal_rows.FATEST=='BASAL FLOW RATE') & (basal_rows.DXTRT=='MULTIPLE DAILY INJECTIONS'))]
@@ -171,7 +171,7 @@ class T1DEXI(StudyDataset):
         return basal_rows
 
     def _extract_cgm_history(self):
-        lb = self.lb.drop_duplicates(subset=['USUBJID','LBDTC'],keep='first')
+        lb = self._lb.drop_duplicates(subset=['USUBJID','LBDTC'],keep='first')
         return lb.rename(columns={
             'USUBJID': self.COL_NAME_PATIENT_ID,
             'LBDTC': self.COL_NAME_DATETIME,
@@ -179,10 +179,8 @@ class T1DEXI(StudyDataset):
         })
         
 class T1DEXIP(T1DEXI):
-    def __init__(self, study_path, drop_mdi=False):
-        super().__init__(study_path)
-        self.study_name = 'T1DEXIP'
-        self.drop_mdi = drop_mdi
+    def __init__(self, study_path, study_name='T1DEXIP', drop_mdi=False):
+        super().__init__(study_path, study_name, drop_mdi)
     
     def _extract_cgm_history(self):
         glucose = super()._extract_cgm_history()
