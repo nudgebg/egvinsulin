@@ -132,43 +132,6 @@ def validate_cgm_output_dataframe(func):
         return df
     return wrapper
 
-def save_to_csv(df, file_path, compressed):
-    """
-    Save a pandas DataFrame to a csv file. The file can be compressed using gzip.
-
-    Args:
-        df (pd.DataFrame): The DataFrame to save.
-        file_path (str): The path to the output file.
-        compressed (bool): If True, the output file will be compressed using gzip.
-    """
-
-    df.to_csv(file_path + (".csv.gz" if compressed else '.csv'), index=False, 
-                compression='gzip' if compressed else None)
-
-def save_to_parquet_partitioned(df, base_path, study_name, data_type):
-    """
-    Save a pandas DataFrame to Parquet files, partitioned by specified columns.
-
-    The output structure will be using Hive style partitioning, for example:
-    `<base_path>/study_name=Flair/data_type=basal/patient_id=1/9ce850a3b57e49d5a01ca1153db0fb40-0.parquet`
-    Args:
-        df (pd.DataFrame): The DataFrame to save.
-        base_path (str): The base directory for the output files.
-        study_name (str): The name of the study.
-        data_type (str): The type of data being saved.
-    """
-
-    # Save the DataFrame as partitioned Parquet files
-    df = df.assign(study_name=study_name, data_type=data_type)
-    df.to_parquet(
-        base_path,
-        index=False,
-        partition_cols=['study_name', 'data_type', 'patient_id'],
-        engine="pyarrow",  # Ensure compatibility with partitioning
-        compression="snappy",
-        existing_data_behavior='delete_matching'
-    )
-
 class StudyDataset:
     """
     The `StudyDataset` class is designed to represent a clinical diabetes dataset with continuous glucose monitoring and insulin delivery data in the form of boluses and basal rates.
@@ -196,10 +159,10 @@ class StudyDataset:
     def __init__(self, study_path, study_name):
         self.study_path = study_path
         self.study_name = study_name
-        self.bolus_event_history = None
-        self.basal_event_history = None
-        self.cgm_history = None
-        self.data_loaded = False
+        self._bolus_event_history = None
+        self._basal_event_history = None
+        self._cgm_history = None
+        self._data_loaded = False
 
     def _load_data(self, subset: bool = False):
         """(Abstract) Load the study data into memory.
@@ -233,9 +196,9 @@ class StudyDataset:
         Args:
             subset (bool, optional): Should only load a small subset of the data for testing purposes. Defaults to False.
         """
-        if not self.data_loaded:
+        if not self._data_loaded:
             self._load_data(subset=subset)
-            self.data_loaded = True
+            self._data_loaded = True
     
     @validate_bolus_output_dataframe
     def extract_bolus_event_history(self):
@@ -257,10 +220,10 @@ class StudyDataset:
                 - `delivery_duration` (pandas.timedelta): the duration of the bolus delivery: For standard boluses the delivery duration is 0 seconds, for extended boluses, these are the duration of the extended delivery.
 
         """
-        if self.bolus_event_history is None:
+        if self._bolus_event_history is None:
             self.load_data()
-            self.bolus_event_history = self._extract_bolus_event_history()
-        return self.bolus_event_history
+            self._bolus_event_history = self._extract_bolus_event_history()
+        return self._bolus_event_history
     
     @validate_basal_output_dataframe
     def extract_basal_event_history(self):
@@ -281,10 +244,10 @@ class StudyDataset:
              - `datetime` (pandas.datetime): the date and time of the basal event
              - `basal_rate` (float): the basal rate in units per hour. Make sure to include zero basal rates as they mark basal suspends.
         """
-        if self.basal_event_history is None:
+        if self._basal_event_history is None:
             self.load_data()
-            self.basal_event_history = self._extract_basal_event_history()
-        return self.basal_event_history
+            self._basal_event_history = self._extract_basal_event_history()
+        return self._basal_event_history
     
     @validate_cgm_output_dataframe
     def extract_cgm_history(self):
@@ -301,7 +264,7 @@ class StudyDataset:
                 - `cgm`: A float representing the cgm value in mg/dL
         
         """
-        if self.cgm_history is None:
+        if self._cgm_history is None:
             self.load_data()
-            self.cgm_history = self._extract_cgm_history()
-        return self.cgm_history
+            self._cgm_history = self._extract_cgm_history()
+        return self._cgm_history
