@@ -150,7 +150,7 @@ However:
  - Others share the same datetime and duration but different rate. 
  - Others have only same time but different duration / rate. 
  - The meaning of the extra columns (Percent, ExpectedDuration, SuprDuration…) remain unclear. 
- - Reverse engineering this is a big time sink and we probably won’t get it right all the time. 
+ - Investigating this is a big time sink and we probably won’t get it right all the time. 
 
 A few examples (same time and rate). Split by which combination of basal types exist. 
 

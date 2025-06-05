@@ -1,6 +1,6 @@
 # Recommendations for Better Datasets
 
-We have spend hundreds of hours processing and reverse-engineering clinical diabetes study datasets. In this process we often came accross similar challenges and unknowns. Often, we were not able to resolve these and had to make small or large assumptions. This page summarizes these challenges and provides suggestions for improvements. This should act as a guide for other researchers when processing datasets as well as investigators to improve the quality and utility of their datasets. 
+We have spend numerous hours analyzing and understanding clinical diabetes study datasets. In this process we often came accross similar challenges and unknowns. Often, we were not able to resolve these and had to make small or large assumptions. This page summarizes these challenges and provides suggestions for improvements. This should act as a guide for other researchers when processing datasets as well as investigators to improve the quality and utility of their datasets. 
 
 ## Access
 - Access is often difficult and time-consuming
