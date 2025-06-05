@@ -15,12 +15,8 @@ class IOBP2(StudyDataset):
     def __init__(self, study_path: str):
         super().__init__(study_path, "IOBP2")
         self.iletFilePath = os.path.join(study_path, 'Data Tables', 'IOBP2DeviceiLet.txt')
-        self.bolus_extracted = None
-        self.cgm_extracted = None
-        self.basal_extracted = None
         
     def _load_data(self, subset) -> pd.DataFrame:
-
         self.df = get_df(self.iletFilePath, usecols=['PtID', 'DeviceDtTm', 'CGMVal', 'BasalDelivPrev','BolusDelivPrev',
                                                      'MealBolusDelivPrev'], subset=subset, dtype={'PtID': str, 'CGMVal': float})
         
@@ -31,60 +27,54 @@ class IOBP2(StudyDataset):
         self.df[self.COL_NAME_DATETIME] = self.df[self.COL_NAME_DATETIME].transform(parse_flair_dates).astype('datetime64[ns]')
 
     def _extract_bolus_event_history(self):
-        if not self.bolus_extracted:
-            df_bolus = self.df.dropna(subset=[self.COL_NAME_BOLUS, 'MealBolusDelivPrev']).copy()
-            
-            #Bolus delivery is separated into two different columns: bolus and meal bolus. 
-            df_bolus[self.COL_NAME_BOLUS] = df_bolus[self.COL_NAME_BOLUS] + df_bolus['MealBolusDelivPrev'] 
-            
-            #there are no extended boluses in ilet only standard/micro boluses
-            df_bolus[self.COL_NAME_BOLUS_DELIVERY_DURATION] = pd.Timedelta('0 minutes')
-            #df_bolus[self.COL_NAME_BOLUS_DELIVERY_DURATION] = df_bolus[self.COL_NAME_BOLUS_DELIVERY_DURATION].astype('timedelta64[ns]')
-            
-            #insulin delivery is reported as the previous amount delivered. Therefore data is shifted to to align with algorithm announcement
-            df_bolus[self.COL_NAME_DATETIME] = (df_bolus[self.COL_NAME_DATETIME] - timedelta(minutes=5))
-            
-            #0 values are dropped
-            df_bolus = df_bolus[df_bolus.bolus > 0]
-            
-            #reduce, return
-            df_bolus = df_bolus[[self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME, self.COL_NAME_BOLUS, self.COL_NAME_BOLUS_DELIVERY_DURATION]]
-            self.bolus_extracted = df_bolus
-        return self.bolus_extracted
+        df_bolus = self.df.dropna(subset=[self.COL_NAME_BOLUS, 'MealBolusDelivPrev']).copy()
+        
+        #Bolus delivery is separated into two different columns: bolus and meal bolus. 
+        df_bolus[self.COL_NAME_BOLUS] = df_bolus[self.COL_NAME_BOLUS] + df_bolus['MealBolusDelivPrev'] 
+        
+        #there are no extended boluses in ilet only standard/micro boluses
+        df_bolus[self.COL_NAME_BOLUS_DELIVERY_DURATION] = pd.Timedelta('0 minutes')
+        #df_bolus[self.COL_NAME_BOLUS_DELIVERY_DURATION] = df_bolus[self.COL_NAME_BOLUS_DELIVERY_DURATION].astype('timedelta64[ns]')
+        
+        #insulin delivery is reported as the previous amount delivered. Therefore data is shifted to to align with algorithm announcement
+        df_bolus[self.COL_NAME_DATETIME] = (df_bolus[self.COL_NAME_DATETIME] - timedelta(minutes=5))
+        
+        #0 values are dropped
+        df_bolus = df_bolus[df_bolus.bolus > 0]
+        
+        #reduce, return
+        df_bolus = df_bolus[[self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME, self.COL_NAME_BOLUS, self.COL_NAME_BOLUS_DELIVERY_DURATION]]
+        return df_bolus
 
     def _extract_cgm_history(self):
-        if not self.cgm_extracted:
-            #get only cgms
-            df_cgm = self.df.dropna(subset=[self.COL_NAME_CGM]).copy()
+        #get only cgms
+        df_cgm = self.df.dropna(subset=[self.COL_NAME_CGM]).copy()
 
-            # replace magic numbers 39,401 with 40,400
-            df_cgm[self.COL_NAME_CGM] = df_cgm[self.COL_NAME_CGM].replace({ 39: 40, 401: 400 })
+        # replace magic numbers 39,401 with 40,400
+        df_cgm[self.COL_NAME_CGM] = df_cgm[self.COL_NAME_CGM].replace({ 39: 40, 401: 400 })
 
-            #there are only two duplicates (almost identical values), we keep just one
-            df_cgm = df_cgm.drop_duplicates([self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME], keep='first')
+        #there are only two duplicates (almost identical values), we keep just one
+        df_cgm = df_cgm.drop_duplicates([self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME], keep='first')
 
-            #reduce, return
-            df_cgm = df_cgm[[self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME, self.COL_NAME_CGM]]
-            self.cgm_extracted = df_cgm
-        return self.cgm_extracted
+        #reduce, return
+        df_cgm = df_cgm[[self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME, self.COL_NAME_CGM]]
+        return df_cgm
     
     def _extract_basal_event_history(self):
-        if not self.basal_event_history:
-            df_basal = self.df.dropna(subset=[self.COL_NAME_BASAL_RATE]).copy()
-            
-            #insulin delivery is reported as the previous amount delivered. Therefore data is shifted to to align with algorithm announcement
-            df_basal[self.COL_NAME_DATETIME] = (df_basal[self.COL_NAME_DATETIME] - timedelta(minutes=5))
-            
-            #convert to rate 
-            df_basal[self.COL_NAME_BASAL_RATE] = df_basal[self.COL_NAME_BASAL_RATE] * 12 # 5 minute delivery to hourly rate
-            
-            #drop duplicates
-            df_basal = df_basal.drop_duplicates([self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME], keep='first')
+        df_basal = self.df.dropna(subset=[self.COL_NAME_BASAL_RATE]).copy()
+        
+        #insulin delivery is reported as the previous amount delivered. Therefore data is shifted to to align with algorithm announcement
+        df_basal[self.COL_NAME_DATETIME] = (df_basal[self.COL_NAME_DATETIME] - timedelta(minutes=5))
+        
+        #convert to rate 
+        df_basal[self.COL_NAME_BASAL_RATE] = df_basal[self.COL_NAME_BASAL_RATE] * 12 # 5 minute delivery to hourly rate
+        
+        #drop duplicates
+        df_basal = df_basal.drop_duplicates([self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME], keep='first')
 
-            #reduce, return
-            df_basal = df_basal[[self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME, self.COL_NAME_BASAL_RATE]]
-            self.basal_event_history = df_basal
-        return self.basal_event_history
+        #reduce, return
+        df_basal = df_basal[[self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME, self.COL_NAME_BASAL_RATE]]
+        return df_basal
 
 if __name__ == '__main__':
     current_dir = os.path.dirname(__file__)
