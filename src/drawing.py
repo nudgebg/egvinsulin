@@ -4,6 +4,7 @@
 # Licensed under the MIT License. See LICENSE file for details.
 from datetime import timedelta
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import numpy as np
 import importlib 
 from src import pandas_helper
@@ -22,6 +23,26 @@ def create_axis():
     """
     fig, ax = plt.figure(figsize=(10, 2)), plt.gca()
     return fig, ax
+
+def format_time_axis(ax, major_interval_days=1, minor_interval_hours=2,major_format='%-d/%-m/%Y', minor_format='%H:%M:%S'):
+    """
+    Formats the x-axis of the given matplotlib axis for time series plots.
+    Sets major ticks to days and minor ticks to hours, with appropriate formatting.
+
+    Args:
+        ax (matplotlib.axes.Axes): The axis to format.
+    """
+    # Minor ticks: every 2 hours, show time
+    ax.xaxis.set_minor_locator(mdates.HourLocator(interval=minor_interval_hours))
+    ax.xaxis.set_minor_formatter(mdates.DateFormatter(minor_format))
+
+    # Major ticks: every day, show date
+    ax.xaxis.set_major_locator(mdates.DayLocator(interval=major_interval_days))
+    ax.xaxis.set_major_formatter(mdates.DateFormatter(major_format))
+
+    # Rotate and style tick labels
+    plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, weight='bold', fontsize=8)
+    plt.setp(ax.xaxis.get_minorticklabels(), rotation=45, fontsize=8)
 
 def parse_duration(duration_str):
     """
