@@ -80,16 +80,14 @@ def calculate_daily_basal_dose(df):
     copy = df.copy()
     copy = pd.concat([copy, pd.DataFrame({'datetime': missing_supports})]).sort_values(by='datetime').reset_index(drop=True)
     copy['basal_rate'] = copy['basal_rate'].ffill()
-
-    #display(copy)
-    #make sure midnights are included for both days
-    daydelta= pd.Timedelta(days=1)
     copy['date'] = copy.datetime.dt.date
-    copy['date_before'] = copy.datetime.dt.date-daydelta
-    copy['midnight'] = copy.date == copy.datetime
-    copy['date'] = copy.apply(lambda row: {row['date']} if not row['midnight'] else {row['date'], row['date']-daydelta}, axis=1)
-    copy = copy.drop(columns=['date_before','midnight'])
+    
+    
+    #make sure midnights are included for both days
+    midnight_mask = copy.datetime.isin(supports)
+    copy.loc[midnight_mask, 'date'] = copy.loc[midnight_mask, 'datetime'].dt.date.apply(lambda x: (x,x-pd.Timedelta(days=1)))  # or .dt.normalize() if you want Timestamps
     copy = copy.explode('date')
+    
     #this results in an additional day group before/after the first/last date which we don't want
     copy = copy.loc[~copy.date.isin([copy.date.max(),copy.date.min()])]
     #display(copy)
