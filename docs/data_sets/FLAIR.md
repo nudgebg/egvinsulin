@@ -1,10 +1,10 @@
 # Flair 
 This page summarizes our insights about the clinical study data of the **Flair** study in efforts to understand how to handle bolus, basal, and cgm data as well, list assumptions that were made, and pose open questions. 
 
-The analysis for this dataset were conducted in:  
-1. `notebooks/understand-flair-dataset/understand-flair-dataset.ipynb` 
-2. `notebooks/understand-flair-dataset/2024-07-12 - Understanding TDD Discrepancies in Flair Data.ipynb` (later added to refine) 
-3. `notebooks/understand-flair-dataset/2025-07-11 - Flair Little Daily CGMs.ipynb` (investigates [lower CGM sample counts compared to other datasets](#summary-of-findings-cgm-daily-sample-counts-2025-07-11))
+The analysis for this dataset were conducted in:   
+1. `notebooks/understand-flair-dataset/understand-flair-dataset.ipynb`   
+2. `notebooks/understand-flair-dataset/2024-07-12 - Understanding TDD Discrepancies in Flair Data.ipynb` (later added to refine)   
+3. `notebooks/understand-flair-dataset/2025-07-11 - Flair Little Daily CGMs.ipynb` ([jump to update](#summary-of-findings-cgm-daily-sample-counts-2025-07-11))
 
 
 

@@ -3,9 +3,9 @@ For detailed code, statistics, and further visualizations, see the referenced no
 # Loop 
 This page summarizes our insights about the clinical study data of the **Loop** study in efforts to understand how to handle bolus, basal, and cgm data, list assumptions that were made, and pose open questions. 
 
-The analysis for this dataset were conducted in: 
-[`notebooks/understand-loop-dataset.ipynb`](./../../notebooks/understand-loop-dataset/understand-loop-dataset.ipynb)
-[`2025-07-11 - Loop Anormalies in egv, tdd, iob.ipynb`](./../../notebooks/understand-loop-dataset/2025-07-11%20-%20Loop%20Anormalies%20in%20egv,%20tdd,%20iob.ipynb)
+The analysis for this dataset were conducted in:   
+ 1. [`notebooks/understand-loop-dataset.ipynb`](./../../notebooks/understand-loop-dataset/understand-loop-dataset.ipynb)   
+ 2. [`2025-07-11 - Loop Anormalies in egv, tdd, iob.ipynb`](./../../notebooks/understand-loop-dataset/2025-07-11%20-%20Loop%20Anormalies%20in%20egv,%20tdd,%20iob.ipynb) ([jump to update](#2025-07-11-anomalies-in-loop-dataset-update))
 
 
 ## Study Overview
@@ -299,11 +299,11 @@ Lane discovered some anomalities in terms of EGV and TDD in Loop compared to oth
 
 The following figures illustrate the distribution and examples of these anomalies:
 
-<img src="assets/loop_cgm_anomalies.png" alt="loop_cgm_anomalies" width="50%"/>
+![loop_cgm_anomalies](assets/loop_cgm_anomalies.png)
 
 Examples of extreme CGM values and their context:
 
-<img src="assets/loop_anormalities.png" alt="loop_anormalities" width="50%"/>
+![loop_anormalities](assets/loop_anormalities.png)
 
 ### TDDs (Total Daily Dose)
 - Small TDDs are mostly linked to minors
@@ -314,11 +314,11 @@ Examples of extreme CGM values and their context:
 
 Scatter plot of age at enrollment vs. median TDD: The lowest TDDs are seen in minors, which makes sense:
 
-<img src="assets/loop_age_vs_tdd.png" alt="loop_age_vs_tdd" width="400"/>
+![loop_age_vs_tdd](assets/loop_age_vs_tdd.png)
 
 Patient 1183 also has very low TDDs, and the CGM confirms that this patient is probably still in the honeymoon phase:
 
-<img src="assets/loop_cgm_patient_1183.png" alt="loop_cgm_patient_1183" width="600"/>
+![loop_cgm_patient_1183](assets/loop_cgm_patient_1183.png)
 
 
 ## Open questions
