@@ -294,7 +294,7 @@ Lane discovered some anomalities in terms of EGV and TDD in Loop compared to oth
 - Values around 38–39 and ~401 likely reflect out-of-range values and **should be replaced with 40 and 400**, respectively.
 - These values are not exact but have minor numerical inaccuracies (e.g., 39.005186 instead of 39).
 - Only 6 values <38 and 34 values >401.06 were found.
-- `Patient 613` appears to use a CGM that reports glucose >400 mg/dL **these values should be kept**.
+- `Patient 613` appears to use a CGM that reports glucose >400 mg/dL **these values should be kept, but also clipped**.
 - Three users have values of 1, 10, or 20 mg/dL, likely due to sensor errors — **these should be removed**.
 
 The following figures illustrate the distribution and examples of these anomalies:
