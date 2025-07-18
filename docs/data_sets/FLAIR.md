@@ -1,7 +1,12 @@
 # Flair 
 This page summarizes our insights about the clinical study data of the **Flair** study in efforts to understand how to handle bolus, basal, and cgm data as well, list assumptions that were made, and pose open questions. 
 
-The full analysis of this dataset is provided in: `notebooks/understand-flair-dataset/understand-flair-dataset.ipynb` and (later added to refine) `notebooks/understand-flair-dataset/2024-07-12 - Understanding TDD Discrepancies in Flair Data.ipynb`
+The analysis for this dataset were conducted in:   
+1. `notebooks/understand-flair-dataset/understand-flair-dataset.ipynb`   
+2. `notebooks/understand-flair-dataset/2024-07-12 - Understanding TDD Discrepancies in Flair Data.ipynb` (later added to refine)   
+3. `notebooks/understand-flair-dataset/2025-07-11 - Flair Little Daily CGMs.ipynb` ([jump to update](#summary-of-findings-cgm-daily-sample-counts-2025-07-11))
+
+
 
 ## Study Overview
 - **Study Name**: A Crossover Study Comparing Two Automated Insulin Delivery System
@@ -244,3 +249,17 @@ By only setting the basal rate to zero when a AutoModeStatus true event occurs s
 
 ## TDDs 
 Reported TDDs are used to test our calculated basals and boluses. However, we often see multiple TDDs reported on a single day including zero values. On these days, the reported and calculated TDDs don't match at all and taking the sum or the last or the maximum value still results in a poor fit. Therefore, we can't trust that reported TDDs are 100% accurate, especially on days where multiple values are reported. For testing, days with multiple TDDs should not be trusted.
+
+## Summary of Findings: CGM Daily Sample Counts (2025-07-11)
+
+Analysis of the Flair CGM data revealed that many days have fewer than 288 samples compared to other datasets 
+![](assets/flair_cgm_sample_cdf_comparison_lane_july_25.png)
+We checked and confirmed that the data is missing in the raw data (not a toolbox problem). The distribution of daily sample counts matches previous findings, with missing samples occurring throughout the study rather than just at the start or end. Gaps in CGM data are often longer than 2 hours, likely due to sensor warmup periods, but many of these large gaps (2–10 or more) remain unexplained. 
+![](assets/flair_cgm_gaps.png)
+Approximately one third of gaps ≥2 hours can likely be attributed to sensor replacement + warmup. The Guardian Sensor 3's 2-hour warmup and 7-day maximum wear time explain some, but not all, missing data. 
+
+Further investigation could look try clipping the data before/after study start/end using the `FLAIRVisitInfo.txt`
+
+
+## Outlook
+Clipping the data before/after study start/end using the `FLAIRVisitInfo.txt` could help remove days with incomplete data. Also, obtaining study and intervention start/end will be helpful in other contexts.

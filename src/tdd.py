@@ -8,37 +8,6 @@ from datetime import timedelta
 from src.logger import Logger
 logger = Logger().get_logger(__name__)
 
-def durations_since_previous_valid_value(dates, values):
-    """
-    Calculate the durations between each date and the previous date with a valid value (non NaN).
-
-    Parameters:
-    dates (list): A list of dates.
-    values (list): A list of values.
-
-    Returns:
-        durations (list): A list of durations between each date and the previous valid date. NaN if there is no previous valid date.
-    """
-    last_valid_date = None
-    durations = []
-    for (date, value) in zip(dates, values):
-        duration = np.nan
-        if last_valid_date is not None:
-            duration = date - last_valid_date
-        if not np.isnan(value):
-            last_valid_date = date
-        durations.append(duration)
-    return durations
-
-def combine_and_forward_fill(df, colname_date, col_name_value, gap: timedelta):
-    #forward fill, but only if duration between values is smaller than the threshold
-    combined_df = df.copy() 
-    combined_df['temp'] = df[col_name_value].ffill()
-    durations = pd.Series(durations_since_previous_valid_value(combined_df[colname_date], combined_df[col_name_value])) 
-    bSmallGap = durations <=  gap
-    combined_df.loc[bSmallGap, col_name_value] = combined_df.temp
-    return combined_df.drop(columns=['temp'])
-
 def total_delivered(df, datetime_col, rate_col):
     """Calculate the total delivered insulin over the time intervals in the given DataFrame."""
     x = (df[datetime_col].diff().dt.total_seconds()/3600)[1:]
@@ -80,16 +49,14 @@ def calculate_daily_basal_dose(df):
     copy = df.copy()
     copy = pd.concat([copy, pd.DataFrame({'datetime': missing_supports})]).sort_values(by='datetime').reset_index(drop=True)
     copy['basal_rate'] = copy['basal_rate'].ffill()
-
-    #display(copy)
-    #make sure midnights are included for both days
-    daydelta= pd.Timedelta(days=1)
     copy['date'] = copy.datetime.dt.date
-    copy['date_before'] = copy.datetime.dt.date-daydelta
-    copy['midnight'] = copy.date == copy.datetime
-    copy['date'] = copy.apply(lambda row: {row['date']} if not row['midnight'] else {row['date'], row['date']-daydelta}, axis=1)
-    copy = copy.drop(columns=['date_before','midnight'])
+    
+    
+    #make sure midnights are included for both days
+    midnight_mask = copy.datetime.isin(supports)
+    copy.loc[midnight_mask, 'date'] = copy.loc[midnight_mask, 'datetime'].dt.date.apply(lambda x: (x,x-pd.Timedelta(days=1)))  # or .dt.normalize() if you want Timestamps
     copy = copy.explode('date')
+
     #this results in an additional day group before/after the first/last date which we don't want
     copy = copy.loc[~copy.date.isin([copy.date.max(),copy.date.min()])]
     #display(copy)

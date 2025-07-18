@@ -1,7 +1,12 @@
+
+For detailed code, statistics, and further visualizations, see the referenced notebook.
 # Loop 
 This page summarizes our insights about the clinical study data of the **Loop** study in efforts to understand how to handle bolus, basal, and cgm data, list assumptions that were made, and pose open questions. 
 
-The full analysis of this dataset is provided in: `notebooks/understand-loop-dataset.ipynb`
+The analysis for this dataset were conducted in:   
+ 1. [`notebooks/understand-loop-dataset.ipynb`](./../../notebooks/understand-loop-dataset/understand-loop-dataset.ipynb)   
+ 2. [`2025-07-11 - Loop Anormalies in egv, tdd, iob.ipynb`](./../../notebooks/understand-loop-dataset/2025-07-11%20-%20Loop%20Anormalies%20in%20egv,%20tdd,%20iob.ipynb) ([jump to update](#2025-07-11-anomalies-in-loop-dataset-update))
+
 
 ## Study Overview
 - **Study Name**: An Observational Study of Individuals with Type 1 Diabetes Using the Loop System for Automated Insulin Delivery: The Loop Observational Study (LOS)  
@@ -124,10 +129,10 @@ Yes, there are some patients with only CGM data but missing basal data.  The pat
 ## Datetimes
 
 ### uutc vs local
-We started by working with CGM data to understand how to obtain local datetimes.  Unfortunately, for most of the data only UTC time exists while DeviceDtTm (local device time) and TmznOffset (time zone offset from utc) are NaN.
+We started by working with CGM data to understand how to obtain local datetimes.  Unfortunately, for most of the data only UTC time exists while DeviceDtTm (local device time) and TmznOffset (time zone offset from utc) are NaN.   
 ![alt text](assets/loop-localtimes.png)
- We confirmed this relationship by plotting the diurnal distributions of glucose and boluses and found the expected postprandial peaks in the morning, around noon, and evening when using local times.
 
+ We confirmed this relationship by plotting the diurnal distributions of glucose and boluses and found the expected postprandial peaks in the morning, around noon, and evening when using local times.   
 ![](assets/loop-localtime-boluses.png)
 
 ### Timezone information
@@ -167,7 +172,7 @@ Local datetimes can be obtained with a small estimated error (<2 hours for >96% 
 - there are also blood glucose calibrations 
 
 ### Special Values
-CGM values are capped (as expected) but no special values (e.g. 0) values exist.
+CGM values are capped (as expected) but no special values (e.g. 0) values exist.   
 ![](assets/loop-cgm-dist.png)
 
 #### CGM Duplicates
@@ -277,6 +282,44 @@ In order to verify if we correctly extracted basal rates, we compared our calcul
 However, what we found is that our calculated TDDs are much higher than those provided by JAEB. Understanding the differences could help us reveal unknowns and wrong assumptions that we made about the data. 
 
 ![](assets/loop-tdd-basal.png)
+
+
+
+## 2025-07-11: Anomalies in Loop Dataset (Update)
+
+Lane discovered some anomalities in terms of EGV and TDD in Loop compared to other datasets. These findings from the analysis notebook "2025-07-11 - Loop Anormalies in egv, tdd, iob.ipynb" regarding CGM (EGV), TDD, and bolus data in the Loop dataset.
+
+
+### EGV (CGM) Anomalies
+- Values around 38–39 and ~401 likely reflect out-of-range values and **should be replaced with 40 and 400**, respectively.
+- These values are not exact but have minor numerical inaccuracies (e.g., 39.005186 instead of 39).
+- Only 6 values <38 and 34 values >401.06 were found.
+- `Patient 613` appears to use a CGM that reports glucose >400 mg/dL **these values should be kept**.
+- Three users have values of 1, 10, or 20 mg/dL, likely due to sensor errors — **these should be removed**.
+
+The following figures illustrate the distribution and examples of these anomalies:
+
+![loop_cgm_anomalies](assets/loop_cgm_anomalies.png)
+
+Examples of extreme CGM values and their context:
+
+![loop_anormalities](assets/loop_anormalities.png)
+
+### TDDs (Total Daily Dose)
+- Small TDDs are mostly linked to minors
+ - Patient 1183 (age 31) has very low TDDs but is not a minor, possibly in a honeymoon phase.
+- Extremely low TDDs (basal, bolus, or both) are most likely due to missing data, often occurring when data is missing on neighboring days as well.
+- Some days show only boluses and no basal rates, or singular micro boluses.
+- There is no general rule for exclusion, but one approach could be to exclude days with less than a threshold number of basal rates and no boluses.
+
+Scatter plot of age at enrollment vs. median TDD: The lowest TDDs are seen in minors, which makes sense:
+
+![loop_age_vs_tdd](assets/loop_age_vs_tdd.png)
+
+Patient 1183 also has very low TDDs, and the CGM confirms that this patient is probably still in the honeymoon phase:
+
+![loop_cgm_patient_1183](assets/loop_cgm_patient_1183.png)
+
 
 ## Open questions
  - Do we need to consider basal type and suppressed values? 
