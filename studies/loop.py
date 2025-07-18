@@ -103,6 +103,10 @@ class Loop(StudyDataset):
         ddf = ddf.map_partitions(lambda df: df.merge(self._df_patient[['PtID', 'PtTimezoneOffset']], on='PtID', how='left'))
         ddf['UTCDtTm'] = ddf['UTCDtTm'] + dd.to_timedelta(ddf['PtTimezoneOffset'], unit='hour')
 
+        #clip CGM data to 40-400 mg/dL, drop outliers (see dedicated analysis)
+        ddf = ddf[ddf.CGMVal > 38]
+        ddf["CGMVal"] = ddf["CGMVal"].clip(lower=40, upper=400)
+        
         # Reduce, Rename
         ddf = ddf.drop(columns=['PtTimezoneOffset', 'RecordType'])
 

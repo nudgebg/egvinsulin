@@ -14,3 +14,6 @@ Sometimes confusion occurs when the patient ID is compared to an integer because
 ## Patient ids are maintained 
 We don't change the original patient ID (even if they are non-numerical). Therefore, there is no guarantee that patient IDs are monotonically increasing from 1.
 
+## CGM out of range values.
+Some datasets set glucose below/above ranges to 40/400, others use special indicators such as 39,401. We replace these with 40,400. However, some datasets like Loop contain sensors that provie readings above range (1 patient as far as we know). This information is also clipped to be consistent.
+
