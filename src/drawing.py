@@ -56,7 +56,7 @@ def parse_duration(duration_str):
     hours, minutes, seconds = map(int, duration_str.split(":"))
     return timedelta(hours=hours, minutes=minutes, seconds=seconds)
 
-def drawCGM(ax, datetimes, values, color=colors['CGM'], unit='mg/dL', **kwargs):
+def drawCGM(ax, datetimes, values, color=colors['CGM'], unit='mg/dL',target_range=True, **kwargs):
     """Draws CGM (Continuous Glucose Monitoring) data on the given axes.
 
     Args:
@@ -73,7 +73,9 @@ def drawCGM(ax, datetimes, values, color=colors['CGM'], unit='mg/dL', **kwargs):
         values = values * 18.01559
     elif unit != 'mg/dL':
         raise ValueError(f'Unknown unit: {unit}')
-    
+    if target_range:
+        ax.axhspan(70, 180, color='lightgreen', alpha=0.2)
+
     ax.scatter(datetimes, values, **defaults)
     ax.set_ylabel('Glucose (mg/dL)')
     ax.legend()
