@@ -148,9 +148,9 @@ In **sumamry** we treat extended boluses as follows:
 4. Set bolus delivery duration:
    - For standard boluses: set to 0
    - Extended boluses: time difference between extended and standard datetimes
-5. For delivery durations >8h (those are definitely matched incorrectly) set the duration to 55 minutes (median value of identified durations) 
+5. For delivery durations >8h (those are definitely matched incorrectly) set the duration to 80 minutes (the median duration in PEDAP) 
 
-Comparing the CDFs we see that, while different, PEDPA and DCLP3 show similar trends (60 minute and 120 minutes being the most common choices) which suggest that our corrections, while not free from it, reduces error:
+Comparing the CDFs we see that, while different, PEDPA and DCLP3 show similar trends (60 minute and 120 minutes being the most common choices) which suggest that our corrections, while not free from it, reduce error:
 
 | PEDAP | DCLP3 |
 |-|-|

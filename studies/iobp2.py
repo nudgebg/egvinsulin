@@ -23,8 +23,10 @@ class IOBP2(StudyDataset):
         self._df.rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'DeviceDtTm': self.COL_NAME_DATETIME, 'CGMVal': self.COL_NAME_CGM, 
                         'BasalDelivPrev': self.COL_NAME_BASAL_RATE, 'BolusDelivPrev': self.COL_NAME_BOLUS}, inplace=True)
         
-        #date time strings wiithout time component are assumed to be midnight
+        #date time strings without time component are assumed to be midnight
         self._df[self.COL_NAME_DATETIME] = self._df[self.COL_NAME_DATETIME].transform(parse_flair_dates).astype('datetime64[ns]')
+
+        self._df = self._df.sort_values([self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME])
 
     def _extract_bolus_event_history(self):
         df_bolus = self._df.dropna(subset=[self.COL_NAME_BOLUS, 'MealBolusDelivPrev']).copy()

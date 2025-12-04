@@ -90,18 +90,18 @@ class Loop(StudyDataset):
         # keep only CGM records (removes calibrations, etc.)
         ddf = ddf.loc[ddf.RecordType == 'CGM']
 
-        #drop duplicates
-        ddf = ddf.map_partitions(lambda df: df.drop_duplicates(subset=['UTCDtTm', 'CGMVal']))
-
         # Convert to mg/dL
         ddf['CGMVal'] = ddf.CGMVal * 18.018
-
-        #sort
-        ddf = ddf.map_partitions(lambda df: df.sort_values('UTCDtTm'))
 
         # Convert to local datetime
         ddf = ddf.map_partitions(lambda df: df.merge(self._df_patient[['PtID', 'PtTimezoneOffset']], on='PtID', how='left'))
         ddf['UTCDtTm'] = ddf['UTCDtTm'] + dd.to_timedelta(ddf['PtTimezoneOffset'], unit='hour')
+
+        #drop duplicates (we see only insignificant differences in duplicates, likely due to rounding)
+        ddf = ddf.map_partitions(lambda df: df.drop_duplicates(subset=['UTCDtTm']))
+
+        #sort
+        ddf = ddf.map_partitions(lambda df: df.sort_values('UTCDtTm'))
 
         #clip CGM data to 40-400 mg/dL, drop outliers (see dedicated analysis)
         ddf = ddf[ddf.CGMVal > 38]
@@ -128,21 +128,24 @@ class Loop(StudyDataset):
                                 parse_dates=['UTCDtTm'], date_format='%Y-%m-%d %H:%M:%S',
                                 usecols=['PtID', 'UTCDtTm', 'Normal', 'Extended', 'Duration'])
         
-        #drop duplicates
-        df = df.drop_duplicates(subset=['PtID', 'UTCDtTm'])
-        
         # Convert to local datetime
         df = df.merge(self._df_patient[['PtID', 'PtTimezoneOffset']], on='PtID', how='left')
         df['UTCDtTm'] = df.UTCDtTm + pd.to_timedelta(df.PtTimezoneOffset, unit='hour')
 
-        #split extended and normal boluses
-        #for normal boluses the delivery duration = 0
-        normal = df.drop(columns=['Extended'])
+        #drop duplicates
+        df = df.drop_duplicates(subset=['PtID', 'UTCDtTm'])
+
+        # Split extended and normal boluses
+        # for normal boluses the delivery duration = 0,
+        # some normal boluses are NaN (relating to square boluses (no immediate part)) and should be dropped
+        normal = df.drop(columns=['Extended']).dropna(subset='Normal')
         normal['Duration'] = pd.to_timedelta(0, unit='millisecond')
 
         #extended boluses have a delivery duration
         extended = df.drop(columns=['Normal']).dropna(subset=['Extended']).rename(columns={"Extended": "Normal"})
         extended['Duration'] = pd.to_timedelta(extended.Duration, unit='millisecond')
+        # Some 108 extended durations are zero, probably indicating a cancelled bolus. These would become duplicates to the normal boluses part.
+        extended = extended.loc[extended.Duration > pd.to_timedelta(0, unit='millisecond')]
         df = pd.concat([normal, extended], axis=0).sort_values('UTCDtTm')
         
         # Reduce, Rename, Return
@@ -170,6 +173,9 @@ class Loop(StudyDataset):
 
         #drop duplicates
         ddf = ddf.map_partitions(lambda df: df.drop_duplicates(subset=['UTCDtTm']))
+
+        #replace NaN basal rates with zero (these are suspends)
+        ddf = ddf.map_partitions(lambda df: df.fillna({'Rate': 0}))
 
         # Convert to local datetime
         ddf = ddf.map_partitions(lambda df: df.merge(self._df_patient[['PtID', 'PtTimezoneOffset']], on='PtID', how='left'))

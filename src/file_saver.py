@@ -2,16 +2,58 @@ import os
 from src import postprocessing
 import pandas as pd
 
-def save_to_csv(df, file_path, compressed):
+def get_output_paths(out_path, study_name, data_types=None):
     """
-    Save a pandas DataFrame to a CSV file. The file can be compressed using gzip.
-
+    Determine the output paths that will be created for a study in Parquet format.
+    This function can be used both for saving files and for cleanup operations.
+    
     Args:
-        df (pd.DataFrame): The DataFrame to save.
-        file_path (str): The path to the output file.
-        compressed (bool): If True, the output file will be compressed using gzip.
+        out_path (str): Base output directory
+        study_name (str): Name of the study
+        data_types (list): List of data types to include ['cgm', 'bolus', 'basal']. If None, all types are included.
+        
+    Returns:
+        list: List of directory paths that will be created/removed
     """
-    df.to_csv(file_path + (".csv.gz" if compressed else '.csv'), compression='gzip' if compressed else None, index=False)
+    directories = []
+    
+    # For parquet format, data is partitioned by study_name, data_type, patient_id
+    if data_types is None:
+        # Remove entire study directory when no specific data types specified
+        directories = [os.path.join(out_path, f"study_name={study_name}")]
+    else:
+        # Remove specific data type partitions
+        for data_type in data_types:
+            directories.append(os.path.join(out_path, f"study_name={study_name}", f"data_type={data_type}"))
+    
+    return directories
+
+def cleanup_study_output(out_path, study_name, data_types=None):
+    """
+    Remove existing output directories for a study to ensure clean output.
+    
+    Args:
+        out_path (str): Base output directory
+        study_name (str): Name of the study
+        data_types (list): List of data types to clean ['cgm', 'bolus', 'basal']. If None, all types are cleaned.
+        
+    Returns:
+        list: List of paths that were actually removed
+    """
+    import shutil
+    
+    directories = get_output_paths(out_path, study_name, data_types)
+    removed_paths = []
+    
+    # Remove directories
+    for directory in directories:
+        if os.path.exists(directory) and os.path.isdir(directory):
+            shutil.rmtree(directory)
+            removed_paths.append(directory)
+    
+    return removed_paths
+
+
 
 def save_to_parquet_partitioned(df, base_path, study_name, data_type):
     """
@@ -35,22 +77,18 @@ def save_to_parquet_partitioned(df, base_path, study_name, data_type):
 
 def save_dataframe(df, out_path, output_format, compressed, study_name, data_type):
     """
-    Save a DataFrame to a specified format (CSV or Parquet) with optional compression.
+    Save a DataFrame to Parquet format with partitioning.
 
     Args:
         df (pd.DataFrame): The DataFrame to save.
         out_path (str): The base directory for the output files.
-        output_format (str): The output format ('csv' or 'parquet').
-        compressed (bool): If True, reduces resolution and compressses the output file (for CSV).
+        output_format (str): The output format (only 'parquet' is supported).
+        compressed (bool): Not used for parquet (compression is handled by pyarrow).
         study_name (str): The name of the study.
         data_type (str): The type of data being saved (e.g., 'cgm', 'bolus', 'basal').
     """
-    if output_format == "csv":
-        if compressed:
-            df = postprocessing.optimize_dataframe_storage(df)
-        save_to_csv(df, os.path.join(out_path, f"{study_name}_{data_type}"), compressed)
-    elif output_format == "parquet":
+    if output_format == "parquet":
         save_to_parquet_partitioned(df, out_path, study_name, data_type)
     else:
-        raise ValueError(f"Unsupported output format: {output_format}")
+        raise ValueError(f"Unsupported output format: {output_format}. Only 'parquet' is supported.")
     

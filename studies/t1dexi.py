@@ -17,7 +17,7 @@ from src.pandas_helper import get_duplicated_max_indexes, get_df
 def load_facm(path, subset):
         facm = get_df(path, subset=subset)
         facm = facm.replace('', np.nan).astype({'USUBJID': 'str', 'FAORRES': 'float'})
-
+        
         #drop columns with no additional, duplicated or corrupt information
         facm = facm.drop(columns=['STUDYID','DOMAIN','FASEQ',# not informative
                                   'FAOBJ', #Always INSULIN, can be ignored.
@@ -118,8 +118,9 @@ class T1DEXI(StudyDataset):
         normal['FADUR'] = timedelta(0) #when there was a normal bolus, it would still carry the extended bolus duration
         extended = bolus_rows.loc[bolus_rows.INSEXBOL>0][['USUBJID','FADTC','FADUR','INSEXBOL']].copy()
         extended = extended.rename(columns={'INSEXBOL': self.COL_NAME_BOLUS})
+        
         #merge back into single dataframe
-        bolus_rows = pd.concat([normal,extended],ignore_index=True)
+        bolus_rows = pd.concat([normal,extended],ignore_index=True).sort_values(by=['USUBJID','FADTC','FADUR'])
     
         # Reduce, Rename
         bolus_rows = bolus_rows.rename(columns={'USUBJID': self.COL_NAME_PATIENT_ID, 

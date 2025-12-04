@@ -49,11 +49,11 @@ The following lists all relevant columns. Other columns were considered irreleva
 | **Rate** | Number of units per hour| **This is likely the only relevant value here**|
 | ~~DeviceDtTm~~ | ~~Local device date and time; note not present in most rows because unavailable in Tidepool data source~~ |*1|
 | ~~TmZnOffset~~ | ~~Timezone offset~~ | *1 | 
-| BasalType| Basal delivery type | Unclear|
-| Duration | Actual number of milliseconds basal will be in effect | Unclear |
-| ExpectedDuration | Expected number of milliseconds basal will be in effect | Unclear|
-| Percnt | Percentage of suppressed basal that should be delivered | Unclear|
-| SuprBasalType| Suppressed basal delivery type (suppressed basal = basal event not being delivered because this one is active) | Unclear, ambiguous description. JAEB did not use these values (see Q&A with JAEB below) |
+| BasalType| Basal delivery type ||
+| Duration | Actual number of milliseconds basal will be in effect | Theoretically could be in milliseconds or minutes but it appears that all are in milliseconds. |
+| ExpectedDuration | Expected number of milliseconds basal will be in effect ||
+| Percnt | Percentage of suppressed basal that should be delivered | See exaplanation suppressed basal rates|
+| SuprBasalType| Suppressed basal delivery type (suppressed basal = basal event not being delivered because this one is active) |  |
 | SuprDuration | Suppressed duration |Unclear|
 | SuprRate | Suppressed rate | Unclear|
 
@@ -80,10 +80,7 @@ Example (first row):
 
 \* The information about the source can be derived from the LoopDeviceUploads.txt. However, this was not done at the time of analysis!
 
-We asked JAEB:
-
-**Suppressed Deliveries:** What are suppressed deliveries in the context of basal data?    
-> Answer: **We do not know** what the suppressed deliveries represent in this context, and we did not use this information for our analyses.  We calculated TDI using the Rate and Duration variables.  We suggest reaching out to Tidepool for information on suppressed deliveries.
+Questons:
 
 **Patient IDs Discrepancy:** Why are there more patient IDs in the CGM files than in the Basal and Bolus files?  
 > If available, CGM data from the participant’s personal CGM was collected for the 3 months prior to enrollment. A number of participants provided the retrospective personal CGM data but did not use Loop/provide us with their Loop data.
@@ -106,7 +103,6 @@ Note: After the analysis we found out that LoopDeviceUploads.txt also provides t
 Boluses:    
 
  - Need to check if the Normal portion is the actual delivered by comparing the values (<= in all cases would prove this to be true).
- - Check if there are extended boluses
  - Can we determine the delivery duration (ms or minutes) based on the data source?
 
 Basals:  
@@ -207,8 +203,9 @@ We found that sometimes boluses are drastically different. We don't know why tha
 ### Dual wave Boluses
 We know there are some dual wave and extended boluses. Since Loop does not support these natively, these were likey initiated by the user from the pump or during open loop mode.
 
- - 0.43% of boluses are extended
- - These always have a duration
+ - 0.43% of boluses are extended (then the Extended Part, otherwise this is set to NaN)
+ - `square` boluses have no Normal Part (set to NaN). These must be dropped.
+ - Some 108 extended boluses have 0 duration. These were probably stopped early and the bolus is almost always zero. We drop these too, otherwise they become temporal duplicates with the Normal part.
 
 #### Bolus Duration
 From the glossary we know that the duration is either in ms or minutes.
@@ -228,7 +225,6 @@ There seem to be only delivered events, no requested.
 * There are some duplicated (in time) Boluses ~3% 
 * These boluses are mostly equal but in rare cases significantly different (reason unclear)
 * Extended boluses exist and should be separted, it appears that Duration is always given in milliseconds
-
 
 ## Basal Rates
 
@@ -252,12 +248,14 @@ DUPLICATES:
 We found that these temporal duplicates differ in almost all columns. In some cases we saw that temporal duplicated rows have different durations and one row seems to have incorrect/incomplete data: very small Duration, missing type, missing rate. By keeping the maximum duration, we mostly remove the left tail. But honestly, we don't know what is going on.
 
 ### Basal Type
-`BaslTypes` differ with `temp` in ~ 99.5% of the cases. Less than 0.5% are scheduled or suspend (0.038%).
+`BaslTypes`: `temp` ~ 99.5% of the cases, <0.5% are `scheduled` or `suspend` (0.038%).
 The SuprBasalType colum only contains `scheduled` values (92%, while the rest is empty).
 
-We asked JAEB about suppressed deliveries and they also didn't know how to interpret them and recommended reaching out to Tidepool directly. 
+### Suppressed events
+The suppressed basal types, rates and durations are those that were originall scheduled but temporarily suppressed either a temp basal or suspended.  The percentage reflects the percentage of the original scheduled rate that is being delivered instead: `Percnt = Rate / SuprRate`. Therefore we can simply rely on the reported `Rate` which is in line with what JAEB did.
 
-We checked and found that the relationship between the values is `Percnt = Rate / SuprRate`. Now it is unclear wether to use the SuprRate or the Rate. The glossary sounds like the Rate is the actual delivered rate. We asked JAEB and they also used the rate.
+### NaN Basal Rates
+Iur analysis shows that all `Suspend` basal events are Reported as NaNs and only Suspends are NaN with 2 exceptions. Therefore, we replace NaNs with 0 basal rates.
 
 ### Basal Durations
 It is unclear to us whether the basal duration must be considered or if the basal rate should be kept active until the next basal rate is reported. We are unsure because we sometimes see basal rates being reported as zero while at other times, after the duration expires, no new basal rates are reported.
@@ -322,7 +320,7 @@ Patient 1183 also has very low TDDs, and the CGM confirms that this patient is p
 
 
 ## Open questions
- - Do we need to consider basal type and suppressed values? 
+
  - How to treat basal durations and how to fill basal gaps?
    - Do basal rates remain active until the next event is reported?
    - Are reported basal rates the absolute basal rate or the deviation from standard basal?

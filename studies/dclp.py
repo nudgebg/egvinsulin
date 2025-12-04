@@ -28,13 +28,6 @@ class DCLP3(StudyDataset):
                           usecols=['RecID', 'PtID', 'DataDtTm', 'CGMValue', 'DataDtTm_adjusted', 'HighLowIndicator'],
                           subset=subset)
 
-        # Handle duplicates
-        # for cgm we just keep the first value
-        df_cgm.drop_duplicates(['PtID', 'DataDtTm'], keep='first', inplace=True)
-        # for basal we decided top use the maximum value
-        _, _, drop_indexes = pandas_helper.get_duplicated_max_indexes(df_basal, ['PtID', 'DataDtTm'], 'CommandedBasalRate')
-        df_basal.drop(drop_indexes, inplace=True)
-
         #remove patients with incomplete data
         intersecting_ids = reduce(np.intersect1d, (df_basal.PtID.unique(), df_bolus.PtID.unique(), df_cgm.PtID.unique()))
         df_basal = df_basal[df_basal.PtID.isin(intersecting_ids)]
@@ -47,31 +40,38 @@ class DCLP3(StudyDataset):
         df_basal['PtID'] = df_basal.PtID.astype(str)
 
         #setting datetimes (using the adjusted datetime if available)
-        df_bolus['datetime'] = pd.to_datetime(df_bolus.DataDtTm_adjusted.fillna(df_bolus.DataDtTm))
-        df_basal['datetime'] = pd.to_datetime(df_basal.DataDtTm_adjusted.fillna(df_basal.DataDtTm))
-        df_cgm['datetime'] = pd.to_datetime(df_cgm.DataDtTm_adjusted.fillna(df_cgm.DataDtTm))
+        df_bolus['DataDtTm'] = pd.to_datetime(df_bolus.DataDtTm_adjusted.fillna(df_bolus.DataDtTm))
+        df_basal['DataDtTm'] = pd.to_datetime(df_basal.DataDtTm_adjusted.fillna(df_basal.DataDtTm))
+        df_cgm['DataDtTm'] = pd.to_datetime(df_cgm.DataDtTm_adjusted.fillna(df_cgm.DataDtTm))
 
-        df_cgm.drop(columns=['DataDtTm', 'DataDtTm_adjusted'], inplace=True)
-        df_bolus.drop(columns=['DataDtTm', 'DataDtTm_adjusted'], inplace=True)
-        df_basal.drop(columns=['DataDtTm', 'DataDtTm_adjusted'], inplace=True)
+        df_cgm.drop(columns=['DataDtTm_adjusted'], inplace=True)
+        df_bolus.drop(columns=['DataDtTm_adjusted'], inplace=True)
+        df_basal.drop(columns=['DataDtTm_adjusted'], inplace=True)
         
-        self._df_bolus = df_bolus.sort_values(by=['PtID','datetime'])
-        self._df_basal = df_basal.sort_values(by=['PtID','datetime'])
-        self._df_cgm = df_cgm.sort_values(by=['PtID','datetime'])
+        self._df_bolus = df_bolus.sort_values(by=['PtID','DataDtTm'])
+        self._df_basal = df_basal.sort_values(by=['PtID','DataDtTm'])
+        self._df_cgm = df_cgm.sort_values(by=['PtID','DataDtTm'])
     
     def __init__(self, study_path, study_name='DCLP3'):
         super().__init__(study_path, study_name)
 
     def _extract_basal_event_history(self):
-        temp = self._df_basal.copy()
-        temp = temp[['PtID', 'datetime', 'CommandedBasalRate']].rename(columns={'PtID': 'patient_id', 'CommandedBasalRate': 'basal_rate'})
-        return temp
+        df_basal = self._df_basal.copy()
+
+        #duplicates
+        _, _, drop_indexes = pandas_helper.get_duplicated_max_indexes(df_basal, ['PtID', 'DataDtTm'], 'CommandedBasalRate')
+        df_basal.drop(drop_indexes, inplace=True)
+
+        df_basal = df_basal[['PtID', 'DataDtTm', 'CommandedBasalRate']].rename(columns={'PtID': StudyDataset.COL_NAME_PATIENT_ID, 
+                                                                                'DataDtTm': StudyDataset.COL_NAME_DATETIME,
+                                                                                'CommandedBasalRate': StudyDataset.COL_NAME_BASAL_RATE})
+        return df_basal
 
     def _extract_bolus_event_history(self):
-        temp = self._df_bolus.copy()
+        df_bolus = self._df_bolus.copy()
         
-        #Match standard and extended boluses (this will incorrectly match purely extended boluses to standard boluses)
-        periods = temp.groupby('PtID').apply(lambda x: find_periods(x,'BolusType','datetime', lambda x: x == 'Standard',  lambda x: x == 'Extended', use_last_start_occurence=True))
+        #Match standard and extended boluses (this will incorrectly match some orphan extended boluses to "a" previous standard boluses)
+        periods = df_bolus.groupby('PtID').apply(lambda x: find_periods(x,'BolusType','DataDtTm', lambda x: x == 'Standard',  lambda x: x == 'Extended', use_last_start_occurence=True))
         periods = periods[periods.apply(lambda x: len(x)>0)] 
         periods = pd.DataFrame(periods.explode(),columns=['Periods'])
         pt_ids_copy = periods.index
@@ -80,29 +80,44 @@ class DCLP3(StudyDataset):
         
         #calculate extended bolus delivery durations
         #durations above 8 hours are not possible, therefore treated as extended boluses (no standard part)
-        #and assigned 55 minutes duration which is the observed meadian duration
+        #and assigned 80 minutes duration which is the observed median duration in PEDAP
         periods['delivery_duration'] = periods.time_end - periods.time_start
-        periods.loc[periods.delivery_duration>timedelta(hours=8), 'delivery_duration'] = timedelta(minutes=55)
-        temp['delivery_duration'] = timedelta(0)
+        periods.loc[periods.delivery_duration>timedelta(hours=8), 'delivery_duration'] = timedelta(minutes=80)
+        df_bolus['delivery_duration'] = timedelta(0)
         #use .values here, otherwise will try to assign by index
-        temp.loc[periods.index_end, 'datetime'] = (periods.time_end - periods.delivery_duration).values
-        temp.loc[periods.index_end, 'delivery_duration'] = periods.delivery_duration.values
+        df_bolus.loc[periods.index_end, 'DataDtTm'] = (periods.time_end - periods.delivery_duration).values
+        df_bolus.loc[periods.index_end, 'delivery_duration'] = periods.delivery_duration.values
+        #df_bolus['delivery_duration'] = pd.to_timedelta(df_bolus.delivery_duration)
+        df_bolus = df_bolus.sort_values(by=['PtID','DataDtTm', 'delivery_duration'])
         
-        temp['delivery_duration'] = pd.to_timedelta(temp.delivery_duration)
+        # Handling Duplicates
+        # After accounting for extended boluses, there are a few duplicates left. We keep the maximum.
+        _,_,i_drop = pandas_helper.get_duplicated_max_indexes(df_bolus,['PtID', 'DataDtTm', 'delivery_duration'], 'BolusAmount')
+        df_bolus.drop(i_drop, inplace=True)
 
-        temp = temp[['PtID', 'datetime', 'BolusAmount', 'delivery_duration']].rename(columns={'PtID': 'patient_id', 'BolusAmount': 'bolus'})
-        return temp
+        #drop zero boluses (there are sometimes a handful of records with 0 bolus amount left)
+        df_bolus = df_bolus[df_bolus.BolusAmount > 0]
+
+        df_bolus = df_bolus[['PtID', 'DataDtTm', 'BolusAmount', 'delivery_duration']].rename(columns={'PtID': StudyDataset.COL_NAME_PATIENT_ID,
+                                                                                              'DataDtTm': StudyDataset.COL_NAME_DATETIME,
+                                                                                              'BolusAmount': StudyDataset.COL_NAME_BOLUS})
+        return df_bolus
 
     def _extract_cgm_history(self):
         df_cgm = self._df_cgm.copy()
-        
+
+        #duplicates
+        df_cgm.drop_duplicates(['PtID', 'DataDtTm'], keep='first', inplace=True)
+
         # replace 0 CGMs with lower upper bounds
         b_zero = df_cgm.CGMValue == 0
         df_cgm.loc[b_zero, 'CGMValue'] = df_cgm.HighLowIndicator.loc[b_zero].replace({ 2: 40, 1: 400 })
         
         #reduce, rename, return
-        df_cgm = df_cgm[['PtID','datetime','CGMValue']]
-        df_cgm = df_cgm.rename(columns={'PtID': 'patient_id', 'CGMValue': 'cgm'})
+        df_cgm = df_cgm[['PtID','DataDtTm','CGMValue']]
+        df_cgm = df_cgm.rename(columns={'PtID': StudyDataset.COL_NAME_PATIENT_ID, 
+                                        'DataDtTm': StudyDataset.COL_NAME_DATETIME,
+                                        'CGMValue': StudyDataset.COL_NAME_CGM})
         return df_cgm
 
 class DCLP5(DCLP3):
@@ -121,27 +136,20 @@ class DCLP5(DCLP3):
                           usecols=['RecID', 'PtID', 'DataDtTm', 'CGMValue', 'DataDtTm_adjusted', 'HighLowIndicator'],
                           subset=subset)
 
-        # Handle duplicates
-        # for cgm we just keep the first value
-        df_cgm.drop_duplicates(['PtID', 'DataDtTm'], keep='first', inplace=True)
-        # for basal we decided top use the maximum value
-        _, _, drop_indexes = pandas_helper.get_duplicated_max_indexes(df_basal, ['PtID', 'DataDtTm'], 'CommandedBasalRate')
-        df_basal.drop(drop_indexes, inplace=True)
-
         #force datatypes (needed for output validation)
         df_cgm['PtID'] = df_cgm.PtID.astype(str)
         df_bolus['PtID'] = df_bolus.PtID.astype(str)
         df_basal['PtID'] = df_basal.PtID.astype(str)
 
         #setting datetimes (using the adjusted datetime if available)
-        df_bolus['datetime'] = df_bolus.DataDtTm_adjusted.fillna(df_bolus.DataDtTm).transform(parse_flair_dates, format_date='%m/%d/%Y', format_time='%I:%M:%S %p')
-        df_basal['datetime'] = df_basal.DataDtTm_adjusted.fillna(df_basal.DataDtTm).transform(parse_flair_dates, format_date='%m/%d/%Y', format_time='%I:%M:%S %p')
-        df_cgm['datetime'] = df_cgm.DataDtTm_adjusted.fillna(df_cgm.DataDtTm).transform(parse_flair_dates, format_date='%m/%d/%Y', format_time='%I:%M:%S %p')
+        df_bolus['DataDtTm'] = df_bolus.DataDtTm_adjusted.fillna(df_bolus.DataDtTm).transform(parse_flair_dates, format_date='%m/%d/%Y', format_time='%I:%M:%S %p')
+        df_basal['DataDtTm'] = df_basal.DataDtTm_adjusted.fillna(df_basal.DataDtTm).transform(parse_flair_dates, format_date='%m/%d/%Y', format_time='%I:%M:%S %p')
+        df_cgm['DataDtTm'] = df_cgm.DataDtTm_adjusted.fillna(df_cgm.DataDtTm).transform(parse_flair_dates, format_date='%m/%d/%Y', format_time='%I:%M:%S %p')
 
-        df_cgm.drop(columns=['DataDtTm', 'DataDtTm_adjusted'], inplace=True)
-        df_bolus.drop(columns=['DataDtTm', 'DataDtTm_adjusted'], inplace=True)
-        df_basal.drop(columns=['DataDtTm', 'DataDtTm_adjusted'], inplace=True)
-        
-        self._df_bolus = df_bolus
-        self._df_basal = df_basal
-        self._df_cgm = df_cgm
+        df_cgm.drop(columns=['DataDtTm_adjusted'], inplace=True)
+        df_bolus.drop(columns=['DataDtTm_adjusted'], inplace=True)
+        df_basal.drop(columns=['DataDtTm_adjusted'], inplace=True)
+
+        self._df_bolus = df_bolus.sort_values(by=['PtID','DataDtTm'])
+        self._df_basal = df_basal.sort_values(by=['PtID','DataDtTm'])
+        self._df_cgm = df_cgm.sort_values(by=['PtID','DataDtTm'])

@@ -2,6 +2,7 @@
 # Author Jan Wrede
 # Copyright (c) 2025 nudgebg
 # Licensed under the MIT License. See LICENSE file for details.
+from datetime import timedelta
 from studies.studydataset import StudyDataset
 import os
 import pandas as pd
@@ -18,7 +19,7 @@ class PEDAP(StudyDataset):
 
         df_bolus = ph.get_df(os.path.join(data_table_path, 'PEDAPTandemBolusDelivered.txt'), usecols=['PtID', 'DeviceDtTm',
                                                                                                    'BolusAmount',
-                                                                                                   'Duration'],
+                                                                                                   'Duration','ExtendedBolusPortion','BolusType'],
                           subset=subset)
         df_basal = ph.get_df(os.path.join(data_table_path, 'PEDAPTandemBASALDELIVERY.txt'), usecols=['PtID', 'DeviceDtTm',
                                                                                                  'BasalRate'],
@@ -39,9 +40,10 @@ class PEDAP(StudyDataset):
         df_basal['DeviceDtTm'] = parse_flair_dates(df_basal['DeviceDtTm'])
         df_cgm['DeviceDtTm'] = parse_flair_dates(df_cgm['DeviceDtTm'])
 
-        self._df_bolus = df_bolus
-        self._df_basal = df_basal
-        self._df_cgm = df_cgm
+    
+        self._df_bolus = df_bolus.sort_values(by=['PtID','DeviceDtTm'])
+        self._df_basal = df_basal.sort_values(by=['PtID','DeviceDtTm'])
+        self._df_cgm = df_cgm.sort_values(by=['PtID','DeviceDtTm'])
 
     def _extract_basal_event_history(self):
         temp = self._df_basal.copy()
@@ -63,10 +65,17 @@ class PEDAP(StudyDataset):
 
         #force datetime, needed for vectorized operations and to pass the data set validaiton
         temp['DeviceDtTm'] = pd.to_datetime(temp.DeviceDtTm)
-
+        
         # convert to adjust start delivery times (only affects extended boluses)
         temp['Duration'] = pd.to_timedelta(temp.Duration, unit='m')
-        temp['DeviceDtTm'] = temp.DeviceDtTm - temp.Duration
+        
+        #Extended boluses reported upon completion, adjust start time accordingly
+        bMaskLater = temp.ExtendedBolusPortion == 'Later'
+        temp.loc[bMaskLater, 'DeviceDtTm'] = temp.loc[bMaskLater, 'DeviceDtTm'] - temp.loc[bMaskLater, 'Duration']
+
+        #Immediate boluses reported with identical duration, set to 0
+        bMaskNow = temp.ExtendedBolusPortion == 'Now'
+        temp.loc[bMaskNow, 'Duration'] = pd.Timedelta(0)
 
         #reduce rename return
         temp = temp[['PtID', 'DeviceDtTm', 'BolusAmount', 'Duration']].astype({'PtID':str})
