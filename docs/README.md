@@ -15,9 +15,10 @@ Babelbetes addresses this “last mile” problem by developing a publicly avail
 
 This is the [official project documentation](https://nudgebg.github.io/babelbetes)
 
+
 ## Supported Studies
 
-![](assets/data_days_per_study.png)
+![](https://raw.githubusercontent.com/nudgebg/babelbetes/develop/docs/assets/data_days_per_study.png)
 Figure: Days worth of **complete** data including cgm, basal and bolus data for supported studies. Overall, we have approximately normalized and extracted half a million days of data.
 
 The goal is to work with as many clinical diabetes trial datasets as possible. At the moment, the following datasets from the diabetes [JAEB database](https://public.jaeb.org/datasets/diabetes) are supported. 
@@ -151,6 +152,31 @@ These are approximate execution times
 |**Total**|**~383 seconds**|
 
 \* Loop raw data files are very large which requires the use of `dask`. `dask` builds upon pandas and processes chunks of the data in parallel. However, the routine to save the data to csv - at the moment - still requires the whole dataframe to be loaded into memory before storing it which might fail if your machine has insufficient memory.
+
+
+## PyPi 
+
+### Quick start
+
+This repository can be used as a dependency in other projects with pip. Install by running: 
+
+```
+pip install babelbetes
+```
+
+Example usage:
+
+[TO DO!]
+
+
+### Update PyPi Distribution
+
+Trigger bump version: 
+1) Increment version in `setup.py`
+2) Remove old versions: `rm dist/*`
+3) Rebuild distributions: `python -m build --sdist --wheel`
+4) Upload new version (use verbose flag to get elaboration in case of errors): `python -m twine upload dist/* --verbose
+`
 
 
 ## Troubleshooting
