@@ -5,3 +5,6 @@ site
 __pycache__
 .DS_Store
 .vscode
+build/
+dist/
+babelbetes.egg-info/

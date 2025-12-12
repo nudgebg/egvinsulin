@@ -119,7 +119,7 @@ The `run_functions.py` script is the entry point for users that simply want to e
 
 Example terminal output:
 ``` bash
-> python run_functions.py
+> python -m babelbetes.run_functions
 [15:26:22] Looking for study folders in /data/raw and saving results to /data/out
 [15:26:22] Start processing supported study folders:
 [15:26:22] 'T1DEXI' using T1DEXI class
@@ -175,8 +175,11 @@ Trigger bump version:
 1) Increment version in `setup.py`
 2) Remove old versions: `rm dist/*`
 3) Rebuild distributions: `python -m build --sdist --wheel`
-4) Upload new version (use verbose flag to get elaboration in case of errors): `python -m twine upload dist/* --verbose
-`
+4) Upload new version (use verbose flag to get elaboration in case of errors): `python -m twine upload dist/* --verbose`
+
+
+python -m twine upload --repository testpypi dist/*
+
 
 
 ## Troubleshooting

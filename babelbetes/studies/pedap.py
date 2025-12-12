@@ -3,11 +3,11 @@
 # Copyright (c) 2025 nudgebg
 # Licensed under the MIT License. See LICENSE file for details.
 from datetime import timedelta
-from studies.studydataset import StudyDataset
+from babelbetes.studies.studydataset import StudyDataset
 import os
 import pandas as pd
-from src.date_helper import parse_flair_dates
-from src import pandas_helper as ph
+from babelbetes.src.date_helper import parse_flair_dates
+from babelbetes.src import pandas_helper as ph
 
 
 class PEDAP(StudyDataset):

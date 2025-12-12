@@ -5,10 +5,10 @@
 import pandas as pd
 import numpy as np
 from datetime import timedelta
-from src.pandas_helper import get_df
+from babelbetes.src.pandas_helper import get_df
 import os 
-from src.date_helper import parse_flair_dates
-from .studydataset import StudyDataset
+from babelbetes.src.date_helper import parse_flair_dates
+from babelbetes.studies.studydataset import StudyDataset
 
 class IOBP2(StudyDataset):
 

@@ -4,7 +4,7 @@
 # Licensed under the MIT License. See LICENSE file for details.
 import pandas as pd
 import numpy as np
-from src.find_periods import find_periods, Period
+from babelbetes.src.find_periods import find_periods, Period
 
 def test_find_periods():
     df = pd.DataFrame({

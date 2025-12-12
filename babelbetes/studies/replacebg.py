@@ -3,12 +3,12 @@
 # Copyright (c) 2025 nudgebg
 # Licensed under the MIT License. See LICENSE file for details.
 import pandas as pd
-from studies.studydataset import StudyDataset
+from babelbetes.studies.studydataset import StudyDataset
 from datetime import datetime, timedelta
 from functools import reduce
 import numpy as np
 import os
-from src import pandas_helper, logger
+from babelbetes.src import pandas_helper, logger
 
 
 class ReplaceBG(StudyDataset):

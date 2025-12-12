@@ -4,7 +4,7 @@
 # Licensed under the MIT License. See LICENSE file for details.
 import pandas as pd
 import os
-from src.logger import Logger
+from babelbetes.src.logger import Logger
 logger = Logger.get_logger(__name__)
 
 def validate_bolus_output_dataframe(func):

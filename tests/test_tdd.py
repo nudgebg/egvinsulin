@@ -6,7 +6,7 @@ import pytest
 import pandas as pd
 import numpy as np
 from datetime import datetime
-from src.tdd import calculate_daily_basal_dose, calculate_daily_bolus_dose, calculate_tdd
+from babelbetes.src.tdd import calculate_daily_basal_dose, calculate_daily_bolus_dose, calculate_tdd
 
 #calculate_tdd_basals
 def test_case_single_event():

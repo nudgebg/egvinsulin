@@ -1,5 +1,5 @@
 import os
-from src import postprocessing
+from babelbetes.src import postprocessing
 import pandas as pd
 
 def get_output_paths(out_path, study_name, data_types=None):

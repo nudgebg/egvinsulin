@@ -10,9 +10,9 @@ import isodate
 import io
 import zipfile_deflate64
 
-from studies.studydataset import StudyDataset
-from src.logger import Logger
-from src.pandas_helper import get_duplicated_max_indexes, get_df
+from babelbetes.studies.studydataset import StudyDataset
+from babelbetes.src.logger import Logger
+from babelbetes.src.pandas_helper import get_duplicated_max_indexes, get_df
 
 def load_facm(path, subset):
         facm = get_df(path, subset=subset)

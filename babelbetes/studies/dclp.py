@@ -9,10 +9,10 @@ from functools import reduce
 from datetime import timedelta
 import numpy as np
 
-from src.find_periods import find_periods, Period
-from src import pandas_helper
-from .studydataset import StudyDataset
-from src.date_helper import parse_flair_dates
+from babelbetes.src.find_periods import find_periods, Period
+from babelbetes.src import pandas_helper
+from babelbetes.studies.studydataset import StudyDataset
+from babelbetes.src.date_helper import parse_flair_dates
 
 
 class DCLP3(StudyDataset):

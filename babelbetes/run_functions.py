@@ -61,10 +61,10 @@ For each study, the dataframes are saved in the `data/out/<study-name>/` folder:
 
 """
 import os
-from studies import StudyDataset, dataset_initializer
-import src.postprocessing as pp
-from src.logger import Logger
-from src.file_saver import save_dataframe, cleanup_study_output
+from babelbetes.studies import StudyDataset, dataset_initializer
+import babelbetes.src.postprocessing as pp
+from babelbetes.src.logger import Logger
+from babelbetes.src.file_saver import save_dataframe, cleanup_study_output
 from datetime import datetime
 from tqdm import tqdm
 import argparse

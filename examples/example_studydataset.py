@@ -6,7 +6,7 @@
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-from studies.studydataset import StudyDataset
+from babelbetes.studies.studydataset import StudyDataset
 
 # Define a new study class that inherits from StudyDataset
 class SampleStudy(StudyDataset):
