@@ -175,7 +175,6 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 # MODIFY SO THE PATH POINTS TO YOUR RAW DATA. THIS CAN BE EITHER THE .zip OR UNZIPPED FOLDER
 study_path = os.path.join(current_dir, 'FLAIRPublicDataSet.zip')
 flair = Flair(study_path)
-flair.load_data()
 print(f'loaded data for {flair.study_name} from {flair.study_path}')
 
 basal_events = flair.extract_basal_event_history()
