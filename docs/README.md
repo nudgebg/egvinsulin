@@ -166,19 +166,35 @@ pip install babelbetes
 
 Example usage:
 
-[TO DO!]
+```
+from babelbetes.studies import Flair
+import os
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# MODIFY SO THE PATH POINTS TO YOUR RAW DATA. THIS CAN BE EITHER THE .zip OR UNZIPPED FOLDER
+study_path = os.path.join(current_dir, 'FLAIRPublicDataSet.zip')
+flair = Flair(study_path)
+flair.load_data()
+print(f'loaded data for {flair.study_name} from {flair.study_path}')
+
+basal_events = flair.extract_basal_event_history()
+cgm = flair.extract_cgm_history()
+boluses = flair.extract_bolus_event_history()
+
+print("Basal events: ", basal_events)
+print("CGM events: ", cgm)
+print("Boluses: ", boluses)
+```
 
 
 ### Update PyPi Distribution
 
-Trigger bump version: 
+How to push a new PyPi distribution update: 
 1) Increment version in `setup.py`
-2) Remove old versions: `rm dist/*`
+2) (If relevant) Remove old versions: `rm -rf dist/ build/ *.egg-info `
 3) Rebuild distributions: `python -m build --sdist --wheel`
 4) Upload new version (use verbose flag to get elaboration in case of errors): `python -m twine upload dist/* --verbose`
-
-
-python -m twine upload --repository testpypi dist/*
 
 
 

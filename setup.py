@@ -6,7 +6,7 @@ with open("docs/README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="babelbetes",  # The package name on pip install
-    version="0.1.4",  # Update version as needed
+    version="0.1.7",  # Update version as needed
     description="Extracting standardized tables from heterogeneous diabetes management datasets",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -21,6 +21,7 @@ setup(
     install_requires=[
         "numpy>=1.26.4,<2.0",
         "pandas>=2.2.2,<3.0",
+        "pyarrow",
         "scipy>=1.13.0,<2.0",
         "ipykernel>=6.29.5",
         "matplotlib>=3.9.3,<4.0",
