@@ -81,6 +81,39 @@ Here, we explain how to install the toolbox and how to use the `run_functions.py
 * We recommend using a python virtual environment (see [using vitual environments](./python-setup.md))
 
 ### Installation
+
+#### Installation via `pip install`
+
+This repository can be used as a dependency in other projects with pip. Install by running: 
+
+```
+pip install babelbetes
+```
+
+Example usage:
+
+```
+from babelbetes.studies import Flair
+import os
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# MODIFY SO THE PATH POINTS TO YOUR RAW DATA. THIS CAN BE EITHER THE .zip OR UNZIPPED FOLDER
+study_path = os.path.join(current_dir, 'FLAIRPublicDataSet.zip')
+flair = Flair(study_path)
+
+basal_events = flair.extract_basal_event_history()
+cgm = flair.extract_cgm_history()
+boluses = flair.extract_bolus_event_history()
+
+print("Basal events: ", basal_events.head())
+print("CGM events: ", cgm.head())
+print("Boluses: ", boluses.head())
+```
+
+
+#### Developer
+
 1. **Clone the repository:**
     ```sh
     git clone git@github.com:nudgebg/babelbetes.git
@@ -154,44 +187,12 @@ These are approximate execution times
 \* Loop raw data files are very large which requires the use of `dask`. `dask` builds upon pandas and processes chunks of the data in parallel. However, the routine to save the data to csv - at the moment - still requires the whole dataframe to be loaded into memory before storing it which might fail if your machine has insufficient memory.
 
 
-## PyPi 
-
-### Quick start
-
-This repository can be used as a dependency in other projects with pip. Install by running: 
-
-```
-pip install babelbetes
-```
-
-Example usage:
-
-```
-from babelbetes.studies import Flair
-import os
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
-
-# MODIFY SO THE PATH POINTS TO YOUR RAW DATA. THIS CAN BE EITHER THE .zip OR UNZIPPED FOLDER
-study_path = os.path.join(current_dir, 'FLAIRPublicDataSet.zip')
-flair = Flair(study_path)
-print(f'loaded data for {flair.study_name} from {flair.study_path}')
-
-basal_events = flair.extract_basal_event_history()
-cgm = flair.extract_cgm_history()
-boluses = flair.extract_bolus_event_history()
-
-print("Basal events: ", basal_events)
-print("CGM events: ", cgm)
-print("Boluses: ", boluses)
-```
-
 
 ### Update PyPi Distribution
 
 How to push a new PyPi distribution update: 
 1) Increment version in `setup.py`
-2) (If relevant) Remove old versions: `rm -rf dist/ build/ *.egg-info `
+2) (If relevant) Remove old versions: `rm -rf dist/ build/ *.egg-info`
 3) Rebuild distributions: `python -m build --sdist --wheel`
 4) Upload new version (use verbose flag to get elaboration in case of errors): `python -m twine upload dist/* --verbose`
 

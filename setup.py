@@ -12,11 +12,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/nudgebg/babelbetes",
     packages=find_packages(),
-    classifiers=[
-        "Programming Language :: Python :: 3",
-        "Operating System :: OS Independent",
-        "License :: OSI Approved :: MIT License",
-    ],
+    license="MIT",
     python_requires=">=3, <4",
     install_requires=[
         "numpy>=1.26.4,<2.0",
