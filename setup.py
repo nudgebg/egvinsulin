@@ -6,7 +6,7 @@ with open("docs/README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="babelbetes",  # The package name on pip install
-    version="0.1.7",  # Update version as needed
+    version="0.1.0",
     description="Extracting standardized tables from heterogeneous diabetes management datasets",
     long_description=long_description,
     long_description_content_type="text/markdown",
