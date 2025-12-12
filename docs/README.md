@@ -188,16 +188,6 @@ These are approximate execution times
 
 
 
-### Update PyPi Distribution
-
-How to push a new PyPi distribution update: 
-1) Increment version in `setup.py`
-2) (If relevant) Remove old versions: `rm -rf dist/ build/ *.egg-info`
-3) Rebuild distributions: `python -m build --sdist --wheel`
-4) Upload new version (use verbose flag to get elaboration in case of errors): `python -m twine upload dist/* --verbose`
-
-
-
 ## Troubleshooting
 - Ensure the raw data folders are named correctly to match the patterns in the script. You shouldn't need to rename the folders or zip archivesafter you downloaded the datasets.
 - Check the console output for any warning or error messages.
