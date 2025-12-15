@@ -3,7 +3,7 @@
 # Copyright (c) 2025 nudgebg
 # Licensed under the MIT License. See LICENSE file for details.
 import pandas as pd
-from studies import IOBP2    
+from babelbetes.studies import IOBP2
 import numpy as np
 
 def test_extract_event_history(tmp_path):

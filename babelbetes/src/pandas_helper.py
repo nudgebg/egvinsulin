@@ -7,7 +7,7 @@ import numpy as np
 import zipfile_deflate64
 import io
 from datetime import timedelta
-from src.logger import Logger
+from babelbetes.src.logger import Logger
 logger = Logger.get_logger(__name__)
 
 def get_duplicated_max_indexes(df, check_cols, max_col):

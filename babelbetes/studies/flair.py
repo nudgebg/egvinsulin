@@ -6,11 +6,11 @@ import pandas as pd
 import os
 import numpy as np
 
-from .studydataset import StudyDataset
-from src.find_periods import find_periods
-from src.pandas_helper import get_df
-from src.date_helper import parse_flair_dates, convert_duration_to_timedelta
-from src import pandas_helper
+from babelbetes.studies.studydataset import StudyDataset
+from babelbetes.src.find_periods import find_periods
+from babelbetes.src.pandas_helper import get_df
+from babelbetes.src.date_helper import parse_flair_dates, convert_duration_to_timedelta
+from babelbetes.src import pandas_helper
 
 def merge_basal_and_temp_basal(df):
     """

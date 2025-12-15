@@ -1,7 +1,7 @@
 
 import os
-from studies import IOBP2, Flair, PEDAP, DCLP3, DCLP5, ReplaceBG, Loop, T1DEXI, T1DEXIP
-from src.logger import Logger
+from babelbetes.studies import IOBP2, Flair, PEDAP, DCLP3, DCLP5, ReplaceBG, Loop, T1DEXI, T1DEXIP
+from babelbetes.src.logger import Logger
 logger = Logger.get_logger(__name__)
 
 def initialize_datasets(data_path):

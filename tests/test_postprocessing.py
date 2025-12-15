@@ -7,7 +7,7 @@
 import pytest
 import pandas as pd
 import numpy as np  
-from src.postprocessing import cgm_transform, bolus_transform, basal_transform
+from babelbetes.src.postprocessing import cgm_transform, bolus_transform, basal_transform
 
 date_format = format='%m/%d/%Y %I:%M:%S %p'
 def test_cgm_transform():

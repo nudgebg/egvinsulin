@@ -15,9 +15,10 @@ Babelbetes addresses this “last mile” problem by developing a publicly avail
 
 This is the [official project documentation](https://nudgebg.github.io/babelbetes)
 
+
 ## Supported Studies
 
-![](assets/data_days_per_study.png)
+![](https://raw.githubusercontent.com/nudgebg/babelbetes/develop/docs/assets/data_days_per_study.png)
 Figure: Days worth of **complete** data including cgm, basal and bolus data for supported studies. Overall, we have approximately normalized and extracted half a million days of data.
 
 The goal is to work with as many clinical diabetes trial datasets as possible. At the moment, the following datasets from the diabetes [JAEB database](https://public.jaeb.org/datasets/diabetes) are supported. 
@@ -80,6 +81,39 @@ Here, we explain how to install the toolbox and how to use the `run_functions.py
 * We recommend using a python virtual environment (see [using vitual environments](./python-setup.md))
 
 ### Installation
+
+#### Installation via `pip install`
+
+This repository can be used as a dependency in other projects with pip. Install by running: 
+
+```
+pip install babelbetes
+```
+
+Example usage:
+
+```
+from babelbetes.studies import Flair
+import os
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# MODIFY SO THE PATH POINTS TO YOUR RAW DATA. THIS CAN BE EITHER THE .zip OR UNZIPPED FOLDER
+study_path = os.path.join(current_dir, 'FLAIRPublicDataSet.zip')
+flair = Flair(study_path)
+
+basal_events = flair.extract_basal_event_history()
+cgm = flair.extract_cgm_history()
+boluses = flair.extract_bolus_event_history()
+
+print("Basal events: ", basal_events.head())
+print("CGM events: ", cgm.head())
+print("Boluses: ", boluses.head())
+```
+
+
+#### Developer
+
 1. **Clone the repository:**
     ```sh
     git clone git@github.com:nudgebg/babelbetes.git
@@ -118,7 +152,7 @@ The `run_functions.py` script is the entry point for users that simply want to e
 
 Example terminal output:
 ``` bash
-> python run_functions.py
+> python -m babelbetes.run_functions
 [15:26:22] Looking for study folders in /data/raw and saving results to /data/out
 [15:26:22] Start processing supported study folders:
 [15:26:22] 'T1DEXI' using T1DEXI class
@@ -151,6 +185,7 @@ These are approximate execution times
 |**Total**|**~383 seconds**|
 
 \* Loop raw data files are very large which requires the use of `dask`. `dask` builds upon pandas and processes chunks of the data in parallel. However, the routine to save the data to csv - at the moment - still requires the whole dataframe to be loaded into memory before storing it which might fail if your machine has insufficient memory.
+
 
 
 ## Troubleshooting

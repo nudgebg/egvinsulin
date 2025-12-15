@@ -10,9 +10,9 @@ import numpy as np
 import pandas as pd
 import numpy as np
 from datetime import timedelta
-from src.logger import Logger
-from src.pandas_helper import repetitive
-from studies import StudyDataset
+from babelbetes.src.logger import Logger
+from babelbetes.src.pandas_helper import repetitive
+from babelbetes.studies import StudyDataset
 logger = Logger.get_logger(__name__)
 
 # Function to split the bolus into multiple deliveries

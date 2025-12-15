@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import numpy as np
 import importlib 
-from src import pandas_helper
+from babelbetes.src import pandas_helper
 importlib.reload(pandas_helper)   
-from src.pandas_helper import get_hour_of_day
+from babelbetes.src.pandas_helper import get_hour_of_day
     
 colors = {'Bolus': 'red', 'Basal': 'blue', 'CGM': 'darkgray'}
 

@@ -5,7 +5,7 @@
 import pytest
 import pandas as pd
 from datetime import datetime, timedelta
-from studies.studydataset import validate_bolus_output_dataframe, validate_basal_output_dataframe, validate_cgm_output_dataframe
+from babelbetes.studies.studydataset import validate_bolus_output_dataframe, validate_basal_output_dataframe, validate_cgm_output_dataframe
 
 
 # Mock functions to be decorated
