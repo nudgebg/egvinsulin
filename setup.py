@@ -6,7 +6,7 @@ with open("docs/README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="babelbetes",  # The package name on pip install
-    version="0.1.0",
+    use_scm_version=True,
     description="Extracting standardized tables from heterogeneous diabetes management datasets",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -15,6 +15,7 @@ setup(
     license="MIT",
     python_requires=">=3, <4",
     install_requires=[
+        "setuptools-scm",
         "numpy>=1.26.4,<2.0",
         "pandas>=2.2.2,<3.0",
         "pyarrow",
