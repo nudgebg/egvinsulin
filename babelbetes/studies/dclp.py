@@ -121,18 +121,30 @@ class DCLP3(StudyDataset):
         return df_cgm
 
     def _extract_age_data(self):
-        """Extract patient age data from the DCLP3/DCLP5 dataset.
+        """Extract patient age data from the DCLP3 dataset.
         
-        Note:
-            This method needs to be implemented with study-specific logic to extract
-            patient age data at study enrollment/start from the available data files.
-            
-        Raises:
-            NotImplementedError: This method requires study-specific implementation.
+        Returns:
+            pd.DataFrame: DataFrame with columns 'patient_id' (str) and 'age' (numeric)
+                representing patient age at study enrollment.
         """
-        raise NotImplementedError(f"Age data extraction not yet implemented for {self.study_name}. "
-                                 "This requires study-specific implementation to locate and extract "
-                                 "patient demographics or enrollment data from the study files.")
+        data_table_path = os.path.join(self.study_path, 'Data Files')
+        age_file_path = os.path.join(data_table_path, 'DiabScreening_a.txt')
+        
+        # Load age data from DiabScreening_a.txt file
+        df_age = pandas_helper.get_df(age_file_path, usecols=['PtID', 'AgeAtEnrollment'])
+        
+        # Clean and rename columns to match StudyDataset standards
+        df_age = df_age[['PtID', 'AgeAtEnrollment']].dropna()
+        df_age = df_age.rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'AgeAtEnrollment': self.COL_NAME_AGE})
+        
+        # Ensure correct data types
+        df_age[self.COL_NAME_PATIENT_ID] = df_age[self.COL_NAME_PATIENT_ID].astype(str)
+        df_age[self.COL_NAME_AGE] = pd.to_numeric(df_age[self.COL_NAME_AGE], errors='coerce')
+        
+        # Remove any rows with invalid age data
+        df_age = df_age.dropna()
+        
+        return df_age
 
 class DCLP5(DCLP3):
     def __init__(self, study_path, study_name='DCLP5'):
@@ -167,3 +179,28 @@ class DCLP5(DCLP3):
         self._df_bolus = df_bolus.sort_values(by=['PtID','DataDtTm'])
         self._df_basal = df_basal.sort_values(by=['PtID','DataDtTm'])
         self._df_cgm = df_cgm.sort_values(by=['PtID','DataDtTm'])
+
+    def _extract_age_data(self):
+        """Extract patient age data from the DCLP5 dataset.
+        
+        Returns:
+            pd.DataFrame: DataFrame with columns 'patient_id' (str) and 'age' (numeric)
+                representing patient age at study enrollment.
+        """
+        age_file_path = os.path.join(self.study_path, 'PtRoster.txt')
+        
+        # Load age data from PtRoster.txt file
+        df_age = pandas_helper.get_df(age_file_path, usecols=['PtID', 'AgeAtEnrollment'])
+        
+        # Clean and rename columns to match StudyDataset standards
+        df_age = df_age[['PtID', 'AgeAtEnrollment']].dropna()
+        df_age = df_age.rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'AgeAtEnrollment': self.COL_NAME_AGE})
+        
+        # Ensure correct data types
+        df_age[self.COL_NAME_PATIENT_ID] = df_age[self.COL_NAME_PATIENT_ID].astype(str)
+        df_age[self.COL_NAME_AGE] = pd.to_numeric(df_age[self.COL_NAME_AGE], errors='coerce')
+        
+        # Remove any rows with invalid age data
+        df_age = df_age.dropna()
+        
+        return df_age
