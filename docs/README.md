@@ -126,7 +126,7 @@ flair = Flair(study_path)
 basal_events = flair.extract_basal_event_history()
 cgm = flair.extract_cgm_history()
 boluses = flair.extract_bolus_event_history()
-age_data = flair.extract_age_data()  # New: extract patient age data
+age_data = flair.extract_age_data() 
 
 print("Basal events: ", basal_events.head())
 print("CGM events: ", cgm.head())

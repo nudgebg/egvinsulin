@@ -245,7 +245,7 @@ def grouped_value_counts(df, group_cols, value_cols):
 
     return df.groupby(group_cols).apply(count_values).reset_index()
 
-def get_df(path, usecols=None, subset=False, dtype=None):
+def get_df(path, usecols=None, subset=False, dtype=None, encoding=None):
     """
     Reads a data file from a given path, handling both standard file formats and files within ZIP archives.
 
@@ -254,6 +254,7 @@ def get_df(path, usecols=None, subset=False, dtype=None):
         usecols (list, optional): List of column names to include in the df.
         subset (bool, optional): If True, read only a subset of the data for lightweight testing.
         dtype (dict, optional): Data types to enforce for specific columns.
+        encoding (str, optional): Encoding to use when reading text files (csv/txt). If None, uses pandas default (utf-8).
 
     Returns:
         pd.DataFrame: The loaded data as a Pandas DataFrame.
@@ -275,7 +276,7 @@ def get_df(path, usecols=None, subset=False, dtype=None):
     skip_fn = (lambda x: (x % 10 != 0)) if subset else None
     
     if file_ending in ["csv", "txt"]:
-        return pd.read_csv(path, sep='|', low_memory=False, usecols=usecols, skiprows=skip_fn, dtype=dtype)
+        return pd.read_csv(path, sep='|', low_memory=False, usecols=usecols, skiprows=skip_fn, dtype=dtype, encoding=encoding)
     elif file_ending == "xpt":
         if subset:
             chunk_size = 25000

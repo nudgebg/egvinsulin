@@ -131,7 +131,7 @@ class DCLP3(StudyDataset):
         age_file_path = os.path.join(data_table_path, 'DiabScreening_a.txt')
         
         # Load age data from DiabScreening_a.txt file
-        df_age = pandas_helper.get_df(age_file_path, usecols=['PtID', 'AgeAtEnrollment'])
+        df_age = pandas_helper.get_df(age_file_path, usecols=['PtID', 'AgeAtEnrollment'], encoding='utf-16')
         
         # Clean and rename columns to match StudyDataset standards
         df_age = df_age[['PtID', 'AgeAtEnrollment']].dropna()
