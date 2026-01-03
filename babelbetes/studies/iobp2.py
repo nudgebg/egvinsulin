@@ -81,16 +81,27 @@ class IOBP2(StudyDataset):
     def _extract_age_data(self):
         """Extract patient age data from the IOBP2 dataset.
         
-        Note:
-            This method needs to be implemented with study-specific logic to extract
-            patient age data at study enrollment/start from the available data files.
-            
-        Raises:
-            NotImplementedError: This method requires study-specific implementation.
+        Returns:
+            pd.DataFrame: DataFrame with columns 'patient_id' (str) and 'age' (numeric)
+                representing patient age as of enrollment date.
         """
-        raise NotImplementedError(f"Age data extraction not yet implemented for {self.study_name}. "
-                                 "This requires study-specific implementation to locate and extract "
-                                 "patient demographics or enrollment data from the study files.")
+        age_file_path = os.path.join(self.study_path, 'Data Tables', 'IOBP2PtRoster.txt')
+        
+        # Load age data from IOBP2PtRoster.txt file
+        df_age = get_df(age_file_path, usecols=['PtID', 'AgeAsofEnrollDt'])
+        
+        # Clean and rename columns to match StudyDataset standards
+        df_age = df_age[['PtID', 'AgeAsofEnrollDt']].dropna()
+        df_age = df_age.rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'AgeAsofEnrollDt': self.COL_NAME_AGE})
+        
+        # Ensure correct data types
+        df_age[self.COL_NAME_PATIENT_ID] = df_age[self.COL_NAME_PATIENT_ID].astype(str)
+        df_age[self.COL_NAME_AGE] = pd.to_numeric(df_age[self.COL_NAME_AGE], errors='coerce')
+        
+        # Remove any rows with invalid age data
+        df_age = df_age.dropna()
+        
+        return df_age
 
 if __name__ == '__main__':
     current_dir = os.path.dirname(__file__)
