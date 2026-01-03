@@ -21,9 +21,18 @@ class PEDAP(StudyDataset):
                                                                                                    'BolusAmount',
                                                                                                    'Duration','ExtendedBolusPortion','BolusType'],
                           subset=subset)
-        df_basal = ph.get_df(os.path.join(data_table_path, 'PEDAPTandemBASALDELIVERY.txt'), usecols=['PtID', 'DeviceDtTm',
-                                                                                                 'BasalRate'],
-                          subset=subset)
+        
+        # Support multiple dataset versions with different basal file names
+        # Try primary filename first, fallback to alternative if not found
+        basal_file_primary = os.path.join(data_table_path, 'PEDAPTandemBASALRATECHG.txt')
+        basal_file_alternative = os.path.join(data_table_path, 'PEDAPTandemBASALDELIVERY.txt')
+        
+        if os.path.exists(basal_file_primary):
+            df_basal = ph.get_df(basal_file_primary, usecols=['PtID', 'DeviceDtTm', 'BasalRate'], subset=subset)
+        elif os.path.exists(basal_file_alternative):
+            df_basal = ph.get_df(basal_file_alternative, usecols=['PtID', 'DeviceDtTm', 'BasalRate'], subset=subset)
+        else:
+            raise FileNotFoundError(f"Neither basal rate file found: {os.path.basename(basal_file_primary)} or {os.path.basename(basal_file_alternative)}")
         df_cgm = ph.get_df(os.path.join(data_table_path, 'PEDAPTandemCGMDATAGXB.txt'), usecols=['PtID', 'DeviceDtTm',
                                                                                              'CGMValue','HighLowIndicator'],
                           subset=subset)
