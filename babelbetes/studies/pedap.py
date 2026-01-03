@@ -97,3 +97,17 @@ class PEDAP(StudyDataset):
                                     'DeviceDtTm': self.COL_NAME_DATETIME,
                                     'CGMValue': self.COL_NAME_CGM})
         return temp
+
+    def _extract_age_data(self):
+        """Extract patient age data from the PEDAP dataset.
+        
+        Note:
+            This method needs to be implemented with study-specific logic to extract
+            patient age data at study enrollment/start from the available data files.
+            
+        Raises:
+            NotImplementedError: This method requires study-specific implementation.
+        """
+        raise NotImplementedError(f"Age data extraction not yet implemented for {self.study_name}. "
+                                 "This requires study-specific implementation to locate and extract "
+                                 "patient demographics or enrollment data from the study files.")

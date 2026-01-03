@@ -120,6 +120,20 @@ class DCLP3(StudyDataset):
                                         'CGMValue': StudyDataset.COL_NAME_CGM})
         return df_cgm
 
+    def _extract_age_data(self):
+        """Extract patient age data from the DCLP3/DCLP5 dataset.
+        
+        Note:
+            This method needs to be implemented with study-specific logic to extract
+            patient age data at study enrollment/start from the available data files.
+            
+        Raises:
+            NotImplementedError: This method requires study-specific implementation.
+        """
+        raise NotImplementedError(f"Age data extraction not yet implemented for {self.study_name}. "
+                                 "This requires study-specific implementation to locate and extract "
+                                 "patient demographics or enrollment data from the study files.")
+
 class DCLP5(DCLP3):
     def __init__(self, study_path, study_name='DCLP5'):
         super().__init__(study_path, study_name)

@@ -13,7 +13,7 @@ Execution:
 Process Overview:
 1. Identifies the appropriate handler class (subclass of studydataset) for each folder in the `data/raw` directory (see supported studies).
 2. Loads the study data into memory.
-3. Extracts bolus, basal, and CGM event histories into a standardized format (see Output Format).
+3. Extracts bolus, basal, CGM event histories, and age data into a standardized format (see Output Format).
 4. Saves the extracted data as CSV files.
 
 ## Output format:
@@ -51,6 +51,16 @@ The outptut format is standardized across all studies and follows the definition
   | patient_id        | str            | Patient ID                                |
   | datetime          | pd.Timestamp   | Datetime of the CGM measurement           |
   | cgm               | float          | CGM value in mg/dL                        |
+
+
+### Age Data
+
+`age_data.csv`: Patient age at study enrollment/start.
+
+  | Column Name       | Type           | Description                               |
+  |-------------------|----------------|-------------------------------------------|
+  | patient_id        | str            | Patient ID                                |
+  | age               | float          | Patient age at study enrollment/start    |
 
 ### Output Files:
 For each study, the dataframes are saved in the `data/out/<study-name>/` folder:
@@ -136,7 +146,7 @@ def main(load_subset=False, remove_repetitive=True, compressed=False, input_dir=
     logger.info(f"Processing all available studies: {list(all_initialized_studies.keys())}")
   
   # Validate and process data_types parameter
-  available_data_types = ['cgm', 'bolus', 'basal']
+  available_data_types = ['cgm', 'bolus', 'basal', 'age']
   if data_types is not None:
     if not isinstance(data_types, list):
       data_types = [data_types]  # Convert single string to list
@@ -223,6 +233,12 @@ def process_folder(study: StudyDataset, out_path_study, progress, load_subset, r
           df = study.extract_cgm_history()
           save_dataframe(df, out_path_study, "parquet", compressed, study.study_name, 'cgm')
           tqdm.write(f"[{current_time()}] [x] CGM extracted"); 
+
+      if 'age' in data_types:
+          progress.set_description_str(f"{study.__class__.__name__}: Extracting age data")
+          df = study.extract_age_data()
+          save_dataframe(df, out_path_study, "parquet", compressed, study.study_name, 'age')
+          tqdm.write(f"[{current_time()}] [x] Age data extracted"); 
       
 
 if __name__ == "__main__":
@@ -233,7 +249,7 @@ if __name__ == "__main__":
   parser.add_argument('--output-dir', type=str, help="Specify a custom output directory. Defaults to 'data/out'.")
   parser.add_argument('--remove-repetitive', action='store_true', help="Remove repetitive values from the basal output dataframes.")
   parser.add_argument('--studies', nargs='*', help="Specify which studies to process. Available: IOBP2, Flair, PEDAP, DCLP3, DCLP5, ReplaceBG, Loop, T1DEXI, T1DEXIP. If not specified, all available studies will be processed.")
-  parser.add_argument('--data-types', nargs='*', choices=['cgm', 'bolus', 'basal'], help="Specify which data types to extract. Available: cgm, bolus, basal. If not specified, all data types will be extracted.")
+  parser.add_argument('--data-types', nargs='*', choices=['cgm', 'bolus', 'basal', 'age'], help="Specify which data types to extract. Available: cgm, bolus, basal, age. If not specified, all data types will be extracted.")
   args = parser.parse_args()
 
   logger.info(f"Using arguments:")

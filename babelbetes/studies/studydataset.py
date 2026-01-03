@@ -132,6 +132,43 @@ def validate_cgm_output_dataframe(func):
         return df
     return wrapper
 
+def validate_age_output_dataframe(func):
+    """
+    A decorator to validate the output of a function to ensure it is a pandas DataFrame with specific required columns and data types.
+    
+    It is used to validate the output of the `extract_age_data` method in the `StudyDataset` class.
+    Subclasses should implement the `_extract_age_data` method which is called by the `extract_age_data` method to use this decorator.
+
+    The DataFrame must have the following columns (see output format in the `extract_age_data` method):
+    - 'patient_id': of type string
+    - 'age': of numeric type
+
+    Raises:
+        TypeError: If the output is not a pandas DataFrame.
+        ValueError: If the DataFrame does not have the required columns.
+        ValueError: If the 'patient_id' column is not of type string.
+        ValueError: If the 'age' column is not of numeric type.
+
+    Args:
+        func (function): The function whose output will be validated.
+
+    Returns:
+        function (function): The wrapped function with validation applied to its output.
+    """
+    def wrapper(*args, **kwargs):
+        df = func(*args, **kwargs)
+        if not isinstance(df, pd.DataFrame):
+            raise TypeError("Output should be a pandas DataFrame")
+        required_columns = ['patient_id', 'age']
+        if set(df.columns) != set(required_columns):
+            raise ValueError(f"DataFrame should have columns 'patient_id' and 'age' but has {df.columns}")
+        if not all(isinstance(item, str) for item in df['patient_id']):
+            raise ValueError("DataFrame should have a 'patient_id' column of type string")
+        if not pd.api.types.is_numeric_dtype(df['age'].dtype):
+            raise ValueError(f"DataFrame should have an 'age' column of numeric type but is {df['age'].dtype}")
+        return df
+    return wrapper
+
 class StudyDataset:
     """
     The `StudyDataset` class is designed to represent a clinical diabetes dataset with continuous glucose monitoring and insulin delivery data in the form of boluses and basal rates.
@@ -154,6 +191,7 @@ class StudyDataset:
     COL_NAME_BASAL_RATE = 'basal_rate'
     COL_NAME_BOLUS_DELIVERY_DURATION = 'delivery_duration'
     COL_NAME_CGM = 'cgm'
+    COL_NAME_AGE = 'age'
 
 
     def __init__(self, study_path, study_name):
@@ -162,6 +200,7 @@ class StudyDataset:
         self._bolus_event_history = None
         self._basal_event_history = None
         self._cgm_history = None
+        self._age_data = None
         self._data_loaded = False
 
     def _load_data(self, subset: bool = False):
@@ -184,6 +223,16 @@ class StudyDataset:
         """(Abstract) Extracts the continuous glucose monitoring (CGM) measurements from the dataset. This is a abstract method that should be implemented by subclasses.
         """
         raise NotImplementedError("Subclasses should implement the _extract_cgm_history method")
+    
+    def _extract_age_data(self):
+        """(Abstract) Extracts the patient age data from the dataset. This is an abstract method that should be implemented by subclasses.
+        
+        Returns:
+            pd.DataFrame: A DataFrame containing patient age data with the following columns:
+                - patient_id (str): Patient identifier
+                - age (numeric): Patient age at study enrollment/start
+        """
+        raise NotImplementedError("Subclasses should implement the _extract_age_data method")
     
     def load_data(self, subset=False):
         """Load and cache the study data into memory by calling the `_load_data` method which should be implemented by subclasses. 
@@ -268,3 +317,30 @@ class StudyDataset:
             self.load_data()
             self._cgm_history = self._extract_cgm_history()
         return self._cgm_history
+    
+    @validate_age_output_dataframe
+    def extract_age_data(self):
+        """Extract patient age data from the dataset, perform type checking, and cache the result.
+        
+        This method extracts patient age at study enrollment/start. The age data represents the
+        demographic information that is typically collected at the beginning of a clinical study.
+        
+        Warning:
+            **Don't override this!** This method does type checking on the output data and should not be
+            overridden by subclasses. Instead, subclasses should implement the `_extract_age_data` method.
+        
+        Notes:
+            - Age should represent patient age at study enrollment or study start date
+            - Ensure the patient_id values are strings, otherwise validation will fail
+            - Ensure age values are numeric (int or float), otherwise validation will fail
+        
+        Returns:
+            age_data (pd.DataFrame): A DataFrame containing the patient age data with the following columns:
+            
+                - `patient_id` (str): The unique patient ID
+                - `age` (numeric): The patient age at study enrollment/start
+        """
+        if self._age_data is None:
+            self.load_data()
+            self._age_data = self._extract_age_data()
+        return self._age_data

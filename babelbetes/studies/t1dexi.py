@@ -178,6 +178,20 @@ class T1DEXI(StudyDataset):
             'LBDTC': self.COL_NAME_DATETIME,
             'LBORRES': self.COL_NAME_CGM
         })
+
+    def _extract_age_data(self):
+        """Extract patient age data from the T1DEXI/T1DEXIP dataset.
+        
+        Note:
+            This method needs to be implemented with study-specific logic to extract
+            patient age data at study enrollment/start from the available data files.
+            
+        Raises:
+            NotImplementedError: This method requires study-specific implementation.
+        """
+        raise NotImplementedError(f"Age data extraction not yet implemented for {self.study_name}. "
+                                 "This requires study-specific implementation to locate and extract "
+                                 "patient demographics or enrollment data from the study files.")
         
 class T1DEXIP(T1DEXI):
     def __init__(self, study_path, study_name='T1DEXIP', drop_mdi=False):

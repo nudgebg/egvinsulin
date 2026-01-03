@@ -78,6 +78,20 @@ class IOBP2(StudyDataset):
         df_basal = df_basal[[self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME, self.COL_NAME_BASAL_RATE]]
         return df_basal
 
+    def _extract_age_data(self):
+        """Extract patient age data from the IOBP2 dataset.
+        
+        Note:
+            This method needs to be implemented with study-specific logic to extract
+            patient age data at study enrollment/start from the available data files.
+            
+        Raises:
+            NotImplementedError: This method requires study-specific implementation.
+        """
+        raise NotImplementedError(f"Age data extraction not yet implemented for {self.study_name}. "
+                                 "This requires study-specific implementation to locate and extract "
+                                 "patient demographics or enrollment data from the study files.")
+
 if __name__ == '__main__':
     current_dir = os.path.dirname(__file__)
     path = os.path.join(current_dir, 'IOBP2 RCT Public Dataset')

@@ -172,6 +172,20 @@ class Flair(StudyDataset):
         df_cgm[self.COL_NAME_PATIENT_ID] = df_cgm[self.COL_NAME_PATIENT_ID].astype(str)
         return df_cgm
 
+    def _extract_age_data(self):
+        """Extract patient age data from the Flair dataset.
+        
+        Note:
+            This method needs to be implemented with study-specific logic to extract
+            patient age data at study enrollment/start from the available data files.
+            
+        Raises:
+            NotImplementedError: This method requires study-specific implementation.
+        """
+        raise NotImplementedError(f"Age data extraction not yet implemented for {self.study_name}. "
+                                 "This requires study-specific implementation to locate and extract "
+                                 "patient demographics or enrollment data from the study files.")
+
     def get_reported_tdds(self, method='max'):
         """
         Retrieves reported total daily doses (TDDs) based on the specified method.
