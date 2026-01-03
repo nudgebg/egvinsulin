@@ -58,18 +58,39 @@ Learn more about [how to contribute](./contribute.md).
  **3. Recommendations**: As guidance for investigators, we've summarized our learnings and challanges in a list of recommendations that we believe would dramatically improve the quality and usability of datasets published in the future.
 
 ### Data Standardization
-The ultimate purpose of this toolbox is to bring CGM and insulin data into a common standardized format. We chose to abstract study datasets as objects. Each study class derives from the parent `StudyDataset` class and overrides methods to extract cgm, bolus and basal data. The StudyDataset base class defineds methods to extract cgm, basal and bolus data in standardized pandas dataframes.
+The ultimate purpose of this toolbox is to bring CGM, insulin, and demographic data into a common standardized format. We chose to abstract study datasets as objects. Each study class derives from the parent `StudyDataset` class and overrides methods to extract cgm, bolus, basal, and age data. The StudyDataset base class defines methods to extract all data types in standardized pandas dataframes.
 
 ![](./assets/classes_Studies.svg)
 
-For example, the bolus dataframe obtained with `extract_bolus_event_history()` has this format:
+#### Supported Data Types
 
+**Bolus Data** - `extract_bolus_event_history()`:
 | Column Name | Type| Description|
 |----|----|----|
 | `patient_id`       | `str`              | Patient ID|
 | `datetime`         | `pd.Timestamp`     | Datetime of the bolus event  |
 | `bolus`            | `float`            | Actual delivered bolus amount in units|
 | `delivery_duration`| `pd.Timedelta`     | Duration of the bolus delivery|
+
+**Basal Data** - `extract_basal_event_history()`:
+| Column Name | Type| Description|
+|----|----|----|
+| `patient_id`       | `str`              | Patient ID|
+| `datetime`         | `pd.Timestamp`     | Datetime of the basal rate start event  |
+| `basal_rate`       | `float`            | Basal rate in units per hour|
+
+**CGM Data** - `extract_cgm_history()`:
+| Column Name | Type| Description|
+|----|----|----|
+| `patient_id`       | `str`              | Patient ID|
+| `datetime`         | `pd.Timestamp`     | Datetime of the CGM measurement|
+| `cgm`              | `float`            | CGM value in mg/dL|
+
+**Age Data** - `extract_age_data()`:
+| Column Name | Type| Description|
+|----|----|----|
+| `patient_id`       | `str`              | Patient ID|
+| `age`              | `float`            | Patient age at study enrollment/start|
 
 refer to the [Code Reference](./reference/#studies.studydataset.StudyDataset) for more details.
 
@@ -105,10 +126,12 @@ flair = Flair(study_path)
 basal_events = flair.extract_basal_event_history()
 cgm = flair.extract_cgm_history()
 boluses = flair.extract_bolus_event_history()
+age_data = flair.extract_age_data()  # New: extract patient age data
 
 print("Basal events: ", basal_events.head())
 print("CGM events: ", cgm.head())
 print("Boluses: ", boluses.head())
+print("Age data: ", age_data.head())
 ```
 
 
@@ -133,22 +156,44 @@ pip install -r requirements.txt
  3. Depending on which studies you downloaded and whether you have .zip archives (or unzipped folders), the folder structure should look like this:
 ```
     babelbetes/
+    ├── babelbetes/
+    │   ├── studies/
+    │   ├── src/
+    │   └── run_functions.py
     ├── data/
     │   └── raw/
-    │       └── FLAIRPublicDataSet.zip
-    │       └── DCLP3 Public Dataset - Release 3 - 2022-08-04
-    │       └── IOBP2 RCT Public Dataset
-    │       └── T1DEXI - DATA FOR UPLOAD
+    │       ├── FLAIRPublicDataSet.zip
+    │       ├── DCLP3 Public Dataset - Release 3 - 2022-08-04
+    │       ├── IOBP2 RCT Public Dataset
+    │       ├── T1DEXI - DATA FOR UPLOAD
     │       └── T1DEXIP - DATA FOR UPLOAD.zip
-    └── run_functions.py
+    ├── docs/
+    ├── examples/
+    └── tests/
 ```
 
 ### Run run_functions.py to batch Extract data
 The `run_functions.py` script is the entry point for users that simply want to extract standardized data from the supported studies. It performs data extraction and standarization. For each folder in the `data/raw` directory the script: 
  1. Identifies the appropriate handler class (see [supported studies](#supported-studies))
  2. Loads the study data
- 3. Extracts bolus, basal, and CGM event histories to a standardized Format (see [data standardization](#data-standardization))
- 4. Saves the extracted data in CSV format. 
+ 3. Extracts bolus, basal, CGM event histories, and age data to a standardized format (see [data standardization](#data-standardization))
+ 4. Saves the extracted data in CSV/Parquet format
+
+**Command Usage:**
+```bash
+# Run from project root - extract all data types
+python -m babelbetes.run_functions
+
+# Extract specific data types only
+python -m babelbetes.run_functions --data-types age cgm
+python -m babelbetes.run_functions --data-types bolus basal
+
+# Process specific studies only
+python -m babelbetes.run_functions --studies Flair DCLP3
+
+# Run in test mode with subset of data
+python -m babelbetes.run_functions --test
+``` 
 
 Example terminal output:
 ``` bash
@@ -163,9 +208,22 @@ Example terminal output:
 [15:26:56] [x] Boluses extracted
 [15:27:00] [x] Basal extracted
 [15:27:12] [x] CGM extracted
+[15:27:13] [x] Age data extracted
 [15:27:12] T1DEXI completed in 37.43 seconds.
 ...
 Processing complete.
+```
+
+**Extract specific data types:**
+``` bash
+# Extract only age data
+> python -m babelbetes.run_functions --data-types age
+
+# Extract multiple data types
+> python -m babelbetes.run_functions --data-types cgm bolus age
+
+# Extract all data types (default behavior)
+> python -m babelbetes.run_functions --data-types cgm bolus basal age
 ```
 
 ### Execution Times
