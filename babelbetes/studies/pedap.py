@@ -24,18 +24,8 @@ class PEDAP(StudyDataset):
                                                                                                    'Duration','ExtendedBolusPortion','BolusType'],
                           subset=subset)
         
-        df_basal = None
-        try:
-            df_basal = ph.get_df(os.path.join(data_table_path, 'PEDAPTandemBASALRATECHG.txt'), usecols=['PtID', 'DeviceDtTm', 'BasalRate'], subset=subset)
-        except FileNotFoundError:
-            logger.warning("PEDAPTandemBASALRATECHG.txt not found, trying PEDAPTandemBASALDELIVERY.txt instead.")
+        df_basal = ph.get_df(os.path.join(data_table_path, 'PEDAPTandemBASALDELIVERY.txt'), usecols=['PtID', 'DeviceDtTm', 'BasalRate'], subset=subset)
         
-        if df_basal is None:
-            try:
-                df_basal = ph.get_df(os.path.join(data_table_path, 'PEDAPTandemBASALDELIVERY.txt'), usecols=['PtID', 'DeviceDtTm', 'BasalRate'], subset=subset)
-            except FileNotFoundError as e:
-                raise FileNotFoundError("Neither PEDAPTandemBASALRATECHG.txt nor PEDAPTandemBASALDELIVERY.txt found.") from e
-                    
         df_cgm = ph.get_df(os.path.join(data_table_path, 'PEDAPTandemCGMDATAGXB.txt'), usecols=['PtID', 'DeviceDtTm',
                                                                                              'CGMValue','HighLowIndicator'],
                           subset=subset)
