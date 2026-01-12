@@ -8,7 +8,9 @@ import os
 import pandas as pd
 from babelbetes.src.date_helper import parse_flair_dates
 from babelbetes.src import pandas_helper as ph
+from babelbetes.src.logger import Logger
 
+logger = Logger.get_logger(__name__)
 
 class PEDAP(StudyDataset):
     def __init__(self, study_path):
@@ -22,17 +24,18 @@ class PEDAP(StudyDataset):
                                                                                                    'Duration','ExtendedBolusPortion','BolusType'],
                           subset=subset)
         
-        # Support multiple dataset versions with different basal file names
-        # Try primary filename first, fallback to alternative if not found
-        basal_file_primary = os.path.join(data_table_path, 'PEDAPTandemBASALRATECHG.txt')
-        basal_file_alternative = os.path.join(data_table_path, 'PEDAPTandemBASALDELIVERY.txt')
+        df_basal = None
+        try:
+            df_basal = ph.get_df(os.path.join(data_table_path, 'PEDAPTandemBASALRATECHG.txt'), usecols=['PtID', 'DeviceDtTm', 'BasalRate'], subset=subset)
+        except FileNotFoundError:
+            logger.warning("PEDAPTandemBASALRATECHG.txt not found, trying PEDAPTandemBASALDELIVERY.txt instead.")
         
-        if os.path.exists(basal_file_primary):
-            df_basal = ph.get_df(basal_file_primary, usecols=['PtID', 'DeviceDtTm', 'BasalRate'], subset=subset)
-        elif os.path.exists(basal_file_alternative):
-            df_basal = ph.get_df(basal_file_alternative, usecols=['PtID', 'DeviceDtTm', 'BasalRate'], subset=subset)
-        else:
-            raise FileNotFoundError(f"Neither basal rate file found: {os.path.basename(basal_file_primary)} or {os.path.basename(basal_file_alternative)}")
+        if df_basal is None:
+            try:
+                df_basal = ph.get_df(os.path.join(data_table_path, 'PEDAPTandemBASALDELIVERY.txt'), usecols=['PtID', 'DeviceDtTm', 'BasalRate'], subset=subset)
+            except FileNotFoundError as e:
+                raise FileNotFoundError("Neither PEDAPTandemBASALRATECHG.txt nor PEDAPTandemBASALDELIVERY.txt found.") from e
+                    
         df_cgm = ph.get_df(os.path.join(data_table_path, 'PEDAPTandemCGMDATAGXB.txt'), usecols=['PtID', 'DeviceDtTm',
                                                                                              'CGMValue','HighLowIndicator'],
                           subset=subset)
@@ -115,19 +118,4 @@ class PEDAP(StudyDataset):
                 representing patient age as of enrollment date.
         """
         age_file_path = os.path.join(self.study_path, 'Data Files', 'PtRoster.txt')
-        
-        # Load age data from PtRoster.txt file
-        df_age = ph.get_df(age_file_path, usecols=['PtID', 'AgeAsofEnrollDt'])
-        
-        # Clean and rename columns to match StudyDataset standards
-        df_age = df_age[['PtID', 'AgeAsofEnrollDt']].dropna()
-        df_age = df_age.rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'AgeAsofEnrollDt': self.COL_NAME_AGE})
-        
-        # Ensure correct data types
-        df_age[self.COL_NAME_PATIENT_ID] = df_age[self.COL_NAME_PATIENT_ID].astype(str)
-        df_age[self.COL_NAME_AGE] = pd.to_numeric(df_age[self.COL_NAME_AGE], errors='coerce')
-        
-        # Remove any rows with invalid age data
-        df_age = df_age.dropna()
-        
-        return df_age
+        return ph.get_df(age_file_path, usecols=['PtID', 'AgeAsofEnrollDt'], dtype={'PtID': str, 'AgeAsofEnrollDt': int}).rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'AgeAsofEnrollDt': self.COL_NAME_AGE})

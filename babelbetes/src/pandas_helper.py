@@ -283,7 +283,9 @@ def get_df(path, usecols=None, subset=False, dtype=None, encoding=None):
             df_iter = pd.read_sas(path, format='xport', encoding='latin-1', chunksize=chunk_size)
             return next(df_iter)
         else:
-            return pd.read_sas(path, format='xport', encoding='latin-1')
+            df = pd.read_sas(path, format='xport', encoding='latin-1')
+            df = df[usecols] if usecols is not None else df
+            return df.astype(dtype) if dtype is not None else df
     else:
         raise ValueError(f"Unsupported file format: {file_ending}")
 

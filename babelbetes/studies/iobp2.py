@@ -86,21 +86,8 @@ class IOBP2(StudyDataset):
                 representing patient age as of enrollment date.
         """
         age_file_path = os.path.join(self.study_path, 'Data Tables', 'IOBP2PtRoster.txt')
-        
-        # Load age data from IOBP2PtRoster.txt file
-        df_age = get_df(age_file_path, usecols=['PtID', 'AgeAsofEnrollDt'])
-        
-        # Clean and rename columns to match StudyDataset standards
-        df_age = df_age[['PtID', 'AgeAsofEnrollDt']].dropna()
+        df_age = get_df(age_file_path, usecols=['PtID', 'AgeAsofEnrollDt'], dtype={'PtID': str, 'AgeAsofEnrollDt': int})
         df_age = df_age.rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'AgeAsofEnrollDt': self.COL_NAME_AGE})
-        
-        # Ensure correct data types
-        df_age[self.COL_NAME_PATIENT_ID] = df_age[self.COL_NAME_PATIENT_ID].astype(str)
-        df_age[self.COL_NAME_AGE] = pd.to_numeric(df_age[self.COL_NAME_AGE], errors='coerce')
-        
-        # Remove any rows with invalid age data
-        df_age = df_age.dropna()
-        
         return df_age
 
 if __name__ == '__main__':

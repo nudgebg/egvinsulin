@@ -170,20 +170,8 @@ class ReplaceBG(StudyDataset):
             pd.DataFrame: DataFrame with columns 'patient_id' (str) and 'age' (numeric)
                 representing patient age as of enrollment date.
         """
-        # Use the already loaded patient data from _load_data()
-        df_age = self._df_patient.copy()
-        
-        # Clean and rename columns to match StudyDataset standards
-        df_age = df_age[['PtID', 'AgeAsOfEnrollDt']].dropna()
-        df_age = df_age.rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'AgeAsOfEnrollDt': self.COL_NAME_AGE})
-        
-        # Ensure correct data types
-        df_age[self.COL_NAME_PATIENT_ID] = df_age[self.COL_NAME_PATIENT_ID].astype(str)
-        df_age[self.COL_NAME_AGE] = pd.to_numeric(df_age[self.COL_NAME_AGE], errors='coerce')
-        
-        # Remove any rows with invalid age data
-        df_age = df_age.dropna()
-        
+        df_age = self._df_patient.copy()[['PtID', 'AgeAsOfEnrollDt']].rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'AgeAsOfEnrollDt': self.COL_NAME_AGE})
+        df_age = df_age.astype({self.COL_NAME_PATIENT_ID: str, self.COL_NAME_AGE: int})
         return df_age
 
 # Example usage

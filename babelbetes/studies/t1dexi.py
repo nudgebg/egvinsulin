@@ -186,22 +186,8 @@ class T1DEXI(StudyDataset):
             pd.DataFrame: DataFrame with columns 'patient_id' (str) and 'age' (numeric)
                 representing patient age as of enrollment date.
         """
-        age_file_path = os.path.join(self.study_path, 'DM.xpt')
-        
-        # Load age data from DM.xpt file
-        df_age = get_df(age_file_path, usecols=['USUBJID', 'AGE'])
-        
-        # Clean and rename columns to match StudyDataset standards
-        df_age = df_age[['USUBJID', 'AGE']].dropna()
+        df_age = get_df(os.path.join(self.study_path, 'DM.xpt'), usecols=['USUBJID', 'AGE'], dtype={'USUBJID': str, 'AGE': int})
         df_age = df_age.rename(columns={'USUBJID': self.COL_NAME_PATIENT_ID, 'AGE': self.COL_NAME_AGE})
-        
-        # Ensure correct data types
-        df_age[self.COL_NAME_PATIENT_ID] = df_age[self.COL_NAME_PATIENT_ID].astype(str)
-        df_age[self.COL_NAME_AGE] = pd.to_numeric(df_age[self.COL_NAME_AGE], errors='coerce')
-        
-        # Remove any rows with invalid age data
-        df_age = df_age.dropna()
-        
         return df_age
         
 class T1DEXIP(T1DEXI):

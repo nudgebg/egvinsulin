@@ -96,7 +96,7 @@ def main(load_subset=False, remove_repetitive=True, compressed=False, input_dir=
     output_dir (str): Custom output directory path. Defaults to 'data/out'.
     studies (list): List of study names to process. If None, all available studies will be processed.
                    Available studies: IOBP2, Flair, PEDAP, DCLP3, DCLP5, ReplaceBG, Loop, T1DEXI, T1DEXIP
-    data_types (list): List of data types to extract ['cgm', 'bolus', 'basal']. If None, all types are extracted.
+    data_types (list): List of data types to extract ['cgm', 'bolus', 'basal', 'age']. If None, all types are extracted.
   
   Logs:
     - Information about the current working directory and paths being used.
@@ -118,29 +118,27 @@ def main(load_subset=False, remove_repetitive=True, compressed=False, input_dir=
   logger.info(f"Output will be saved to {out_path}")
   all_initialized_studies = dataset_initializer.initialize_datasets(in_path)
   
-  # Filter studies if specific studies are requested
   if studies is not None:
     if not isinstance(studies, list):
       studies = [studies]  # Convert single string to list
-    
-    # Filter to only include requested studies
-    filtered_studies = {name: study for name, study in all_initialized_studies.items() if name in studies}
+    studies_lower = [s.lower() for s in studies]
+    matched_studies = {name: study for name, study in all_initialized_studies.items() if name.lower() in studies_lower}
     
     # Check if any requested studies were not found
-    available_studies = set(all_initialized_studies.keys())
-    requested_studies = set(studies)
-    missing_studies = requested_studies - available_studies
+    #available_studies = set(all_initialized_studies.keys())
+    #requested_studies = set(requested_studies)
+    missing_studies = set(studies_lower) - set(name.lower() for name in matched_studies.keys())
     
     if missing_studies:
       logger.warning(f"Requested studies not found: {list(missing_studies)}")
-      logger.info(f"Available studies: {list(available_studies)}")
+      logger.info(f"Available studies: {list(all_initialized_studies.keys())}")
     
-    if not filtered_studies:
+    if not matched_studies:
       logger.error("No requested studies were found. Exiting.")
       return
     
-    initialized_studies = list(filtered_studies.values())
-    logger.info(f"Processing only requested studies: {list(filtered_studies.keys())}")
+    initialized_studies = list(matched_studies.values())
+    logger.info(f"Processing only matched studies: {list(matched_studies.keys())}")
   else:
     initialized_studies = list(all_initialized_studies.values())
     logger.info(f"Processing all available studies: {list(all_initialized_studies.keys())}")

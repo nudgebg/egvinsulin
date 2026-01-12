@@ -3,8 +3,15 @@
 # Copyright (c) 2025 nudgebg
 # Licensed under the MIT License. See LICENSE file for details.
 import pandas as pd
-import os
 from babelbetes.src.logger import Logger
+import pandera.pandas as pa
+from pandera.pandas import Column, DataFrameSchema, Check
+
+AGE_OUTPUT_SCHEMA = DataFrameSchema({
+    "patient_id": Column(pa.String, nullable=False, unique=True),
+    "age": Column(pa.Int, nullable=False, checks=[Check.ge(0),Check.le(120)]),
+})
+
 logger = Logger.get_logger(__name__)
 
 def validate_bolus_output_dataframe(func):
@@ -129,43 +136,6 @@ def validate_cgm_output_dataframe(func):
             raise ValueError("DataFrame should have a 'patient_id' column of type string")
         if not pd.api.types.is_numeric_dtype(df['cgm'].dtype):
             raise ValueError(f"DataFrame should have a 'cgm' column of numeric type but is {df['cgm'].dtype}")
-        return df
-    return wrapper
-
-def validate_age_output_dataframe(func):
-    """
-    A decorator to validate the output of a function to ensure it is a pandas DataFrame with specific required columns and data types.
-    
-    It is used to validate the output of the `extract_age_data` method in the `StudyDataset` class.
-    Subclasses should implement the `_extract_age_data` method which is called by the `extract_age_data` method to use this decorator.
-
-    The DataFrame must have the following columns (see output format in the `extract_age_data` method):
-    - 'patient_id': of type string
-    - 'age': of numeric type
-
-    Raises:
-        TypeError: If the output is not a pandas DataFrame.
-        ValueError: If the DataFrame does not have the required columns.
-        ValueError: If the 'patient_id' column is not of type string.
-        ValueError: If the 'age' column is not of numeric type.
-
-    Args:
-        func (function): The function whose output will be validated.
-
-    Returns:
-        function (function): The wrapped function with validation applied to its output.
-    """
-    def wrapper(*args, **kwargs):
-        df = func(*args, **kwargs)
-        if not isinstance(df, pd.DataFrame):
-            raise TypeError("Output should be a pandas DataFrame")
-        required_columns = ['patient_id', 'age']
-        if set(df.columns) != set(required_columns):
-            raise ValueError(f"DataFrame should have columns 'patient_id' and 'age' but has {df.columns}")
-        if not all(isinstance(item, str) for item in df['patient_id']):
-            raise ValueError("DataFrame should have a 'patient_id' column of type string")
-        if not pd.api.types.is_numeric_dtype(df['age'].dtype):
-            raise ValueError(f"DataFrame should have an 'age' column of numeric type but is {df['age'].dtype}")
         return df
     return wrapper
 
@@ -318,7 +288,6 @@ class StudyDataset:
             self._cgm_history = self._extract_cgm_history()
         return self._cgm_history
     
-    @validate_age_output_dataframe
     def extract_age_data(self):
         """Extract patient age data from the dataset, perform type checking, and cache the result.
         
@@ -343,4 +312,5 @@ class StudyDataset:
         if self._age_data is None:
             self.load_data()
             self._age_data = self._extract_age_data()
+            AGE_OUTPUT_SCHEMA.validate(self._age_data, lazy=True)
         return self._age_data
