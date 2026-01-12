@@ -27,6 +27,10 @@ class SampleStudy(StudyDataset):
         cgm_history = self.df[['patient_id', 'datetime', 'cgm']]
         return cgm_history.dropna()
 
+    def _extract_age_data(self):
+        age_data = self.df[['patient_id', 'age']]
+        return age_data.dropna().drop_duplicates()
+
 
 
 # Create separate date ranges for each type of event
@@ -42,7 +46,8 @@ bolus_df = pd.DataFrame({
     'bolus': np.random.uniform(0, 10, len(bolus_date_range)),
     'delivery_duration': pd.to_timedelta(np.random.randint(0, 60, len(bolus_date_range)), unit='m'),
     'basal_rate': np.nan,
-    'cgm': np.nan
+    'cgm': np.nan,
+    'age': 45  # Patient age at study enrollment
 })
 basal_df = pd.DataFrame({
     'patient_id': 'patient_1',
@@ -50,7 +55,8 @@ basal_df = pd.DataFrame({
     'bolus': np.nan,
     'delivery_duration': np.nan,
     'basal_rate': np.random.uniform(0, 2, len(basal_date_range)),
-    'cgm': np.nan
+    'cgm': np.nan,
+    'age': 45  # Patient age at study enrollment
 })
 cgm_df = pd.DataFrame({
     'patient_id': 'patient_1',
@@ -58,7 +64,8 @@ cgm_df = pd.DataFrame({
     'bolus': np.nan,
     'delivery_duration': np.nan,
     'basal_rate': np.nan,
-    'cgm': np.random.uniform(70, 180, len(cgm_date_range))
+    'cgm': np.random.uniform(70, 180, len(cgm_date_range)),
+    'age': 45  # Patient age at study enrollment
 })
 
 # Concatenate and save the file
@@ -74,9 +81,11 @@ study.load_data()
 bolus_history = study.extract_bolus_event_history()
 basal_history = study.extract_basal_event_history()
 cgm_history = study.extract_cgm_history()
+age_data = study.extract_age_data()
 print(cgm_history.head())
 print(basal_history.head())
 print(bolus_history.head())
+print(age_data.head())
 
 
 #derive from SampleStudy and override the extract_bolus_event_history method to return the wrong columns
@@ -96,6 +105,12 @@ class SampleStudy2(SampleStudy):
         cgm_history['datetime'] = cgm_history['datetime'].astype(str)
         return cgm_history.dropna()
 
+    def _extract_age_data(self):
+        age_data = self.df[['patient_id', 'age']].copy()
+        #convert the age column to a string to cause validation error
+        age_data['age'] = age_data['age'].astype(str)
+        return age_data.dropna().drop_duplicates()
+
 #use the class to load the data
 print('\n\n--> Testing SampleStudy2 (this includes wrong output formats)')
 study2 = SampleStudy2('sample_dataset.csv')
@@ -112,3 +127,7 @@ try:
     study2.extract_bolus_event_history()
 except ValueError as e:
     print(f'Error in extract_bolus_event_history: {e}')
+try:
+    study2.extract_age_data()
+except ValueError as e:
+    print(f'Error in extract_age_data: {e}')

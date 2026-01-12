@@ -163,6 +163,17 @@ class ReplaceBG(StudyDataset):
                                         'GlucoseValue': self.COL_NAME_CGM})
         return df_cgm[[self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME, self.COL_NAME_CGM]]
 
+    def _extract_age_data(self):
+        """Extract patient age data from the ReplaceBG dataset.
+        
+        Returns:
+            pd.DataFrame: DataFrame with columns 'patient_id' (str) and 'age' (numeric)
+                representing patient age as of enrollment date.
+        """
+        df_age = self._df_patient.copy()[['PtID', 'AgeAsOfEnrollDt']].rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'AgeAsOfEnrollDt': self.COL_NAME_AGE})
+        df_age = df_age.astype({self.COL_NAME_PATIENT_ID: str, self.COL_NAME_AGE: int})
+        return df_age
+
 # Example usage
 if __name__ == "__main__":
     logger = logger.Logger.get_logger(__file__)

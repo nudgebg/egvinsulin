@@ -193,6 +193,17 @@ class Loop(StudyDataset):
         ddf = self._extract_basal_as_dask()
         df = ddf.compute()
         return df
+
+    def _extract_age_data(self):
+        """Extract patient age data from the Loop dataset.
+        
+        Returns:
+            pd.DataFrame: DataFrame with columns 'patient_id' (str) and 'age' (numeric)
+                representing patient age at study enrollment.
+        """
+        df_age = self._df_patient.copy()[['PtID', 'AgeAtEnrollment']].rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'AgeAtEnrollment': self.COL_NAME_AGE})
+        df_age = df_age.astype({self.COL_NAME_PATIENT_ID: str, self.COL_NAME_AGE: int})
+        return df_age
     
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@
 import pytest
 import pandas as pd
 from datetime import datetime, timedelta
-from babelbetes.studies.studydataset import validate_bolus_output_dataframe, validate_basal_output_dataframe, validate_cgm_output_dataframe
+from babelbetes.studies.studydataset import validate_bolus_output_dataframe, validate_basal_output_dataframe, validate_cgm_output_dataframe, validate_age_output_dataframe
 
 
 # Mock functions to be decorated
@@ -19,6 +19,10 @@ def mock_extract_basal_event_history(df):
 
 @validate_cgm_output_dataframe
 def mock_extract_cgm_history(df):
+    return df
+
+@validate_age_output_dataframe
+def mock_extract_age_data(df):
     return df
 
 # Bolus validation tests
@@ -115,6 +119,36 @@ def test_validate_cgm_output_dataframe_additional_column():
     df = pd.DataFrame({'patient_id': ['1'], 'datetime': [datetime.now()], 'cgm': [100.0], 'extra_column': [1]})
     with pytest.raises(ValueError, match="DataFrame should have columns 'patient_id', 'datetime' and 'cgm' but has"):
         mock_extract_cgm_history(df)
+
+# Age validation tests
+def test_validate_age_output_dataframe_wrong_patient_datatype():
+    df = pd.DataFrame({'patient_id': [1], 'age': [25.0]})
+    with pytest.raises(ValueError, match="DataFrame should have a 'patient_id' column of type string"):
+        mock_extract_age_data(df)
+
+def test_validate_age_output_dataframe_wrong_age_datatype():
+    df = pd.DataFrame({'patient_id': ['1'], 'age': ['25.0']})
+    with pytest.raises(ValueError, match="DataFrame should have an 'age' column of numeric type"):
+        mock_extract_age_data(df)
+
+def test_validate_age_output_dataframe_column_name_spelling():
+    df = pd.DataFrame({'patient_id': ['1'], 'agee': [25.0]})
+    with pytest.raises(ValueError, match="DataFrame should have columns 'patient_id' and 'age' but has"):
+        mock_extract_age_data(df)
+
+def test_validate_age_output_dataframe_additional_column():
+    df = pd.DataFrame({'patient_id': ['1'], 'age': [25.0], 'extra_column': [1]})
+    with pytest.raises(ValueError, match="DataFrame should have columns 'patient_id' and 'age' but has"):
+        mock_extract_age_data(df)
+
+def test_validate_age_output_dataframe_missing_column():
+    df = pd.DataFrame({'patient_id': ['1']})
+    with pytest.raises(ValueError, match="DataFrame should have columns 'patient_id' and 'age' but has"):
+        mock_extract_age_data(df)
+
+def test_validate_age_output_dataframe_happy_case():
+    df = pd.DataFrame({'patient_id': ['1'], 'age': [25.0]})
+    assert mock_extract_age_data(df).equals(df)
 
 if __name__ == "__main__":
     pytest.main()

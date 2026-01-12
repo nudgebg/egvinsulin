@@ -13,7 +13,7 @@ Execution:
 Process Overview:
 1. Identifies the appropriate handler class (subclass of studydataset) for each folder in the `data/raw` directory (see supported studies).
 2. Loads the study data into memory.
-3. Extracts bolus, basal, and CGM event histories into a standardized format (see Output Format).
+3. Extracts bolus, basal, CGM event histories, and age data into a standardized format (see Output Format).
 4. Saves the extracted data as CSV files.
 
 ## Output format:
@@ -52,6 +52,16 @@ The outptut format is standardized across all studies and follows the definition
   | datetime          | pd.Timestamp   | Datetime of the CGM measurement           |
   | cgm               | float          | CGM value in mg/dL                        |
 
+
+### Age Data
+
+`age_data.csv`: Patient age at study enrollment/start.
+
+  | Column Name       | Type           | Description                               |
+  |-------------------|----------------|-------------------------------------------|
+  | patient_id        | str            | Patient ID                                |
+  | age               | float          | Patient age at study enrollment/start    |
+
 ### Output Files:
 For each study, the dataframes are saved in the `data/out/<study-name>/` folder:
  - To reduce file size, the data is saved in a compressed format using the `gzip`
@@ -86,7 +96,7 @@ def main(load_subset=False, remove_repetitive=True, compressed=False, input_dir=
     output_dir (str): Custom output directory path. Defaults to 'data/out'.
     studies (list): List of study names to process. If None, all available studies will be processed.
                    Available studies: IOBP2, Flair, PEDAP, DCLP3, DCLP5, ReplaceBG, Loop, T1DEXI, T1DEXIP
-    data_types (list): List of data types to extract ['cgm', 'bolus', 'basal']. If None, all types are extracted.
+    data_types (list): List of data types to extract ['cgm', 'bolus', 'basal', 'age']. If None, all types are extracted.
   
   Logs:
     - Information about the current working directory and paths being used.
@@ -108,35 +118,33 @@ def main(load_subset=False, remove_repetitive=True, compressed=False, input_dir=
   logger.info(f"Output will be saved to {out_path}")
   all_initialized_studies = dataset_initializer.initialize_datasets(in_path)
   
-  # Filter studies if specific studies are requested
   if studies is not None:
     if not isinstance(studies, list):
       studies = [studies]  # Convert single string to list
-    
-    # Filter to only include requested studies
-    filtered_studies = {name: study for name, study in all_initialized_studies.items() if name in studies}
+    studies_lower = [s.lower() for s in studies]
+    matched_studies = {name: study for name, study in all_initialized_studies.items() if name.lower() in studies_lower}
     
     # Check if any requested studies were not found
-    available_studies = set(all_initialized_studies.keys())
-    requested_studies = set(studies)
-    missing_studies = requested_studies - available_studies
+    #available_studies = set(all_initialized_studies.keys())
+    #requested_studies = set(requested_studies)
+    missing_studies = set(studies_lower) - set(name.lower() for name in matched_studies.keys())
     
     if missing_studies:
       logger.warning(f"Requested studies not found: {list(missing_studies)}")
-      logger.info(f"Available studies: {list(available_studies)}")
+      logger.info(f"Available studies: {list(all_initialized_studies.keys())}")
     
-    if not filtered_studies:
+    if not matched_studies:
       logger.error("No requested studies were found. Exiting.")
       return
     
-    initialized_studies = list(filtered_studies.values())
-    logger.info(f"Processing only requested studies: {list(filtered_studies.keys())}")
+    initialized_studies = list(matched_studies.values())
+    logger.info(f"Processing only matched studies: {list(matched_studies.keys())}")
   else:
     initialized_studies = list(all_initialized_studies.values())
     logger.info(f"Processing all available studies: {list(all_initialized_studies.keys())}")
   
   # Validate and process data_types parameter
-  available_data_types = ['cgm', 'bolus', 'basal']
+  available_data_types = ['cgm', 'bolus', 'basal', 'age']
   if data_types is not None:
     if not isinstance(data_types, list):
       data_types = [data_types]  # Convert single string to list
@@ -223,6 +231,12 @@ def process_folder(study: StudyDataset, out_path_study, progress, load_subset, r
           df = study.extract_cgm_history()
           save_dataframe(df, out_path_study, "parquet", compressed, study.study_name, 'cgm')
           tqdm.write(f"[{current_time()}] [x] CGM extracted"); 
+
+      if 'age' in data_types:
+          progress.set_description_str(f"{study.__class__.__name__}: Extracting age data")
+          df = study.extract_age_data()
+          save_dataframe(df, out_path_study, "parquet", compressed, study.study_name, 'age')
+          tqdm.write(f"[{current_time()}] [x] Age data extracted"); 
       
 
 if __name__ == "__main__":
@@ -233,7 +247,7 @@ if __name__ == "__main__":
   parser.add_argument('--output-dir', type=str, help="Specify a custom output directory. Defaults to 'data/out'.")
   parser.add_argument('--remove-repetitive', action='store_true', help="Remove repetitive values from the basal output dataframes.")
   parser.add_argument('--studies', nargs='*', help="Specify which studies to process. Available: IOBP2, Flair, PEDAP, DCLP3, DCLP5, ReplaceBG, Loop, T1DEXI, T1DEXIP. If not specified, all available studies will be processed.")
-  parser.add_argument('--data-types', nargs='*', choices=['cgm', 'bolus', 'basal'], help="Specify which data types to extract. Available: cgm, bolus, basal. If not specified, all data types will be extracted.")
+  parser.add_argument('--data-types', nargs='*', choices=['cgm', 'bolus', 'basal', 'age'], help="Specify which data types to extract. Available: cgm, bolus, basal, age. If not specified, all data types will be extracted.")
   args = parser.parse_args()
 
   logger.info(f"Using arguments:")

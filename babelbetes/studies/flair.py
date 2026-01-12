@@ -172,6 +172,19 @@ class Flair(StudyDataset):
         df_cgm[self.COL_NAME_PATIENT_ID] = df_cgm[self.COL_NAME_PATIENT_ID].astype(str)
         return df_cgm
 
+    def _extract_age_data(self):
+        """Extract patient age data from the Flair dataset.
+        
+        Returns:
+            pd.DataFrame: DataFrame with columns 'patient_id' (str) and 'age' (numeric)
+                representing patient age as of enrollment date.
+        """
+        age_file_path = os.path.join(self.study_path, 'Data Tables', 'PtRoster.txt')
+        df_age = get_df(age_file_path, usecols=['PtID', 'AgeAsofEnrollDt'],dtype={'PtID': str, 'AgeAsofEnrollDt': int})
+        df_age = df_age.rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'AgeAsofEnrollDt': self.COL_NAME_AGE})
+        
+        return df_age
+
     def get_reported_tdds(self, method='max'):
         """
         Retrieves reported total daily doses (TDDs) based on the specified method.

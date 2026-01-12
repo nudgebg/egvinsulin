@@ -178,6 +178,17 @@ class T1DEXI(StudyDataset):
             'LBDTC': self.COL_NAME_DATETIME,
             'LBORRES': self.COL_NAME_CGM
         })
+
+    def _extract_age_data(self):
+        """Extract patient age data from the T1DEXI dataset.
+        
+        Returns:
+            pd.DataFrame: DataFrame with columns 'patient_id' (str) and 'age' (numeric)
+                representing patient age as of enrollment date.
+        """
+        df_age = get_df(os.path.join(self.study_path, 'DM.xpt'), usecols=['USUBJID', 'AGE'], dtype={'USUBJID': str, 'AGE': int})
+        df_age = df_age.rename(columns={'USUBJID': self.COL_NAME_PATIENT_ID, 'AGE': self.COL_NAME_AGE})
+        return df_age
         
 class T1DEXIP(T1DEXI):
     def __init__(self, study_path, study_name='T1DEXIP', drop_mdi=False):

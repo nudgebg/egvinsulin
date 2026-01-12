@@ -8,7 +8,9 @@ import os
 import pandas as pd
 from babelbetes.src.date_helper import parse_flair_dates
 from babelbetes.src import pandas_helper as ph
+from babelbetes.src.logger import Logger
 
+logger = Logger.get_logger(__name__)
 
 class PEDAP(StudyDataset):
     def __init__(self, study_path):
@@ -21,9 +23,9 @@ class PEDAP(StudyDataset):
                                                                                                    'BolusAmount',
                                                                                                    'Duration','ExtendedBolusPortion','BolusType'],
                           subset=subset)
-        df_basal = ph.get_df(os.path.join(data_table_path, 'PEDAPTandemBASALDELIVERY.txt'), usecols=['PtID', 'DeviceDtTm',
-                                                                                                 'BasalRate'],
-                          subset=subset)
+        
+        df_basal = ph.get_df(os.path.join(data_table_path, 'PEDAPTandemBASALDELIVERY.txt'), usecols=['PtID', 'DeviceDtTm', 'BasalRate'], subset=subset)
+        
         df_cgm = ph.get_df(os.path.join(data_table_path, 'PEDAPTandemCGMDATAGXB.txt'), usecols=['PtID', 'DeviceDtTm',
                                                                                              'CGMValue','HighLowIndicator'],
                           subset=subset)
@@ -97,3 +99,13 @@ class PEDAP(StudyDataset):
                                     'DeviceDtTm': self.COL_NAME_DATETIME,
                                     'CGMValue': self.COL_NAME_CGM})
         return temp
+
+    def _extract_age_data(self):
+        """Extract patient age data from the PEDAP dataset.
+        
+        Returns:
+            pd.DataFrame: DataFrame with columns 'patient_id' (str) and 'age' (numeric)
+                representing patient age as of enrollment date.
+        """
+        age_file_path = os.path.join(self.study_path, 'Data Files', 'PtRoster.txt')
+        return ph.get_df(age_file_path, usecols=['PtID', 'AgeAsofEnrollDt'], dtype={'PtID': str, 'AgeAsofEnrollDt': int}).rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'AgeAsofEnrollDt': self.COL_NAME_AGE})

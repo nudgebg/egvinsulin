@@ -3,8 +3,15 @@
 # Copyright (c) 2025 nudgebg
 # Licensed under the MIT License. See LICENSE file for details.
 import pandas as pd
-import os
 from babelbetes.src.logger import Logger
+import pandera.pandas as pa
+from pandera.pandas import Column, DataFrameSchema, Check
+
+AGE_OUTPUT_SCHEMA = DataFrameSchema({
+    "patient_id": Column(pa.String, nullable=False, unique=True),
+    "age": Column(pa.Int, nullable=False, checks=[Check.ge(0),Check.le(120)]),
+})
+
 logger = Logger.get_logger(__name__)
 
 def validate_bolus_output_dataframe(func):
@@ -154,6 +161,7 @@ class StudyDataset:
     COL_NAME_BASAL_RATE = 'basal_rate'
     COL_NAME_BOLUS_DELIVERY_DURATION = 'delivery_duration'
     COL_NAME_CGM = 'cgm'
+    COL_NAME_AGE = 'age'
 
 
     def __init__(self, study_path, study_name):
@@ -162,6 +170,7 @@ class StudyDataset:
         self._bolus_event_history = None
         self._basal_event_history = None
         self._cgm_history = None
+        self._age_data = None
         self._data_loaded = False
 
     def _load_data(self, subset: bool = False):
@@ -184,6 +193,16 @@ class StudyDataset:
         """(Abstract) Extracts the continuous glucose monitoring (CGM) measurements from the dataset. This is a abstract method that should be implemented by subclasses.
         """
         raise NotImplementedError("Subclasses should implement the _extract_cgm_history method")
+    
+    def _extract_age_data(self):
+        """(Abstract) Extracts the patient age data from the dataset. This is an abstract method that should be implemented by subclasses.
+        
+        Returns:
+            pd.DataFrame: A DataFrame containing patient age data with the following columns:
+                - patient_id (str): Patient identifier
+                - age (numeric): Patient age at study enrollment/start
+        """
+        raise NotImplementedError("Subclasses should implement the _extract_age_data method")
     
     def load_data(self, subset=False):
         """Load and cache the study data into memory by calling the `_load_data` method which should be implemented by subclasses. 
@@ -268,3 +287,30 @@ class StudyDataset:
             self.load_data()
             self._cgm_history = self._extract_cgm_history()
         return self._cgm_history
+    
+    def extract_age_data(self):
+        """Extract patient age data from the dataset, perform type checking, and cache the result.
+        
+        This method extracts patient age at study enrollment/start. The age data represents the
+        demographic information that is typically collected at the beginning of a clinical study.
+        
+        Warning:
+            **Don't override this!** This method does type checking on the output data and should not be
+            overridden by subclasses. Instead, subclasses should implement the `_extract_age_data` method.
+        
+        Notes:
+            - Age should represent patient age at study enrollment or study start date
+            - Ensure the patient_id values are strings, otherwise validation will fail
+            - Ensure age values are numeric (int or float), otherwise validation will fail
+        
+        Returns:
+            age_data (pd.DataFrame): A DataFrame containing the patient age data with the following columns:
+            
+                - `patient_id` (str): The unique patient ID
+                - `age` (numeric): The patient age at study enrollment/start
+        """
+        if self._age_data is None:
+            self.load_data()
+            self._age_data = self._extract_age_data()
+            AGE_OUTPUT_SCHEMA.validate(self._age_data, lazy=True)
+        return self._age_data

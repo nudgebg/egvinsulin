@@ -78,6 +78,18 @@ class IOBP2(StudyDataset):
         df_basal = df_basal[[self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME, self.COL_NAME_BASAL_RATE]]
         return df_basal
 
+    def _extract_age_data(self):
+        """Extract patient age data from the IOBP2 dataset.
+        
+        Returns:
+            pd.DataFrame: DataFrame with columns 'patient_id' (str) and 'age' (numeric)
+                representing patient age as of enrollment date.
+        """
+        age_file_path = os.path.join(self.study_path, 'Data Tables', 'IOBP2PtRoster.txt')
+        df_age = get_df(age_file_path, usecols=['PtID', 'AgeAsofEnrollDt'], dtype={'PtID': str, 'AgeAsofEnrollDt': int})
+        df_age = df_age.rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'AgeAsofEnrollDt': self.COL_NAME_AGE})
+        return df_age
+
 if __name__ == '__main__':
     current_dir = os.path.dirname(__file__)
     path = os.path.join(current_dir, 'IOBP2 RCT Public Dataset')

@@ -120,6 +120,19 @@ class DCLP3(StudyDataset):
                                         'CGMValue': StudyDataset.COL_NAME_CGM})
         return df_cgm
 
+    def _extract_age_data(self):
+        """Extract patient age data from the DCLP3 dataset.
+        
+        Returns:
+            pd.DataFrame: DataFrame with columns 'patient_id' (str) and 'age' (numeric)
+                representing patient age at study enrollment.
+        """
+        age_file_path = os.path.join(self.study_path, 'Data Files',  'DiabScreening_a.txt')
+        df_age = pandas_helper.get_df(age_file_path, usecols=['PtID', 'AgeAtEnrollment'], encoding='utf-16', dtype={'PtID': str, 'AgeAtEnrollment': int})
+        df_age = df_age.rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'AgeAtEnrollment': self.COL_NAME_AGE})
+        
+        return df_age
+
 class DCLP5(DCLP3):
     def __init__(self, study_path, study_name='DCLP5'):
         super().__init__(study_path, study_name)
@@ -153,3 +166,15 @@ class DCLP5(DCLP3):
         self._df_bolus = df_bolus.sort_values(by=['PtID','DataDtTm'])
         self._df_basal = df_basal.sort_values(by=['PtID','DataDtTm'])
         self._df_cgm = df_cgm.sort_values(by=['PtID','DataDtTm'])
+
+    def _extract_age_data(self):
+        """Extract patient age data from the DCLP5 dataset.
+        
+        Returns:
+            pd.DataFrame: DataFrame with columns 'patient_id' (str) and 'age' (numeric)
+                representing patient age at study enrollment.
+        """
+        age_file_path = os.path.join(self.study_path, 'PtRoster.txt')
+        df_age = pandas_helper.get_df(age_file_path, usecols=['PtID', 'AgeAtEnrollment'], dtype={'PtID': str, 'AgeAtEnrollment': int})
+        df_age = df_age.rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'AgeAtEnrollment': self.COL_NAME_AGE})
+        return df_age
