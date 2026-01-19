@@ -74,7 +74,8 @@ class PEDAP(StudyDataset):
         #Extended boluses reported upon completion, adjust start time accordingly
         bMaskLater = temp.ExtendedBolusPortion == 'Later'
         temp.loc[bMaskLater, 'DeviceDtTm'] = temp.loc[bMaskLater, 'DeviceDtTm'] - temp.loc[bMaskLater, 'Duration']
-
+        temp = temp.sort_values(by=['PtID','DeviceDtTm'])
+        
         #Immediate boluses reported with identical duration, set to 0
         bMaskNow = temp.ExtendedBolusPortion == 'Now'
         temp.loc[bMaskNow, 'Duration'] = pd.Timedelta(0)
