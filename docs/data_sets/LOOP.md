@@ -301,7 +301,7 @@ The following figures illustrate the distribution and examples of these anomalie
 
 Examples of extreme CGM values and their context:
 
-![loop_anormalities](assets/loop_anormalities.png)
+![loop_anormalities](assets/loop_anomalies.png)
 
 ### TDDs (Total Daily Dose)
 - Small TDDs are mostly linked to minors
