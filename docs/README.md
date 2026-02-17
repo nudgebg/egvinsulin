@@ -92,7 +92,7 @@ The ultimate purpose of this toolbox is to bring CGM, insulin, and demographic d
 | `patient_id`       | `str`              | Patient ID|
 | `age`              | `float`            | Patient age at study enrollment/start|
 
-refer to the [Code Reference](./reference/#studies.studydataset.StudyDataset) for more details.
+refer to the [Code Reference](reference.md/#babelbetes.studies.studydataset) for more details.
 
 ## How to use BabelBetes (Quickstart)
 Here, we explain how to install the toolbox and how to use the `run_functions.py` script that batch processes all studies and extracts the standardized data.
