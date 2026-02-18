@@ -31,11 +31,11 @@ jobs:
       
       - name: Build docs
         run: |
+          pip install mike
           mkdocs build
       
       - name: Deploy docs
         run: |
-          pip install mike
           git fetch origin gh-pages --depth=1
           git config user.name docs-bot
           git config user.email docs-bot@users.noreply.github.com
