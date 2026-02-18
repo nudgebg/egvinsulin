@@ -31,7 +31,9 @@ jobs:
         run: mkdocs build
 
       - name: Deploy docs
-        run: mkdocs gh-deploy --force
+        run: |
+          pip install mike
+          mike deploy "$GITHUB_REF_NAME" latest --push
 
       - name: Build package
         run: python -m build

@@ -11,6 +11,7 @@ extra_css:
   - style.css
 
 plugins:
+  - mike
 - mkdocstrings:
     handlers:
       python:
@@ -22,7 +23,11 @@ plugins:
           show_symbol_type_heading: true
           show_symbol_type_toc: true
           show_submodules: true
-          
+
+extra:
+  version:
+    provider: mike
+      
 nav:
  - Babelbetes: README.md
  - Supported Datasets:

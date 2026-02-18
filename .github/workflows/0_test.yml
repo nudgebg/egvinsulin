@@ -8,7 +8,7 @@ on:
     branches: 
       - develop
 jobs:
-  deploy:
+  run:
     runs-on: ubuntu-latest
     
     steps:
@@ -32,3 +32,11 @@ jobs:
       - name: Build docs
         run: |
           mkdocs build
+      
+      - name: Deploy docs
+        run: |
+          pip install mike
+          git fetch origin gh-pages --depth=1
+          git config user.name docs-bot
+          git config user.email docs-bot@users.noreply.github.com
+          mike deploy develop --push

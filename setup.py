@@ -7,7 +7,7 @@ with open("docs/README.md", "r", encoding="utf-8") as fh:
 setup(
     name="babelbetes",  # The package name on pip install
     use_scm_version=True,
-    description="Extracting standardized tables from heterogeneous diabetes management datasets",
+    description="A Data Processing Tool to Standardize Publicly Available Clinical Diabetes Trial Data",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/nudgebg/babelbetes",
@@ -42,7 +42,6 @@ setup(
             "mkdocs-material>=9.5.36",
             "mkdocstrings-python>=1.11.1",
             "pymdown-extensions>=10.8.1",
-            "mkdocs-with-pdf>=0.9.3",
         ],
     },
     include_package_data=True,  # Include files from MANIFEST.in
