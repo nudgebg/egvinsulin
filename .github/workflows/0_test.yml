@@ -37,7 +37,7 @@ jobs:
       - name: Deploy docs
         if: github.event_name == 'push'
         run: |
-          git fetch origin gh-pages --depth=1
+          git fetch origin gh-pages --depth=1 || true
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           mike deploy develop --push
