@@ -11,9 +11,9 @@ def get_output_paths(out_path, study_name, data_types=None):
         out_path (str): Base output directory
         study_name (str): Name of the study
         data_types (list): List of data types to include ['cgm', 'bolus', 'basal']. If None, all types are included.
-        
+    
     Returns:
-        list: List of directory paths that will be created/removed
+        list (list): List of directory paths that will be created/removed
     """
     directories = []
     
@@ -38,7 +38,7 @@ def cleanup_study_output(out_path, study_name, data_types=None):
         data_types (list): List of data types to clean ['cgm', 'bolus', 'basal']. If None, all types are cleaned.
         
     Returns:
-        list: List of paths that were actually removed
+        list (list): List of paths that were actually removed
     """
     import shutil
     

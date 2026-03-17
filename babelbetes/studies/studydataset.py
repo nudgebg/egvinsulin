@@ -9,7 +9,7 @@ from pandera.pandas import Column, DataFrameSchema, Check
 
 AGE_OUTPUT_SCHEMA = DataFrameSchema({
     "patient_id": Column(pa.String, nullable=False, unique=True),
-    "age": Column(pa.Int, nullable=False, checks=[Check.ge(0),Check.le(120)]),
+    "age": Column(pa.Int, nullable=False, checks=[Check.ge(0), Check.le(120)]),
 })
 
 logger = Logger.get_logger(__name__)
@@ -258,10 +258,9 @@ class StudyDataset:
         
         Returns:  
             basal_event_history (pd.DataFrame): The basal event history with the following columns:    
-            
-             - `patient_id` (String): the unique patient ID
-             - `datetime` (pandas.datetime): the date and time of the basal event
-             - `basal_rate` (float): the basal rate in units per hour. Make sure to include zero basal rates as they mark basal suspends.
+                - `patient_id` (String): the unique patient ID
+                - `datetime` (pandas.datetime): the date and time of the basal event
+                - `basal_rate` (float): the basal rate in units per hour. Make sure to include zero basal rates as they mark basal suspends.
         """
         if self._basal_event_history is None:
             self.load_data()
@@ -312,5 +311,5 @@ class StudyDataset:
         if self._age_data is None:
             self.load_data()
             self._age_data = self._extract_age_data()
-            AGE_OUTPUT_SCHEMA.validate(self._age_data, lazy=True)
+        AGE_OUTPUT_SCHEMA.validate(self._age_data, lazy=True)
         return self._age_data

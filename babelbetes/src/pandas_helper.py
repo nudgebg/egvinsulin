@@ -75,7 +75,7 @@ def split_groups(x: pd.Series, threshold) -> pd.Series:
 
    Args:
        x (pd.Series): Series of numerical values.
-       threshold : The maximum duration between two consecutive values to consider them in the same group.
+       threshold(same as x.diff()): The maximum distance between two consecutive values to consider them in the same group. Must be same type as x.diff() values (e.g. int, float, Timedelta)
 
    Returns:
        (pd.Series): The Series containing the data.
@@ -257,7 +257,7 @@ def get_df(path, usecols=None, subset=False, dtype=None, encoding=None):
         encoding (str, optional): Encoding to use when reading text files (csv/txt). If None, uses pandas default (utf-8).
 
     Returns:
-        pd.DataFrame: The loaded data as a Pandas DataFrame.
+        dataframe (pd.DataFrame): The loaded data as a Pandas DataFrame.
     """
     file_ending = path.rsplit('.', 1)[-1]
     
@@ -299,7 +299,7 @@ def repetitive(df, datetime_col, value_col, max_duration):
         max_duration (timedelta, optional): To prevent long gaps between values, this parameter is used define the max duration for which consecutive values are dropped. At least one value will be kept whenever duration exceeds tha map_duration.
     
     Returns:
-        tuple: A tuple containing three elements:
+        tuple (tuple): A tuple containing three elements:
             - i_all_rep (np.array): Indexes of all repetitive values.
             - i_keep (np.array): Indexes of the first occurrence of repetitive values.
             - i_drop (np.array): Indexes of values to drop (to remove repetitive values after the first occurrence).

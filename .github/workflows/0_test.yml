@@ -1,13 +1,14 @@
-name: Build After Push
+name: Test Code
 
 on:
   push:
     branches:
-      - prerelease
       - develop
-      
+  pull_request: 
+    branches: 
+      - develop
 jobs:
-  deploy:
+  run:
     runs-on: ubuntu-latest
     
     steps:
@@ -22,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -e ".[dev]"
       
       - name: Run tests
         run: |
@@ -30,9 +31,13 @@ jobs:
       
       - name: Build docs
         run: |
+          pip install mike
           mkdocs build
       
-      - name: Deploy to GitHub Pages (develop only)
-        if: github.ref == 'refs/heads/develop'
+      - name: Deploy docs
+        if: github.event_name == 'push'
         run: |
-          mkdocs gh-deploy --force --remote-branch gh-pages
+          git fetch origin gh-pages --depth=1 || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mike deploy develop --push

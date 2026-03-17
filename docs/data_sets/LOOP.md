@@ -4,8 +4,8 @@ For detailed code, statistics, and further visualizations, see the referenced no
 This page summarizes our insights about the clinical study data of the **Loop** study in efforts to understand how to handle bolus, basal, and cgm data, list assumptions that were made, and pose open questions. 
 
 The analysis for this dataset were conducted in:   
- 1. [`notebooks/understand-loop-dataset.ipynb`](./../../notebooks/understand-loop-dataset/understand-loop-dataset.ipynb)   
- 2. [`2025-07-11 - Loop Anormalies in egv, tdd, iob.ipynb`](./../../notebooks/understand-loop-dataset/2025-07-11%20-%20Loop%20Anormalies%20in%20egv,%20tdd,%20iob.ipynb) ([jump to update](#2025-07-11-anomalies-in-loop-dataset-update))
+ 1. [`understand-loop-dataset.ipynb`](https://github.com/nudgebg/babelbetes/blob/develop/notebooks/understand-loop-dataset/understand-loop-dataset.ipynb)   
+ 2. [`2025-07-11 - Loop Anormalies in egv, tdd, iob.ipynb`](https://github.com/nudgebg/babelbetes/blob/develop/notebooks/understand-loop-dataset/2025-07-11%20-%20Loop%20Anormalies%20in%20egv%2C%20tdd%2C%20iob.ipynb) ([jump to update](#2025-07-11-anomalies-in-loop-dataset-update))
 
 
 ## Study Overview
@@ -301,7 +301,7 @@ The following figures illustrate the distribution and examples of these anomalie
 
 Examples of extreme CGM values and their context:
 
-![loop_anormalities](assets/loop_anormalities.png)
+![loop_anormalities](assets/loop_anomalies.png)
 
 ### TDDs (Total Daily Dose)
 - Small TDDs are mostly linked to minors

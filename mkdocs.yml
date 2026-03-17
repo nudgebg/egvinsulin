@@ -1,31 +1,43 @@
 site_name: Babelbetes
 
-theme: material
+theme:
+  name: material
+  features:
+    - navigation.indexes
+    - navigation.sections
 
 markdown_extensions:
   - pymdownx.snippets:
       base_path: ["."]  # Relative to the current Markdown file
   - admonition
+  - pymdownx.tasklist:
+      custom_checkbox: true
 
 extra_css:
   - style.css
 
 plugins:
-- mkdocstrings:
-    handlers:
-      python:
-        options:
-          show_source: false
-          heading_level: 3
-          show_root_heading: true
-          show_root_full_path: true
-          show_symbol_type_heading: true
-          show_symbol_type_toc: true
-          show_submodules: true
-          
+  - mike
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: false
+            heading_level: 3
+            show_root_heading: true
+            show_root_full_path: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            show_submodules: true
+
+extra:
+  version:
+    provider: mike
+      
 nav:
  - Babelbetes: README.md
- - Supported Datasets:
+ - Datasets:
+    - Overview: data_sets/overview.md
     - IOBP2: data_sets/IOBP2.md
     - DCLP3: data_sets/DCLP3.md
     - DCLP5: data_sets/DCLP5.md
@@ -35,12 +47,14 @@ nav:
     - T1DExi: data_sets/T1DEXI.md
     - T1DEXIP: data_sets/T1DEXIP.md
     - Replace BG: data_sets/REPLACE_BG.md
- - Better Datasets: recommendations.md
- - Toolbox Guide:
+ - For Users:
     - Code Reference: reference.md
-    - Study Checklist: checklist.md
-    - Best Pracitces: best-practices.md
+    - Dataset Checklist : checklist.md
+    - Best Practices: best-practices.md
     - Virtual Environments: python-setup.md
+ - For Dataset Providers:
+   - Good Dataset Practices: recommendations.md
  - Contribute: contribute.md
+ - Acknowledgements: acknowledgements.md
  - About: about.md
  - License: license.md
