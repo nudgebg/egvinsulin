@@ -1,11 +1,17 @@
 site_name: Babelbetes
 
-theme: material
+theme:
+  name: material
+  features:
+    - navigation.indexes
+    - navigation.sections
 
 markdown_extensions:
   - pymdownx.snippets:
       base_path: ["."]  # Relative to the current Markdown file
   - admonition
+  - pymdownx.tasklist:
+      custom_checkbox: true
 
 extra_css:
   - style.css
@@ -30,7 +36,8 @@ extra:
       
 nav:
  - Babelbetes: README.md
- - Supported Datasets:
+ - Datasets:
+    - Overview: data_sets/overview.md
     - IOBP2: data_sets/IOBP2.md
     - DCLP3: data_sets/DCLP3.md
     - DCLP5: data_sets/DCLP5.md
@@ -40,12 +47,13 @@ nav:
     - T1DExi: data_sets/T1DEXI.md
     - T1DEXIP: data_sets/T1DEXIP.md
     - Replace BG: data_sets/REPLACE_BG.md
- - Better Datasets: recommendations.md
- - Toolbox Guide:
+ - Guidance:
     - Code Reference: reference.md
     - Study Checklist: checklist.md
     - Best Pracitces: best-practices.md
     - Virtual Environments: python-setup.md
+ - → Dataset Recommendations: recommendations.md
  - Contribute: contribute.md
+ - Acknowledgements: acknowledgements.md
  - About: about.md
  - License: license.md
