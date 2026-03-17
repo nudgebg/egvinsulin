@@ -1,11 +1,12 @@
-name: Release
+name: Pre-release
 
 on:
   push:
-    tags: ["v*"]
+    branches:
+      - prerelease
 
 jobs:
-  release:
+  prerelease:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -13,6 +14,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -22,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -e ".[dev]"
-          pip install build
+          pip install build mike
 
       - name: Run tests
         run: python test.py
@@ -30,17 +33,19 @@ jobs:
       - name: Build docs
         run: mkdocs build
 
-      - name: Deploy docs
+      - name: Deploy docs to test version
         run: |
-          pip install mike
           git fetch origin gh-pages --depth=1 || true
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          mike deploy "$GITHUB_REF_NAME" latest --push
-          mike set-default latest --push
+          mike deploy test --push
 
       - name: Build package
-        run: python -m build
+        run: |
+          VERSION=$(python -m setuptools_scm | sed 's/+.*//')
+          SETUPTOOLS_SCM_PRETEND_VERSION=$VERSION python -m build
 
-      - name: Publish to PyPI
+      - name: Publish to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/

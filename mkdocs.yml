@@ -47,12 +47,13 @@ nav:
     - T1DExi: data_sets/T1DEXI.md
     - T1DEXIP: data_sets/T1DEXIP.md
     - Replace BG: data_sets/REPLACE_BG.md
- - Guidance:
+ - For Users:
     - Code Reference: reference.md
-    - Study Checklist: checklist.md
-    - Best Pracitces: best-practices.md
+    - Dataset Checklist : checklist.md
+    - Best Practices: best-practices.md
     - Virtual Environments: python-setup.md
- - → Dataset Recommendations: recommendations.md
+ - For Dataset Providers:
+   - Good Dataset Practices: recommendations.md
  - Contribute: contribute.md
  - Acknowledgements: acknowledgements.md
  - About: about.md

@@ -1,3 +1,4 @@
+# Dataset Processing Checklist
 !!! info
 	This checklist is for **researchers implementing a new dataset parser** in BabelBetes. It is based on pitfalls, challenges, and errors encountered while processing clinical diabetes datasets, and ensures that important aspects are not overlooked. If you are a dataset provider or investigator looking for guidance on how to structure and distribute your data, see [Recommendations for Dataset Providers](recommendations.md) instead.
 
