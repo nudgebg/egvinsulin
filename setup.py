@@ -43,6 +43,7 @@ setup(
             "mkdocstrings>=1.0",
             "mkdocstrings-python>=2.0",
             "pymdown-extensions>=10.8.1",
+            "mike",
         ],
     },
     include_package_data=True,  # Include files from MANIFEST.in
