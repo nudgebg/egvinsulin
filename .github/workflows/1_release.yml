@@ -3,6 +3,7 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 jobs:
   release:
@@ -13,6 +14,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -32,15 +35,31 @@ jobs:
 
       - name: Deploy docs
         run: |
-          pip install mike
           git fetch origin gh-pages --depth=1 || true
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          mike deploy "$GITHUB_REF_NAME" latest --push
-          mike set-default latest --push
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            mike deploy test --push
+          else
+            mike deploy "$GITHUB_REF_NAME" latest --push
+            mike set-default latest --push
+          fi
 
       - name: Build package
-        run: python -m build
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION=$(python -m setuptools_scm | sed 's/+.*//')
+            SETUPTOOLS_SCM_PRETEND_VERSION=$VERSION python -m build
+          else
+            python -m build
+          fi
+
+      - name: Publish to TestPyPI
+        if: github.event_name == 'workflow_dispatch'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
 
       - name: Publish to PyPI
+        if: github.event_name == 'push'
         uses: pypa/gh-action-pypi-publish@release/v1
