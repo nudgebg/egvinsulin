@@ -91,9 +91,6 @@ class Flair(StudyDataset):
         self._pump_file = os.path.join(self.study_path, 'Data Tables', 'FLAIRDevicePump.txt')
         self._cgm_file = os.path.join(self.study_path, 'Data Tables', 'FLAIRDeviceCGM.txt')
 
-    def _load_data(self, subset=False):
-        pass  # data loaded lazily via cached_property file accessors
-
     @cached_property
     def _df_cgm(self):
         df_cgm = get_df(self._cgm_file, usecols=['PtID', 'DataDtTm', 'DataDtTm_adjusted', 'CGM', 'Unusuable'], subset=self.subset)

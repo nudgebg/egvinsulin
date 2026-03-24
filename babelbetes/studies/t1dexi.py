@@ -70,9 +70,6 @@ class T1DEXI(StudyDataset):
         super().__init__(study_path, study_name, subset=subset)
         self.drop_mdi = drop_mdi
 
-    def _load_data(self, subset=False):
-        pass  # data loaded lazily via cached_property file accessors
-
     @cached_property
     def _facm(self):
         dx = load_dx(os.path.join(self.study_path, 'DX.xpt'))

@@ -3,7 +3,6 @@
 # Copyright (c) 2025 nudgebg
 # Licensed under the MIT License. See LICENSE file for details.
 from babelbetes.src.logger import Logger
-from functools import cached_property
 import pandera.pandas as pa
 from pandera.pandas import Column, DataFrameSchema, Check
 
@@ -42,7 +41,6 @@ class StudyDataset:
     Abstract base class for clinical diabetes datasets with CGM, bolus, basal, and age data.
 
     Subclasses implement four abstract methods:
-    - `_load_data`: Load raw files from the study directory.
     - `_extract_bolus_event_history`: Return bolus events as a DataFrame.
     - `_extract_basal_event_history`: Return basal rate events as a DataFrame.
     - `_extract_cgm_history`: Return CGM measurements as a DataFrame.
@@ -81,10 +79,6 @@ class StudyDataset:
         for attr in self._raw_attrs:
             self.__dict__.pop(attr, None)
 
-    def _load_data(self, subset: bool = False):
-        """(Abstract) Load raw study files into memory."""
-        raise NotImplementedError("Subclasses should implement the _load_data method")
-
     def _extract_bolus_event_history(self):
         """(Abstract) Extract bolus events. Implement in subclasses."""
         raise NotImplementedError("Subclasses should implement the _extract_bolus_event_history method")
@@ -101,7 +95,7 @@ class StudyDataset:
         """(Abstract) Extract patient age at enrollment. Implement in subclasses."""
         raise NotImplementedError("Subclasses should implement the _extract_age_data method")
 
-    @cached_property
+    @property
     def bolus(self):
         """Bolus event history as a validated, cached DataFrame.
 
@@ -113,8 +107,8 @@ class StudyDataset:
         df = self._extract_bolus_event_history()
         BOLUS_SCHEMA.validate(df, lazy=True)
         return df
-
-    @cached_property
+    
+    @property
     def basal(self):
         """Basal rate event history as a validated, cached DataFrame.
 
@@ -130,7 +124,7 @@ class StudyDataset:
         BASAL_SCHEMA.validate(df, lazy=True)
         return df
 
-    @cached_property
+    @property
     def cgm(self):
         """CGM measurements as a validated, cached DataFrame.
 
@@ -141,8 +135,8 @@ class StudyDataset:
         df = self._extract_cgm_history()
         CGM_SCHEMA.validate(df, lazy=True)
         return df
-
-    @cached_property
+    
+    @property
     def age(self):
         """Patient age at enrollment as a validated, cached DataFrame.
 

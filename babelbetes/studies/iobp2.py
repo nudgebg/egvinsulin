@@ -18,9 +18,6 @@ class IOBP2(StudyDataset):
         super().__init__(study_path, "IOBP2", subset=subset)
         self._iletFilePath = os.path.join(study_path, 'Data Tables', 'IOBP2DeviceiLet.txt')
 
-    def _load_data(self, subset=False):
-        pass  # data loaded lazily via cached_property file accessors
-
     @cached_property
     def _df(self):
         df = get_df(self._iletFilePath, usecols=['PtID', 'DeviceDtTm', 'CGMVal', 'BasalDelivPrev', 'BolusDelivPrev',

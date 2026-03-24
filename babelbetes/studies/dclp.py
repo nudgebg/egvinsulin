@@ -21,9 +21,6 @@ class DCLP3(StudyDataset):
         super().__init__(study_path, study_name, subset=subset)
         self._data_table_path = os.path.join(study_path, 'Data Files')
 
-    def _load_data(self, subset=False):
-        pass  # data loaded lazily via cached_property file accessors
-
     @cached_property
     def _df_bolus(self):
         df = pandas_helper.get_df(os.path.join(self._data_table_path, 'Pump_BolusDelivered.txt'),

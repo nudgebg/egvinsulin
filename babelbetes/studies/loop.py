@@ -34,9 +34,6 @@ class Loop(StudyDataset):
         self._cgm_parquet_filename = 'loop_cgm.parquet'
         self._basal_parquet_filename = 'loop_basal.parquet'
 
-    def _load_data(self, subset=False):
-        pass  # data loaded lazily via cached_property file accessors
-
     def _convert_csv_to_partqet(self, ddf, parquet_path, override=False):
         if os.path.exists(parquet_path) and (not override):
             self._logger.debug(f"{os.path.basename(parquet_path)} already exists. Skipping conversion.")

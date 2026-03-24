@@ -19,9 +19,6 @@ class ReplaceBG(StudyDataset):
         super().__init__(study_path, 'ReplaceBG', subset=subset)
         self._enrollment_start = datetime(2015, 1, 1)
 
-    def _load_data(self, subset=False):
-        pass  # data loaded lazily via cached_property file accessors
-
     @cached_property
     def _df_patient(self):
         return pandas_helper.get_df(os.path.join(self.study_path, 'Data Tables', 'HPtRoster.txt'),

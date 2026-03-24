@@ -74,7 +74,7 @@ import os
 from babelbetes.studies import StudyDataset, dataset_initializer
 import babelbetes.src.postprocessing as pp
 from babelbetes.src.logger import Logger
-from babelbetes.src.file_saver import save_dataframe, cleanup_study_output
+from babelbetes.src.data_store import ParquetStore
 from datetime import datetime
 from tqdm import tqdm
 import argparse
@@ -85,13 +85,12 @@ logger = Logger.get_logger(__file__)
 def current_time():
   return datetime.now().strftime("%H:%M:%S")
 
-def main(load_subset=False, remove_repetitive=True, compressed=False, input_dir=None, output_dir=None, studies=None, data_types=None):
+def main(load_subset=False, remove_repetitive=True, input_dir=None, output_dir=None, studies=None, data_types=None):
   """
   Main function to process study data folders.
 
   Args:
     load_subset (bool): If True, runs the script on a limited amount of data (e.g. skipping rows).
-    compressed (bool): Whether to compress the output files.
     input_dir (str): Custom input directory path. Defaults to 'data/raw'.
     output_dir (str): Custom output directory path. Defaults to 'data/out'.
     studies (list): List of study names to process. If None, all available studies will be processed.
@@ -108,8 +107,7 @@ def main(load_subset=False, remove_repetitive=True, compressed=False, input_dir=
   in_path = input_dir if input_dir else os.path.join(current_dir, 'data', 'raw')
   out_path = output_dir if output_dir else os.path.join(current_dir, 'data', 'out')
 
-  if not os.path.exists(out_path):
-    os.makedirs(out_path)
+  store = ParquetStore(out_path)
       
   if load_subset:
      logger.warning(f"ATTENTION: --test was provided: Running in test mode using a subset of the data.")
@@ -170,13 +168,13 @@ def main(load_subset=False, remove_repetitive=True, compressed=False, input_dir=
       tqdm.write(f"[{current_time()}] {study.study_name} ...")
       
       # Clean up existing output for this study
-      removed_paths = cleanup_study_output(out_path, study.study_name, data_types)
+      removed_paths = store.cleanup(study.study_name, data_types)
       if removed_paths:
         tqdm.write(f"[{current_time()}] Cleaned up existing output: {len(removed_paths)} items removed")
       
       start_time = time()
       try:
-         process_folder(study, out_path, progress, remove_repetitive=remove_repetitive, compressed=compressed, data_types=data_types)
+         process_folder(study, store, progress, remove_repetitive=remove_repetitive, data_types=data_types)
       except Exception as e:
           tqdm.write(f"[{current_time()}] Error processing {study.study_name}: {e}")
           logger.error(f"Error processing {study.study_name}: {e} \n" \
@@ -191,25 +189,19 @@ def main(load_subset=False, remove_repetitive=True, compressed=False, input_dir=
 
     tqdm.write(f"Processing completed in {time() - global_start_time:.2f} seconds.")
 
-def process_folder(study: StudyDataset, out_path_study, progress, remove_repetitive, compressed, data_types):
-      """Processes the data for a given study by loading, extracting, and resampling bolus, basal, and glucose events.
+def process_folder(study: StudyDataset, store: 'ParquetStore', progress, remove_repetitive, data_types):
+      """Processes the data for a given study by loading, extracting, and saving bolus, basal, CGM, and age events.
 
         Args:
-          study (object): An instance of a study class that contains methods to load and extract data.
-          out_path_study (str): The output directory path where the processed data will be saved.
-          progress (tqdm): A tqdm progress bar object to display the progress of the processing steps.
-          compressed (bool): Whether to compress the output files.
-          data_types (list): List of data types to extract ['cgm', 'bolus', 'basal'].
-        
-        Steps:
-          1. Loads the study data.
-          2. Extracts the requested data types and saves them as parquet files.
-          Each step updates the progress bar and logs the current status.
+          study (StudyDataset): Study instance to extract data from.
+          store (ParquetStore): Store to write data to.
+          progress (tqdm): Progress bar to update.
+          remove_repetitive (bool): Whether to drop repetitive basal values.
+          data_types (list): Data types to extract ['cgm', 'bolus', 'basal', 'age'].
         """
-      # Process each requested data type
       if 'bolus' in data_types:
           progress.set_description_str(f"{study.__class__.__name__}: Extracting boluses")
-          save_dataframe(study.bolus, out_path_study, "parquet", compressed, study.study_name, 'bolus')
+          store.save(study.bolus, study.study_name, 'bolus')
           tqdm.write(f"[{current_time()}] [x] Boluses extracted")
 
       if 'basal' in data_types:
@@ -218,24 +210,23 @@ def process_folder(study: StudyDataset, out_path_study, progress, remove_repetit
           if remove_repetitive:
              progress.set_description_str(f"{study.__class__.__name__}: Removing repetitive basals")
              df = df.groupby(StudyDataset.COL_NAME_PATIENT_ID).apply(pp.drop_repetitive_basals, include_groups=False).reset_index(level=0)
-          save_dataframe(df, out_path_study, "parquet", compressed, study.study_name, 'basal')
+          store.save(df, study.study_name, 'basal')
           tqdm.write(f"[{current_time()}] [x] Basal extracted")
 
       if 'cgm' in data_types:
           progress.set_description_str(f"{study.__class__.__name__}: Extracting glucose")
-          save_dataframe(study.cgm, out_path_study, "parquet", compressed, study.study_name, 'cgm')
+          store.save(study.cgm, study.study_name, 'cgm')
           tqdm.write(f"[{current_time()}] [x] CGM extracted")
 
       if 'age' in data_types:
           progress.set_description_str(f"{study.__class__.__name__}: Extracting age data")
-          save_dataframe(study.age, out_path_study, "parquet", compressed, study.study_name, 'age')
+          store.save(study.age, study.study_name, 'age')
           tqdm.write(f"[{current_time()}] [x] Age data extracted")
       
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Run data normalization on raw study data.")
   parser.add_argument('--test', action='store_true', help="Run the script in test mode using test data.")
-  parser.add_argument('--compressed', action='store_true', help="Enable compression for the output files.")
   parser.add_argument('--input-dir', type=str, help="Specify a custom input directory. Defaults to 'data/raw'.")
   parser.add_argument('--output-dir', type=str, help="Specify a custom output directory. Defaults to 'data/out'.")
   parser.add_argument('--remove-repetitive', action='store_true', help="Remove repetitive values from the basal output dataframes.")
@@ -246,4 +237,4 @@ if __name__ == "__main__":
   logger.info(f"Using arguments:")
   for arg, value in vars(args).items():
       logger.info(f"  {arg}: {value}")
-  main(load_subset=args.test, remove_repetitive=args.remove_repetitive, compressed=args.compressed, input_dir=args.input_dir, output_dir=args.output_dir, studies=args.studies, data_types=args.data_types)
+  main(load_subset=args.test, remove_repetitive=args.remove_repetitive, input_dir=args.input_dir, output_dir=args.output_dir, studies=args.studies, data_types=args.data_types)
