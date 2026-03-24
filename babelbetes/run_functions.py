@@ -209,30 +209,27 @@ def process_folder(study: StudyDataset, out_path_study, progress, remove_repetit
       # Process each requested data type
       if 'bolus' in data_types:
           progress.set_description_str(f"{study.__class__.__name__}: Extracting boluses")
-          df = study.extract_bolus_event_history()
-          save_dataframe(df, out_path_study, "parquet", compressed, study.study_name, 'bolus')
-          tqdm.write(f"[{current_time()}] [x] Boluses extracted"); 
+          save_dataframe(study.bolus, out_path_study, "parquet", compressed, study.study_name, 'bolus')
+          tqdm.write(f"[{current_time()}] [x] Boluses extracted")
 
       if 'basal' in data_types:
           progress.set_description_str(f"{study.__class__.__name__}: Extracting basals")
-          df = study.extract_basal_event_history()
+          df = study.basal
           if remove_repetitive:
              progress.set_description_str(f"{study.__class__.__name__}: Removing repetitive basals")
-             df = df.groupby(StudyDataset.COL_NAME_PATIENT_ID).apply(pp.drop_repetitive_basals,include_groups=False).reset_index(level=0)
+             df = df.groupby(StudyDataset.COL_NAME_PATIENT_ID).apply(pp.drop_repetitive_basals, include_groups=False).reset_index(level=0)
           save_dataframe(df, out_path_study, "parquet", compressed, study.study_name, 'basal')
-          tqdm.write(f"[{current_time()}] [x] Basal extracted"); 
+          tqdm.write(f"[{current_time()}] [x] Basal extracted")
 
       if 'cgm' in data_types:
           progress.set_description_str(f"{study.__class__.__name__}: Extracting glucose")
-          df = study.extract_cgm_history()
-          save_dataframe(df, out_path_study, "parquet", compressed, study.study_name, 'cgm')
-          tqdm.write(f"[{current_time()}] [x] CGM extracted"); 
+          save_dataframe(study.cgm, out_path_study, "parquet", compressed, study.study_name, 'cgm')
+          tqdm.write(f"[{current_time()}] [x] CGM extracted")
 
       if 'age' in data_types:
           progress.set_description_str(f"{study.__class__.__name__}: Extracting age data")
-          df = study.extract_age_data()
-          save_dataframe(df, out_path_study, "parquet", compressed, study.study_name, 'age')
-          tqdm.write(f"[{current_time()}] [x] Age data extracted"); 
+          save_dataframe(study.age, out_path_study, "parquet", compressed, study.study_name, 'age')
+          tqdm.write(f"[{current_time()}] [x] Age data extracted")
       
 
 if __name__ == "__main__":

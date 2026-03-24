@@ -223,17 +223,3 @@ class Flair(StudyDataset):
         else:
             raise ValueError('method must be one of: max, sum, latest, all')
 
-
-def main():
-    #get directory of this file
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    study_path = os.path.join(current_dir, '..', 'data','raw', 'FLAIRPublicDataSet')
-    flair = Flair('FLAIR', study_path)
-    flair.load_data()
-    print(f'loaded data for {flair.study_name} from {flair.study_path}')
-    basal_events = flair.extract_basal_event_history()
-    cgm = flair.extract_cgm_history()
-    boluses = flair.extract_bolus_event_history()
-
-if __name__ == "__main__":
-    main()

@@ -3,6 +3,7 @@
 # Copyright (c) 2025 nudgebg
 # Licensed under the MIT License. See LICENSE file for details.
 from babelbetes.src.logger import Logger
+from functools import cached_property
 import pandera.pandas as pa
 from pandera.pandas import Column, DataFrameSchema, Check
 
@@ -47,9 +48,9 @@ class StudyDataset:
     - `_extract_cgm_history`: Return CGM measurements as a DataFrame.
     - `_extract_age_data`: Return patient age at enrollment as a DataFrame.
 
-    Public extraction methods (`extract_bolus_event_history`, etc.) validate output against
-    pandera schemas and cache results. Do not override them; override the private `_extract_*`
-    methods instead.
+    Public properties (`bolus`, `basal`, `cgm`, `age`) validate output against pandera schemas
+    and cache results via `cached_property`. Do not override them; override the private
+    `_extract_*` methods instead.
 
     For memory management when processing multiple studies, declare raw file cache attributes
     in `_raw_attrs` and call `unload_raw()` after extraction is complete.
@@ -69,11 +70,6 @@ class StudyDataset:
         self.study_path = study_path
         self.study_name = study_name
         self.subset = subset
-        self._bolus_event_history = None
-        self._basal_event_history = None
-        self._cgm_history = None
-        self._age_data = None
-        self._data_loaded = False
 
     def unload_raw(self):
         """Free raw file caches from memory.
@@ -105,35 +101,22 @@ class StudyDataset:
         """(Abstract) Extract patient age at enrollment. Implement in subclasses."""
         raise NotImplementedError("Subclasses should implement the _extract_age_data method")
 
-    def load_data(self, subset=False):
-        """Load and cache study data by calling `_load_data`. Idempotent.
-
-        Called automatically by extraction methods. Can also be called up-front.
-
-        Args:
-            subset (bool): Load only a small subset for testing. Defaults to False.
-        """
-        if not self._data_loaded:
-            self._load_data(subset=subset)
-            self._data_loaded = True
-
-    def extract_bolus_event_history(self):
-        """Extract and validate bolus event history, caching the result.
+    @cached_property
+    def bolus(self):
+        """Bolus event history as a validated, cached DataFrame.
 
         Returns:
             pd.DataFrame: Columns: patient_id (str), datetime (datetime64),
                 bolus (float, units), delivery_duration (timedelta).
                 Standard boluses have delivery_duration of 0 seconds.
         """
-        if self._bolus_event_history is None:
-            self.load_data()
-            df = self._extract_bolus_event_history()
-            BOLUS_SCHEMA.validate(df, lazy=True)
-            self._bolus_event_history = df
-        return self._bolus_event_history
+        df = self._extract_bolus_event_history()
+        BOLUS_SCHEMA.validate(df, lazy=True)
+        return df
 
-    def extract_basal_event_history(self):
-        """Extract and validate basal event history, caching the result.
+    @cached_property
+    def basal(self):
+        """Basal rate event history as a validated, cached DataFrame.
 
         Notes:
             - Zero basal rates (pump suspends) must be included.
@@ -143,36 +126,29 @@ class StudyDataset:
             pd.DataFrame: Columns: patient_id (str), datetime (datetime64),
                 basal_rate (float, units/hour).
         """
-        if self._basal_event_history is None:
-            self.load_data()
-            df = self._extract_basal_event_history()
-            BASAL_SCHEMA.validate(df, lazy=True)
-            self._basal_event_history = df
-        return self._basal_event_history
+        df = self._extract_basal_event_history()
+        BASAL_SCHEMA.validate(df, lazy=True)
+        return df
 
-    def extract_cgm_history(self):
-        """Extract and validate CGM measurements, caching the result.
+    @cached_property
+    def cgm(self):
+        """CGM measurements as a validated, cached DataFrame.
 
         Returns:
             pd.DataFrame: Columns: patient_id (str), datetime (datetime64),
                 cgm (float, mg/dL).
         """
-        if self._cgm_history is None:
-            self.load_data()
-            df = self._extract_cgm_history()
-            CGM_SCHEMA.validate(df, lazy=True)
-            self._cgm_history = df
-        return self._cgm_history
+        df = self._extract_cgm_history()
+        CGM_SCHEMA.validate(df, lazy=True)
+        return df
 
-    def extract_age_data(self):
-        """Extract and validate patient age at enrollment, caching the result.
+    @cached_property
+    def age(self):
+        """Patient age at enrollment as a validated, cached DataFrame.
 
         Returns:
             pd.DataFrame: Columns: patient_id (str), age (int, 0–120).
         """
-        if self._age_data is None:
-            self.load_data()
-            df = self._extract_age_data()
-            AGE_SCHEMA.validate(df, lazy=True)
-            self._age_data = df
-        return self._age_data
+        df = self._extract_age_data()
+        AGE_SCHEMA.validate(df, lazy=True)
+        return df
