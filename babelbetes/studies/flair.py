@@ -170,6 +170,7 @@ class Flair(StudyDataset):
                                     'DateTime': self.COL_NAME_DATETIME,
                                     'CGM': self.COL_NAME_CGM})
         df_cgm[self.COL_NAME_PATIENT_ID] = df_cgm[self.COL_NAME_PATIENT_ID].astype(str)
+        df_cgm[self.COL_NAME_CGM] = df_cgm[self.COL_NAME_CGM].astype(float)
         return df_cgm
 
     def _extract_age_data(self):

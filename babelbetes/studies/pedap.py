@@ -96,9 +96,10 @@ class PEDAP(StudyDataset):
         #reduce rename return
         temp = temp[['PtID', 'DeviceDtTm', 'CGMValue']].astype({'PtID':str})
         temp['DeviceDtTm'] = pd.to_datetime(temp.DeviceDtTm)
-        temp = temp.rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 
+        temp = temp.rename(columns={'PtID': self.COL_NAME_PATIENT_ID,
                                     'DeviceDtTm': self.COL_NAME_DATETIME,
                                     'CGMValue': self.COL_NAME_CGM})
+        temp[self.COL_NAME_CGM] = temp[self.COL_NAME_CGM].astype(float)
         return temp
 
     def _extract_age_data(self):

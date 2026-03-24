@@ -115,9 +115,10 @@ class DCLP3(StudyDataset):
         
         #reduce, rename, return
         df_cgm = df_cgm[['PtID','DataDtTm','CGMValue']]
-        df_cgm = df_cgm.rename(columns={'PtID': StudyDataset.COL_NAME_PATIENT_ID, 
+        df_cgm = df_cgm.rename(columns={'PtID': StudyDataset.COL_NAME_PATIENT_ID,
                                         'DataDtTm': StudyDataset.COL_NAME_DATETIME,
                                         'CGMValue': StudyDataset.COL_NAME_CGM})
+        df_cgm[StudyDataset.COL_NAME_CGM] = df_cgm[StudyDataset.COL_NAME_CGM].astype(float)
         return df_cgm
 
     def _extract_age_data(self):
