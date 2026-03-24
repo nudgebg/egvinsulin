@@ -4,7 +4,7 @@ from babelbetes.studies import IOBP2, Flair, PEDAP, DCLP3, DCLP5, ReplaceBG, Loo
 from babelbetes.src.logger import Logger
 logger = Logger.get_logger(__name__)
 
-def initialize_datasets(data_path):
+def initialize_datasets(data_path, subset=False):
     patterns = ['IOBP2', 'FLAIR', 'PEDAP', 'DCLP3', 'DCLP5', 'REPLACE-BG', 'Loop', 'T1DEXI - DATA', 'T1DEXIP - DATA']
     classes = [IOBP2, Flair, PEDAP, DCLP3, DCLP5, ReplaceBG, Loop, T1DEXI, T1DEXIP]
     class_map = dict(zip(patterns, classes))
@@ -20,7 +20,7 @@ def initialize_datasets(data_path):
             if len(matches) > 1:
                 logger.warning(f"{pattern} matches multiple folders: {matches}. Using {match}.")
             file_path = os.path.join(data_path, match)
-            study = class_map[pattern](file_path)
+            study = class_map[pattern](file_path, subset=subset)
             initialized_studies.append(study)
             all_folders.remove(match)  # Remove matched folder from the list
 

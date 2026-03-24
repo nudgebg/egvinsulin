@@ -116,7 +116,7 @@ def main(load_subset=False, remove_repetitive=True, compressed=False, input_dir=
 
   logger.info(f"Looking for studies in  {in_path}")
   logger.info(f"Output will be saved to {out_path}")
-  all_initialized_studies = dataset_initializer.initialize_datasets(in_path)
+  all_initialized_studies = dataset_initializer.initialize_datasets(in_path, subset=load_subset)
   
   if studies is not None:
     if not isinstance(studies, list):
@@ -176,7 +176,7 @@ def main(load_subset=False, remove_repetitive=True, compressed=False, input_dir=
       
       start_time = time()
       try:
-         process_folder(study, out_path, progress, load_subset=load_subset, remove_repetitive=remove_repetitive, compressed=compressed, data_types=data_types)
+         process_folder(study, out_path, progress, remove_repetitive=remove_repetitive, compressed=compressed, data_types=data_types)
       except Exception as e:
           tqdm.write(f"[{current_time()}] Error processing {study.study_name}: {e}")
           logger.error(f"Error processing {study.study_name}: {e} \n" \
@@ -191,7 +191,7 @@ def main(load_subset=False, remove_repetitive=True, compressed=False, input_dir=
 
     tqdm.write(f"Processing completed in {time() - global_start_time:.2f} seconds.")
 
-def process_folder(study: StudyDataset, out_path_study, progress, load_subset, remove_repetitive, compressed, data_types):
+def process_folder(study: StudyDataset, out_path_study, progress, remove_repetitive, compressed, data_types):
       """Processes the data for a given study by loading, extracting, and resampling bolus, basal, and glucose events.
 
         Args:
@@ -206,10 +206,6 @@ def process_folder(study: StudyDataset, out_path_study, progress, load_subset, r
           2. Extracts the requested data types and saves them as parquet files.
           Each step updates the progress bar and logs the current status.
         """
-      progress.set_description_str(f"{study.__class__.__name__}: (Loading data)")
-      study.load_data(subset=load_subset)
-      tqdm.write(f"[{current_time()}] [x] Data loaded"); 
-
       # Process each requested data type
       if 'bolus' in data_types:
           progress.set_description_str(f"{study.__class__.__name__}: Extracting boluses")
