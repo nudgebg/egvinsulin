@@ -2,7 +2,6 @@
 # Author Jan Wrede
 # Copyright (c) 2025 nudgebg
 # Licensed under the MIT License. See LICENSE file for details.
-import pandas as pd
 from babelbetes.src.logger import Logger
 import pandera.pandas as pa
 from pandera.pandas import Column, DataFrameSchema, Check
@@ -66,9 +65,10 @@ class StudyDataset:
 
     _raw_attrs = ()  # subclasses declare raw file cache attribute names here
 
-    def __init__(self, study_path, study_name):
+    def __init__(self, study_path, study_name, subset=False):
         self.study_path = study_path
         self.study_name = study_name
+        self.subset = subset
         self._bolus_event_history = None
         self._basal_event_history = None
         self._cgm_history = None
