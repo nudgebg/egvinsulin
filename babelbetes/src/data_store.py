@@ -11,7 +11,12 @@ class ParquetStore:
     """Read/write interface for the partitioned Parquet output store.
 
     Data is stored as Hive-partitioned Parquet files under `base_path`,
-    partitioned by study_name / data_type / patient_id.
+    with each data type in its own subdirectory to keep schemas homogeneous:
+
+        base_path/cgm/study_name=X/patient_id=Z/*.parquet
+        base_path/bolus/study_name=X/patient_id=Z/*.parquet
+        base_path/basal/study_name=X/patient_id=Z/*.parquet
+        base_path/age/study_name=X/patient_id=Z/*.parquet
 
     Args:
         base_path (str): Root directory of the store (e.g. "data/out").
@@ -29,11 +34,11 @@ class ParquetStore:
             study_name (str): Study identifier (e.g. "Flair").
             data_type (str): One of 'cgm', 'bolus', 'basal', 'age'.
         """
-        df = df.assign(study_name=study_name, data_type=data_type)
+        df = df.assign(study_name=study_name)
         df.to_parquet(
-            self.base_path,
+            os.path.join(self.base_path, data_type),
             index=False,
-            partition_cols=['study_name', 'data_type', 'patient_id'],
+            partition_cols=['study_name', 'patient_id'],
             engine="pyarrow",
             compression="snappy",
             existing_data_behavior='delete_matching',
@@ -54,23 +59,20 @@ class ParquetStore:
         """
         ALL_DATA_TYPES = ['cgm', 'bolus', 'basal', 'age']
 
-        base_filters = []
+        filters = []
         if study is not None:
             studies = [study] if isinstance(study, str) else study
-            base_filters.append(("study_name", "in", studies))
+            filters.append(("study_name", "in", studies))
         if patient is not None:
             patients = [patient] if isinstance(patient, str) else patient
-            base_filters.append(("patient_id", "in", patients))
+            filters.append(("patient_id", "in", patients))
 
-        if data_type is None or isinstance(data_type, list):
-            data_types = ALL_DATA_TYPES if data_type is None else data_type
-            return {
-                dt: pd.read_parquet(self.base_path, filters=base_filters + [("data_type", "==", dt)])
-                for dt in data_types
-            }
+        data_types = ALL_DATA_TYPES if data_type is None else [data_type] if isinstance(data_type, str) else data_type
 
-        filters = base_filters + [("data_type", "==", data_type)]
-        return pd.read_parquet(self.base_path, filters=filters or None)
+        R = {dt: pd.read_parquet(os.path.join(self.base_path, dt), filters=filters or None)
+             for dt in data_types}
+
+        return R
 
     def cleanup(self, study_name: str, data_types: list = None):
         """Remove existing output for a study to ensure a clean write.
@@ -78,18 +80,16 @@ class ParquetStore:
         Args:
             study_name (str): Study whose output should be removed.
             data_types (list): Specific data types to remove. If None, removes
-                the entire study directory.
+                the study from all data type directories.
 
         Returns:
             list: Paths that were actually removed.
         """
-        if data_types is None:
-            directories = [os.path.join(self.base_path, f"study_name={study_name}")]
-        else:
-            directories = [
-                os.path.join(self.base_path, f"study_name={study_name}", f"data_type={dt}")
-                for dt in data_types
-            ]
+        dts = data_types if data_types is not None else ['cgm', 'bolus', 'basal', 'age']
+        directories = [
+            os.path.join(self.base_path, dt, f"study_name={study_name}")
+            for dt in dts
+        ]
 
         removed = []
         for d in directories:
