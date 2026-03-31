@@ -10,8 +10,8 @@ from babelbetes.studies.studydataset import StudyDataset
 
 # Define a new study class that inherits from StudyDataset
 class SampleStudy(StudyDataset):
-    def load_data(self):
-        self.df = pd.read_csv(self.filepath)
+    def _load_data(self, subset=False):
+        self.df = pd.read_csv(self.study_path)
         self.df['datetime'] = pd.to_datetime(self.df['datetime'])
         self.df['delivery_duration'] = pd.to_timedelta(self.df['delivery_duration'])
 
@@ -77,11 +77,10 @@ print(df.head())
 #use the class to load the data
 print('--> Testing SampleStudy')
 study = SampleStudy('sample_dataset.csv')
-study.load_data()
-bolus_history = study.extract_bolus_event_history()
-basal_history = study.extract_basal_event_history()
-cgm_history = study.extract_cgm_history()
-age_data = study.extract_age_data()
+bolus_history = study.bolus
+basal_history = study.basal
+cgm_history = study.cgm
+age_data = study.age
 print(cgm_history.head())
 print(basal_history.head())
 print(bolus_history.head())
@@ -114,20 +113,19 @@ class SampleStudy2(SampleStudy):
 #use the class to load the data
 print('\n\n--> Testing SampleStudy2 (this includes wrong output formats)')
 study2 = SampleStudy2('sample_dataset.csv')
-study2.load_data()
 try:
-    study2.extract_cgm_history()
-except ValueError as e:
-    print(f'Error in extract_cgm_history: {e}')
+    study2.cgm
+except Exception as e:
+    print(f'Error in cgm: {e}')
 try:
-    study2.extract_basal_event_history()
-except ValueError as e:
-    print(f'Error in extract_basal_event_history: {e}')
+    study2.basal
+except Exception as e:
+    print(f'Error in basal: {e}')
 try:
-    study2.extract_bolus_event_history()
-except ValueError as e:
-    print(f'Error in extract_bolus_event_history: {e}')
+    study2.bolus
+except Exception as e:
+    print(f'Error in bolus: {e}')
 try:
-    study2.extract_age_data()
-except ValueError as e:
-    print(f'Error in extract_age_data: {e}')
+    study2.age
+except Exception as e:
+    print(f'Error in age: {e}')

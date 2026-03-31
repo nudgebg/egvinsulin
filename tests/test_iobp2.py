@@ -70,12 +70,10 @@ def test_extract_event_history(tmp_path):
 
     #load the data
     study = IOBP2(study_path=tmp_path)
-    study.load_data()
-
     #extract
-    result_bolus = study.extract_bolus_event_history().sort_values(by=['patient_id', 'datetime']).reset_index(drop=True)
-    result_cgm = study.extract_cgm_history().sort_values(by=['patient_id', 'datetime']).reset_index(drop=True)
-    result_basal = study.extract_basal_event_history().sort_values(by=['patient_id', 'datetime']).reset_index(drop=True)
+    result_bolus = study.bolus.sort_values(by=['patient_id', 'datetime']).reset_index(drop=True)
+    result_cgm = study.cgm.sort_values(by=['patient_id', 'datetime']).reset_index(drop=True)
+    result_basal = study.basal.sort_values(by=['patient_id', 'datetime']).reset_index(drop=True)
     
     #validate
     pd.testing.assert_frame_equal(result_bolus, expected_result_bolus)

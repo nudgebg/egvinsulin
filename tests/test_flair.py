@@ -124,11 +124,7 @@ def sample_data_closed_loop(tmpdir):
 
 def test_sample_data_closed_loop(sample_data_closed_loop):
     flair = Flair(study_path=str(sample_data_closed_loop))
-    flair.load_data()
-
-    basal = flair.extract_basal_event_history()
-    print(basal)
-    tdd_basal = basal.groupby('patient_id').apply(tdd.calculate_daily_basal_dose, include_groups=False).reset_index().astype({'date': 'datetime64[ns]'})
+    tdd_basal = flair.basal.groupby('patient_id').apply(tdd.calculate_daily_basal_dose, include_groups=False).reset_index().astype({'date': 'datetime64[ns]'})
 
     expected_basal = pd.DataFrame({
         'patient_id': [1, 2],
@@ -139,7 +135,7 @@ def test_sample_data_closed_loop(sample_data_closed_loop):
     print(expected_basal)
     pd.testing.assert_frame_equal(tdd_basal, expected_basal)
 
-    bolus = flair.extract_bolus_event_history()
+    bolus = flair.bolus
     tdd_bolus = bolus.groupby('patient_id').apply(tdd.calculate_daily_bolus_dose, include_groups=False).reset_index().astype({'date': 'datetime64[ns]'})
     expected_bolus = pd.DataFrame({
         'patient_id': [1, 2],
@@ -153,10 +149,7 @@ def test_sample_data_closed_loop(sample_data_closed_loop):
 
 def test_load_data_basal_only(sample_data_dir_basal_simple):
     flair = Flair(study_path=str(sample_data_dir_basal_simple))
-    flair.load_data()
-
-    basal = flair.extract_basal_event_history()
-    tdd_basal = basal.groupby('patient_id').apply(tdd.calculate_daily_basal_dose, include_groups=False).reset_index().astype({'date': 'datetime64[ns]'})
+    tdd_basal = flair.basal.groupby('patient_id').apply(tdd.calculate_daily_basal_dose, include_groups=False).reset_index().astype({'date': 'datetime64[ns]'})
 
     expected_basal = pd.DataFrame({
         'patient_id': [1, 1, 2, 2],

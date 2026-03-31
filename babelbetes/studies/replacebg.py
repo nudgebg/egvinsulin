@@ -1,99 +1,80 @@
 # File: replacebg.py
-# Author Jan Wrede
+# Author Jan Wrede, Rachel Brandt
 # Copyright (c) 2025 nudgebg
 # Licensed under the MIT License. See LICENSE file for details.
 import pandas as pd
+from functools import cached_property
 from babelbetes.studies.studydataset import StudyDataset
-from datetime import datetime, timedelta
-from functools import reduce
+from datetime import datetime
 import numpy as np
 import os
 from babelbetes.src import pandas_helper, logger
 
 
 class ReplaceBG(StudyDataset):
-    def __init__(self, study_path):
-        super().__init__(study_path, 'ReplaceBG')
-    
-    def _load_data(self, subset: bool = False):
-        study_path = self.study_path
 
-        #imaginary start date we chose since data is relative to enrollment
-        enrollment_start = datetime(2015, 1, 1)
-        #load data
-        dtype = {'PtID': str}
-        df_basal = pandas_helper.get_df(os.path.join(study_path, 'Data Tables', 'HDeviceBasal.txt'), dtype=dtype,
-                                        subset=subset)
-        df_bolus = pandas_helper.get_df(os.path.join(study_path, 'Data Tables', 'HDeviceBolus.txt'),
-                                        dtype=dtype, subset=subset)
-        df_patient = pandas_helper.get_df(os.path.join(study_path, 'Data Tables', 'HPtRoster.txt'),
-                                        dtype=dtype, subset=subset)
-        df_cgm = pandas_helper.get_df(os.path.join(study_path, 'Data Tables', 'HDeviceCGM.txt'),
-                                        dtype=dtype, subset=subset)
-        df_uploads = pandas_helper.get_df(os.path.join(study_path, 'Data Tables', 'HDeviceUploads.txt'),
-                                        dtype={'PtId':str}, subset=subset).rename(columns={'PtId':'PtID'})
+    _raw_attrs = ('_df_patient', '_df_bolus', '_df_basal', '_df_cgm')
 
-        #convert datetimes
-        df_basal['datetime'] = enrollment_start + pd.to_timedelta(df_basal['DeviceDtTmDaysFromEnroll'], unit='D') + pd.to_timedelta(df_basal['DeviceTm'])
-        df_bolus['datetime'] = enrollment_start + pd.to_timedelta(df_bolus['DeviceDtTmDaysFromEnroll'], unit='D') + pd.to_timedelta(df_bolus['DeviceTm'])
-        df_cgm['datetime'] = enrollment_start + pd.to_timedelta(df_cgm['DeviceDtTmDaysFromEnroll'], unit='D') + pd.to_timedelta(df_cgm['DeviceTm'])
+    def __init__(self, study_path, subset=False):
+        super().__init__(study_path, 'ReplaceBG', subset=subset)
+        self._enrollment_start = datetime(2015, 1, 1)
 
-        df_basal['hour_of_day'] = df_basal.datetime.dt.hour
-        df_bolus['hour_of_day'] = df_bolus.datetime.dt.hour
-        df_cgm['hour_of_day'] = df_cgm.datetime.dt.hour
+    @cached_property
+    def _df_patient(self):
+        return pandas_helper.get_df(os.path.join(self.study_path, 'Data Tables', 'HPtRoster.txt'),
+                                    dtype={'PtID': str}, subset=self.subset)
 
-        df_bolus['day'] = df_bolus.datetime.dt.date
-        df_basal['day'] = df_basal.datetime.dt.date
-        df_cgm['day'] = df_cgm.datetime.dt.date
+    @cached_property
+    def _df_bolus(self):
+        df_uploads = pandas_helper.get_df(os.path.join(self.study_path, 'Data Tables', 'HDeviceUploads.txt'),
+                                          dtype={'PtId': str}, subset=self.subset).rename(columns={'PtId': 'PtID'})
+        df = pandas_helper.get_df(os.path.join(self.study_path, 'Data Tables', 'HDeviceBolus.txt'),
+                                  dtype={'PtID': str}, subset=self.subset)
+        df['datetime'] = self._enrollment_start + pd.to_timedelta(df['DeviceDtTmDaysFromEnroll'], unit='D') + pd.to_timedelta(df['DeviceTm'])
+        df['hour_of_day'] = df.datetime.dt.hour
+        df['day'] = df.datetime.dt.date
+        df.drop(columns=['DeviceDtTmDaysFromEnroll', 'DeviceTm'], inplace=True)
 
-        df_basal.drop(columns=['DeviceDtTmDaysFromEnroll', 'DeviceTm'], inplace=True)
-        df_bolus.drop(columns=['DeviceDtTmDaysFromEnroll', 'DeviceTm'], inplace=True)
-        df_cgm.drop(columns=['DeviceDtTmDaysFromEnroll', 'DeviceTm'], inplace=True)
+        # Diasend specific: Diasend durations are in minutes not ms
+        df = pd.merge(df,
+                      df_uploads.rename(columns={'RecID': 'ParentHDeviceUploadsID'})[['PtID', 'ParentHDeviceUploadsID', 'DataSource']],
+                      on=['PtID', 'ParentHDeviceUploadsID'])
+        df.loc[df.DataSource == 'Diasend', 'Duration'] *= 60 * 1000
+        df.loc[(df.DataSource == 'Diasend') & df.Extended.isna() & df.Duration.notna(), ['Duration']] = np.nan
 
-        # convert durations
-        
-        #Diasend specific: Diasend durations are in minutes not ms (only exist in boluses)
-        # adjust bolus durations (from minutes to ms) and treat boluses without extended part as normal boluses
-        df_bolus = pd.merge(df_bolus, 
-                    df_uploads.rename(columns={'RecID':'ParentHDeviceUploadsID'})[['PtID','ParentHDeviceUploadsID','DataSource']],
-                    on=['PtID','ParentHDeviceUploadsID'])
-        df_bolus.loc[df_bolus.DataSource=='Diasend','Duration'] *= 60*1000
-        df_bolus.loc[(df_bolus.DataSource=='Diasend') & df_bolus.Extended.isna() & df_bolus.Duration.notna(),['Duration']] = np.nan
+        df['Duration'] = pd.to_timedelta(df['Duration'], unit='ms')
+        df['ExpectedDuration'] = pd.to_timedelta(df['ExpectedDuration'], unit='ms')
+        return df.sort_values(by=['PtID', 'datetime'])
 
-        df_basal['Duration'] = pd.to_timedelta(df_basal['Duration'], unit='ms')
-        df_basal['ExpectedDuration'] = pd.to_timedelta(df_basal['ExpectedDuration'], unit='ms')
-        df_basal['SuprDuration'] = pd.to_timedelta(df_basal['SuprDuration'], unit='ms')
-        df_bolus['Duration'] = pd.to_timedelta(df_bolus['Duration'], unit='ms')
-        df_bolus['ExpectedDuration'] = pd.to_timedelta(df_bolus['ExpectedDuration'], unit='ms')
-        
-        #drop patients that are not in all datasets 
-        patient_ids_to_keep = reduce(np.intersect1d, [df_basal['PtID'].unique(),
-                                  df_bolus['PtID'].unique(), 
-                                  df_cgm['PtID'].unique()])
-        df_basal = df_basal[df_basal['PtID'].isin(patient_ids_to_keep)]
-        df_bolus = df_bolus[df_bolus['PtID'].isin(patient_ids_to_keep)]
-        df_cgm = df_cgm[df_cgm['PtID'].isin(patient_ids_to_keep)]
+    @cached_property
+    def _df_basal(self):
+        df = pandas_helper.get_df(os.path.join(self.study_path, 'Data Tables', 'HDeviceBasal.txt'),
+                                  dtype={'PtID': str}, subset=self.subset)
+        df['datetime'] = self._enrollment_start + pd.to_timedelta(df['DeviceDtTmDaysFromEnroll'], unit='D') + pd.to_timedelta(df['DeviceTm'])
+        df['hour_of_day'] = df.datetime.dt.hour
+        df['day'] = df.datetime.dt.date
+        df.drop(columns=['DeviceDtTmDaysFromEnroll', 'DeviceTm'], inplace=True)
+        df['Duration'] = pd.to_timedelta(df['Duration'], unit='ms')
+        df['ExpectedDuration'] = pd.to_timedelta(df['ExpectedDuration'], unit='ms')
+        df['SuprDuration'] = pd.to_timedelta(df['SuprDuration'], unit='ms')
+        return df.sort_values(by=['PtID', 'datetime'])
 
-        #sort data by patient and datetime
-        df_basal = df_basal.sort_values(by=['PtID', 'datetime'])
-        df_bolus = df_bolus.sort_values(by=['PtID', 'datetime'])
-        df_cgm = df_cgm.sort_values(by=['PtID', 'datetime'])
-
-        # Assign to self
-        self._df_basal = df_basal
-        self._df_bolus = df_bolus
-        self._df_patient = df_patient
-        self._df_cgm = df_cgm
-        self._df_uploads = df_uploads
-
+    @cached_property
+    def _df_cgm(self):
+        df = pandas_helper.get_df(os.path.join(self.study_path, 'Data Tables', 'HDeviceCGM.txt'),
+                                  dtype={'PtID': str}, subset=self.subset)
+        df['datetime'] = self._enrollment_start + pd.to_timedelta(df['DeviceDtTmDaysFromEnroll'], unit='D') + pd.to_timedelta(df['DeviceTm'])
+        df['hour_of_day'] = df.datetime.dt.hour
+        df['day'] = df.datetime.dt.date
+        df.drop(columns=['DeviceDtTmDaysFromEnroll', 'DeviceTm'], inplace=True)
+        return df.sort_values(by=['PtID', 'datetime'])
 
     def _extract_bolus_event_history(self):
-
         #drop actual duplicates
         df_bolus = self._df_bolus.copy()
         df_bolus = df_bolus.drop_duplicates(subset=['PtID', 'datetime','BolusType','Normal','Extended','Duration'])
 
-        #drop temporal duplciates keeping the maximum RecID row 
+        #drop temporal duplciates keeping the maximum RecID row
         _, _, i_drop = pandas_helper.get_duplicated_max_indexes(df_bolus, ['PtID', 'datetime'], 'RecID')
         df_bolus = df_bolus.drop(index=i_drop)
 
@@ -107,7 +88,7 @@ class ReplaceBG(StudyDataset):
         #for example there are extended boluses with zero units
         #these would just create larger output files and we want to obmit them
         df_bolus = df_bolus.replace({'Normal':0, 'Extended':0}, np.nan)
-                
+
         #Convert extended part to new rows
         #the dropna makes sure we remove rows that had 0 deliveries in the previous step
         normal = df_bolus.dropna(subset=['Normal']).drop(columns=['Extended'])
@@ -134,15 +115,15 @@ class ReplaceBG(StudyDataset):
         _,_,i_drop = pandas_helper.get_duplicated_max_indexes(df_basal, ['PtID', 'datetime'], 'RecID')
         df_basal = df_basal.drop(index=i_drop)
         df_basal = df_basal.drop_duplicates(subset=['PtID', 'datetime','Rate', 'Duration'],keep='first')
-        
+
         #replace NaNs Rates with zero (we know these only come from Suspends and temp basals)
         df_basal.fillna({'Rate':0}, inplace=True)
-        
+
         #reduce, rename, return
         df_basal = df_basal[['PtID', 'datetime', 'Rate']]
         df_basal = df_basal.rename(columns={'Rate': self.COL_NAME_BASAL_RATE,
                                             'PtID': self.COL_NAME_PATIENT_ID,
-                                            'datetime': self.COL_NAME_DATETIME}) 
+                                            'datetime': self.COL_NAME_DATETIME})
         return df_basal
 
     def _extract_cgm_history(self):
@@ -164,26 +145,5 @@ class ReplaceBG(StudyDataset):
         return df_cgm[[self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME, self.COL_NAME_CGM]]
 
     def _extract_age_data(self):
-        """Extract patient age data from the ReplaceBG dataset.
-        
-        Returns:
-            pd.DataFrame: DataFrame with columns 'patient_id' (str) and 'age' (numeric)
-                representing patient age as of enrollment date.
-        """
         df_age = self._df_patient.copy()[['PtID', 'AgeAsOfEnrollDt']].rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'AgeAsOfEnrollDt': self.COL_NAME_AGE})
-        df_age = df_age.astype({self.COL_NAME_PATIENT_ID: str, self.COL_NAME_AGE: int})
-        return df_age
-
-# Example usage
-if __name__ == "__main__":
-    logger = logger.Logger.get_logger(__file__)
-    logger.info(os.getcwd())
-    
-    folder = 'REPLACE-BG Dataset-79f6bdc8-3c51-4736-a39f-c4c0f71d45e5'
-    study = ReplaceBG(study_path=os.path.join(os.getcwd(),'data', 'raw', folder))
-    out_path = os.path.join(os.getcwd(),'data', 'out', folder)
-    study.load_data()
-    study.extract_basal_event_history()
-    study.extract_bolus_event_history()
-    study.extract_cgm_history()
-    study.save_basal_event_history_to_file(out_path)
+        return df_age.astype({self.COL_NAME_PATIENT_ID: str, self.COL_NAME_AGE: int})
