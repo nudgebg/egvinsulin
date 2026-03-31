@@ -114,7 +114,7 @@ def main(load_subset=False, remove_repetitive=True, input_dir=None, output_dir=N
 
   logger.info(f"Looking for studies in  {in_path}")
   logger.info(f"Output will be saved to {out_path}")
-  all_initialized_studies = dataset_initializer.initialize_datasets(in_path, subset=load_subset)
+  all_initialized_studies : list[StudyDataset] = dataset_initializer.initialize_datasets(in_path, subset=load_subset)
   
   if studies is not None:
     if not isinstance(studies, list):
@@ -135,7 +135,7 @@ def main(load_subset=False, remove_repetitive=True, input_dir=None, output_dir=N
       logger.error("No requested studies were found. Exiting.")
       return
     
-    initialized_studies = list(matched_studies.values())
+    initialized_studies : list[StudyDataset] = list(matched_studies.values())
     logger.info(f"Processing only matched studies: {list(matched_studies.keys())}")
   else:
     initialized_studies = list(all_initialized_studies.values())
@@ -186,7 +186,7 @@ def main(load_subset=False, remove_repetitive=True, input_dir=None, output_dir=N
           
       progress.update(1)
       tqdm.write(f"[{current_time()}] {study.study_name} completed in {time() - start_time:.2f} seconds.")
-
+      study.unload_raw()
     tqdm.write(f"Processing completed in {time() - global_start_time:.2f} seconds.")
 
 def process_folder(study: StudyDataset, store: 'ParquetStore', progress, remove_repetitive, data_types):

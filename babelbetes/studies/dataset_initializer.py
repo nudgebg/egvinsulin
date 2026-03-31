@@ -1,10 +1,10 @@
 
 import os
-from babelbetes.studies import IOBP2, Flair, PEDAP, DCLP3, DCLP5, ReplaceBG, Loop, T1DEXI, T1DEXIP
+from babelbetes.studies import StudyDataset, IOBP2, Flair, PEDAP, DCLP3, DCLP5, ReplaceBG, Loop, T1DEXI, T1DEXIP
 from babelbetes.src.logger import Logger
 logger = Logger.get_logger(__name__)
 
-def initialize_datasets(data_path, subset=False):
+def initialize_datasets(data_path, subset=False) -> dict[str,StudyDataset]:
     patterns = ['IOBP2', 'FLAIR', 'PEDAP', 'DCLP3', 'DCLP5', 'REPLACE-BG', 'Loop', 'T1DEXI - DATA', 'T1DEXIP - DATA']
     classes = [IOBP2, Flair, PEDAP, DCLP3, DCLP5, ReplaceBG, Loop, T1DEXI, T1DEXIP]
     class_map = dict(zip(patterns, classes))
