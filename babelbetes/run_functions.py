@@ -160,7 +160,7 @@ def main(load_subset=False, remove_repetitive=True, input_dir=None, output_dir=N
 
   # Process matched folders with progress indicators
   logger.info(f"Start processing:")
-  
+
   
   with tqdm(total=len(initialized_studies), desc=f"Processing studies", bar_format='Study {n_fmt}/{total_fmt} [{desc}]:|{bar}', unit="studies", leave=False) as progress:
     global_start_time = time()

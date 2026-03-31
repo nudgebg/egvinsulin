@@ -308,29 +308,15 @@ def repetitive(df, datetime_col, value_col, max_duration):
     if not df[datetime_col].is_monotonic_increasing:
         logger.warning(f"{repetitive} requires the datetime column to be sorted! Sorting it now.")
         df = df.sort_values(datetime_col)
-    
-    #group repetitive values
-    grp = (df[value_col].diff() != 0).cumsum()
-    i_all_repetitives = grp[grp.map(grp.value_counts()) > 1].index
-    
-    #always keep last value by assining it to a separate group
-    grp.iloc[-1] += 1 
-    
-    #subsplit
-    if max_duration is not None:
-    
-        #subsplit groups based on time passed since group started
-        dur = (df.datetime-df.datetime.iloc[0])
-        dur = dur - dur.groupby(grp).transform('first')#within group duration
-        sub_grp = dur//max_duration
-        #assert np.all(sub_grp<=1000)
-        #final_grp = 1000*grp + sub_grp #this could break TODO: Change final_grp to ensure unique values e.g. using tuples
-        final_grp = pd.concat([grp, sub_grp], axis=1).apply(tuple, axis=1)
-    else:
-        final_grp = grp
-    
-    #keep only the first of each subgroup
-    i_keep = final_grp.groupby(final_grp).head(1).index
 
-    i_drop = np.setdiff1d(i_all_repetitives, i_keep)
-    return i_all_repetitives, i_keep, i_drop
+    grp = (df[value_col].diff() != 0).cumsum()
+    i_all_rep = grp[grp.map(grp.value_counts()) > 1].index
+
+    if max_duration is not None:
+        elapsed = df[datetime_col] - df[datetime_col].groupby(grp).transform('first')
+        sub_grp = elapsed // max_duration
+        grp = grp.astype(str) + '_' + sub_grp.astype(str)
+
+    i_keep = grp[~grp.duplicated()].index.union([df.index[-1]])
+    i_drop = i_all_rep.difference(i_keep)
+    return i_all_rep, i_keep, i_drop

@@ -31,7 +31,8 @@ setup(
         "dask-expr>=1.1.10",
         "isodate>=0.7.2",
         "zipfile-deflate64-macos",
-        "pandera==0.28.1"
+        "pandera==0.28.1",
+        "squarify>=0.4.3"
     ],
 
     # Development/documentation dependencies
