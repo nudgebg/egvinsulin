@@ -1,22 +1,55 @@
-"""Validation figures.
-
-Each function returns a matplotlib Figure. Caller is responsible for closing it
-(plt.close(fig)) after saving or embedding.
-"""
-import matplotlib
-matplotlib.use("Agg")  # non-interactive backend — safe for report generation
-
+"""Validation figures for the BabelBetes output validation report."""
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import squarify
 
-from babelbetes.src import cdf as cdf_module
+import squarify
+from typing import NamedTuple
+
 from babelbetes.src import drawing
 
 # Consistent colour palette keyed by study name (falls back to tab10 for unknown studies)
 _STUDY_COLORS: dict[str, str] = {}
 _CMAP = plt.cm.get_cmap("tab10")
+
+
+class _CDFConfig(NamedTuple):
+    data_type: str
+    col: str
+    xlabel: str
+    log_x: bool = False
+
+
+class _TDDConfig(NamedTuple):
+    col: str
+    xlabel: str
+
+
+_CDF_CONFIGS = [
+    _CDFConfig(data_type="cgm",   col="cgm",       xlabel="CGM (mg/dL)"),
+    _CDFConfig(data_type="bolus", col="bolus",      xlabel="Bolus (U)",         log_x=True),
+    _CDFConfig(data_type="basal", col="basal_rate", xlabel="Basal rate (U/hr)"),
+]
+
+_TDD_CONFIGS = [
+    _TDDConfig(col="basal", xlabel="Basal TDD (U/day)"),
+    _TDDConfig(col="bolus", xlabel="Bolus TDD (U/day)"),
+    _TDDConfig(col="total", xlabel="Total TDD (U/day)"),
+]
+
+_CDF_QUANTILES = np.linspace(0, 1, 401)  # 0.25% resolution
+
+
+def _plot_cdf_lines(ax: plt.Axes, df: pd.DataFrame, value_col: str, study_col: str) -> None:
+    """Plot per-study CDF lines from pre-computed quantiles.
+
+    Uses 401 fixed quantile points (0.25% resolution) per study regardless of
+    data size — deterministic, exact, and fast for any dataset.
+    """
+    for study, group in df.groupby(study_col, observed=True):
+        quantiles = np.quantile(group[value_col].to_numpy(), _CDF_QUANTILES)
+        ax.plot(quantiles, _CDF_QUANTILES, color=_study_color(study), linewidth=1, label=study)
+    ax.legend(fontsize=7)
 
 
 def _study_color(study: str) -> str:
@@ -29,10 +62,13 @@ def _fig(w=10, h=4):
     return plt.subplots(figsize=(w, h))
 
 
-# ── 1. Subjects per study ──────────────────────────────────────────────────────
-
 def plot_subjects_per_study(stats_df: pd.DataFrame) -> plt.Figure:
-    """Bar chart: number of patients per study (from patient_count metric)."""
+    """Bar chart: number of patients per study.
+
+    Args:
+        stats_df: Columns [study, data_type, metric, value].
+                  Uses rows where metric="patient_count", data_type="all".
+    """
     data = (stats_df[stats_df["metric"] == "patient_count"]
             .groupby("study")["value"].max()
             .sort_values(ascending=False))
@@ -46,10 +82,13 @@ def plot_subjects_per_study(stats_df: pd.DataFrame) -> plt.Figure:
     return fig
 
 
-# ── 2. Patient-days per study split by data type ───────────────────────────────
-
 def plot_days_per_study(stats_df: pd.DataFrame) -> plt.Figure:
-    """Grouped bar chart: patient-days per study, split by data type."""
+    """Grouped bar chart: patient-days per study, split by data type.
+
+    Args:
+        stats_df: Columns [study, data_type, metric, value].
+                  Uses rows where metric="patient_days"; data_type is the bar group (cgm/bolus/basal/all).
+    """
     data = (stats_df[stats_df["metric"] == "patient_days"]
             .pivot_table(index="study", columns="data_type", values="value", aggfunc="sum")
             .fillna(0))
@@ -73,12 +112,15 @@ def plot_days_per_study(stats_df: pd.DataFrame) -> plt.Figure:
     return fig
 
 
-# ── 3. Complete patient-days treemap ──────────────────────────────────────────
-
 def plot_complete_days_treemap(stats_df: pd.DataFrame) -> plt.Figure:
-    """Treemap: total complete patient-days (CGM + bolus + basal) per study."""
+    """Treemap: total complete patient-days (CGM + bolus + basal) per study.
+
+    Args:
+        stats_df: Columns [study, data_type, metric, value].
+                  Uses rows where metric="patient_days", data_type="all" (complete days only).
+    """
     data = (stats_df[
-                (stats_df["metric"] == "patient_days_complete") &
+                (stats_df["metric"] == "patient_days") &
                 (stats_df["data_type"] == "all")
             ]
             .groupby("study")["value"].sum()
@@ -97,71 +139,59 @@ def plot_complete_days_treemap(stats_df: pd.DataFrame) -> plt.Figure:
     return fig
 
 
-# ── 4. CDFs: raw values per study ─────────────────────────────────────────────
+def plot_cdfs(cdf_df: pd.DataFrame) -> plt.Figure:
+    """CDF per study for CGM, bolus, and basal — one subplot per data type.
 
-def plot_cdfs(store: dict[str, dict[str, pd.DataFrame]]) -> plt.Figure:
-    """CDF per study for CGM, bolus, and basal — one subplot per data type."""
-    configs = [
-        ("cgm",   "cgm",       "CGM (mg/dL)",      False),
-        ("bolus", "bolus",     "Bolus (U)",         True),
-        ("basal", "basal_rate","Basal rate (U/hr)", False),
-    ]
+    Args:
+        cdf_df: Pre-computed quantile DataFrame from compute.compute_cdf_quantiles().
+                Columns: [study, data_type, quantile_level, value].
+    """
     fig, axes = plt.subplots(1, 3, figsize=(15, 4))
 
-    for ax, (data_type, col, xlabel, log_x) in zip(axes, configs):
-        for study, data_types in store.items():
-            if data_type not in data_types:
-                continue
-            df = data_types[data_type]
-            vals = df[col].dropna().values
-            if len(vals) == 0:
-                continue
-            if log_x:
-                vals = vals[vals > 0]
-            cdf_module.plot_cdf(
-                vals, ax=ax, label=study,
-                color=_study_color(study), linewidth=1, markersize=0, linestyle="-",
-            )
-        ax.set_title(f"CDF — {data_type}")
-        ax.set_xlabel(xlabel)
-        if log_x:
+    for ax, cfg in zip(axes, _CDF_CONFIGS):
+        df = cdf_df[cdf_df["data_type"] == cfg.data_type]
+        if not df.empty:
+            for study, group in df.groupby("study", observed=True):
+                ax.plot(group["value"], group["quantile_level"],
+                        color=_study_color(study), linewidth=1, label=study)
+            ax.legend(fontsize=7)
+        ax.set_title(f"CDF — {cfg.data_type}")
+        ax.set_xlabel(cfg.xlabel)
+        if cfg.log_x:
             ax.set_xscale("log")
-        ax.legend(fontsize=7)
 
     fig.tight_layout()
     return fig
 
-
-# ── 5. TDD CDFs ───────────────────────────────────────────────────────────────
 
 def plot_tdd_cdfs(tdd_df: pd.DataFrame) -> plt.Figure:
-    """CDF per study for basal TDD, bolus TDD, and total TDD."""
-    configs = [("basal", "Basal TDD (U/day)"), ("bolus", "Bolus TDD (U/day)"), ("total", "Total TDD (U/day)")]
+    """CDF per study for basal TDD, bolus TDD, and total TDD.
+
+    Args:
+        tdd_df: Columns [study, patient_id, date, basal, bolus, total].
+                basal/bolus/total are daily insulin doses in U/day.
+    """
     fig, axes = plt.subplots(1, 3, figsize=(15, 4))
 
-    for ax, (col, xlabel) in zip(axes, configs):
-        for study, group in tdd_df.groupby("study"):
-            vals = group[col].dropna().values
-            if len(vals) == 0:
-                continue
-            cdf_module.plot_cdf(
-                vals, ax=ax, label=study,
-                color=_study_color(study), linewidth=1, markersize=0, linestyle="-",
-            )
-        ax.set_title(f"CDF — {col} TDD")
-        ax.set_xlabel(xlabel)
-        ax.legend(fontsize=7)
+    for ax, cfg in zip(axes, _TDD_CONFIGS):
+        df = tdd_df[["study", cfg.col]].dropna()
+        if not df.empty:
+            _plot_cdf_lines(ax, df, cfg.col, "study")
+        ax.set_title(f"CDF — {cfg.col} TDD")
+        ax.set_xlabel(cfg.xlabel)
 
     fig.tight_layout()
     return fig
 
-
-# ── 6. Scatter: per-patient geometric mean vs geometric std ───────────────────
 
 def plot_gm_vs_gs(patient_stats_df: pd.DataFrame) -> plt.Figure:
     """Scatter plot of per-patient geometric mean vs geometric std, coloured by study.
 
     One subplot per data type (cgm, bolus, basal).
+
+    Args:
+        patient_stats_df: Columns [study, patient_id, data_type, metric, value].
+                          Uses metric="gm" (geometric mean) and metric="gs" (geometric std).
     """
     data_types = [dt for dt in ("cgm", "bolus", "basal")
                   if dt in patient_stats_df["data_type"].values]
@@ -196,10 +226,15 @@ def plot_gm_vs_gs(patient_stats_df: pd.DataFrame) -> plt.Figure:
     return fig
 
 
-# ── 7. Moving averages (circadian patterns) ───────────────────────────────────
+def plot_moving_averages(store: dict[str, pd.DataFrame]) -> plt.Figure:
+    """Moving average of values by hour-of-day per study — one subplot per data type.
 
-def plot_moving_averages(store: dict[str, dict[str, pd.DataFrame]]) -> plt.Figure:
-    """Moving average of values by hour-of-day per study (one subplot per data type)."""
+    Args:
+        store: {data_type: df} where df contains a study_name column.
+               cgm df columns:   patient_id, study_name, datetime, cgm (float, mg/dL)
+               bolus df columns: patient_id, study_name, datetime, bolus (float, U)
+               basal df columns: patient_id, study_name, datetime, basal_rate (float, U/hr)
+    """
     configs = [
         ("cgm",   "cgm",        "CGM (mg/dL)"),
         ("bolus", "bolus",      "Bolus (U)"),
@@ -208,10 +243,10 @@ def plot_moving_averages(store: dict[str, dict[str, pd.DataFrame]]) -> plt.Figur
     fig, axes = plt.subplots(1, 3, figsize=(15, 4))
 
     for ax, (data_type, col, ylabel) in zip(axes, configs):
-        for study, data_types in store.items():
-            if data_type not in data_types:
-                continue
-            df = data_types[data_type][["datetime", col]].dropna()
+        if data_type not in store:
+            continue
+        for study, df in store[data_type].groupby("study_name", observed=True):
+            df = df[["datetime", col]].dropna()
             if len(df) < 48:  # need at least 2 days worth of data
                 continue
             try:

@@ -4,7 +4,7 @@ import pandas as pd
 _CHANGE_THRESHOLD_PCT = 5.0
 
 
-def diff_stats(snap_a: pd.DataFrame, snap_b: pd.DataFrame) -> pd.DataFrame:
+def diff_study_stats(snap_a: pd.DataFrame, snap_b: pd.DataFrame) -> pd.DataFrame:
     """Diff two stats snapshots.
 
     Uses an outer merge on (study, data_type, metric) so that:

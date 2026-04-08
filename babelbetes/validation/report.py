@@ -4,6 +4,8 @@ import io
 from datetime import datetime
 from pathlib import Path
 
+import matplotlib
+matplotlib.use("Agg")  # non-interactive backend for headless report generation
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -44,20 +46,28 @@ section {{ margin-bottom: 32px; }}
 
 
 def generate_report(
-    stats_df: pd.DataFrame,
+    study_stats_df: pd.DataFrame,
     patient_stats_df: pd.DataFrame,
     tdd_df: pd.DataFrame,
-    store: dict[str, dict[str, pd.DataFrame]],
+    cdf_df: pd.DataFrame | None = None,
+    store: dict[str, dict[str, pd.DataFrame]] | None = None,
     output_path: Path | None = None,
 ) -> Path:
-    """Generate a self-contained HTML validation report.
+    """Generate a self-contained HTML validation report from pre-computed snapshots.
 
     Args:
-        stats_df:         Study-level stats from snapshot.load_stats()
-        patient_stats_df: Per-patient stats from snapshot.load_patient_stats()
-        tdd_df:           Daily TDD from snapshot.load_tdd()
-        store:            Raw data dict {study: {data_type: DataFrame}}
+        study_stats_df:   Study-level stats. Columns: [study, data_type, metric, value, snapshot_id].
+                          From snapshot.load_study_stats().
+        patient_stats_df: Per-patient stats. Columns: [study, patient_id, data_type, metric, value].
+                          From snapshot.load_patient_stats(). May be empty.
+        tdd_df:           Daily TDD per patient. Columns: [study, patient_id, date, basal, bolus, total].
+                          From snapshot.load_tdd(). May be empty.
+        cdf_df:           Pre-computed CDF quantiles. Columns: [study, data_type, quantile_level, value].
+                          From snapshot.load_cdf_quantiles(). CDF section skipped if None.
+        store:            Optional raw data dict {data_type: df} for circadian pattern figures.
+                          Circadian section skipped if None.
         output_path:      Optional override for the output HTML path.
+                          Default: data/validation/report_<timestamp>.html
 
     Returns:
         Path to the generated HTML file.
@@ -75,20 +85,21 @@ def generate_report(
             sections_html.append(f"<section><h2>{title}</h2><p style='color:red'>Error: {e}</p></section>")
 
     render("Subjects per Study",
-           lambda: fig_module.plot_subjects_per_study(stats_df),
+           lambda: fig_module.plot_subjects_per_study(study_stats_df),
            "Number of unique patients per study.")
 
     render("Patient-days per Study by Data Type",
-           lambda: fig_module.plot_days_per_study(stats_df),
+           lambda: fig_module.plot_days_per_study(study_stats_df),
            "Total patient-days available per study, broken down by data type.")
 
     render("Complete Patient-days (Treemap)",
-           lambda: fig_module.plot_complete_days_treemap(stats_df),
+           lambda: fig_module.plot_complete_days_treemap(study_stats_df),
            "Patient-days where CGM, bolus, and basal data are all available.")
 
-    render("CDFs — Raw Values",
-           lambda: fig_module.plot_cdfs(store),
-           "Cumulative distribution functions for CGM (mg/dL), bolus (U), and basal rate (U/hr) per study.")
+    if cdf_df is not None:
+        render("CDFs — Raw Values",
+               lambda: fig_module.plot_cdfs(cdf_df),
+               "Cumulative distribution functions for CGM (mg/dL), bolus (U), and basal rate (U/hr) per study.")
 
     if not tdd_df.empty:
         render("CDFs — Total Daily Dose",
@@ -100,16 +111,17 @@ def generate_report(
                lambda: fig_module.plot_gm_vs_gs(patient_stats_df),
                "Each point is one patient. Spread shows inter-patient variability per study.")
 
-    render("Circadian Patterns (Moving Averages)",
-           lambda: fig_module.plot_moving_averages(store),
-           "Rolling average of values by hour of day, revealing daily patterns across studies.")
+    if store is not None:
+        render("Circadian Patterns (Moving Averages)",
+               lambda: fig_module.plot_moving_averages(store),
+               "Rolling average of values by hour of day, revealing daily patterns across studies.")
 
     # ── assemble HTML ──────────────────────────────────────────────────────────
-    snapshot_ids = stats_df["snapshot_id"].unique().tolist() if "snapshot_id" in stats_df.columns else []
+    snapshot_ids = study_stats_df["snapshot_id"].unique().tolist() if "snapshot_id" in study_stats_df.columns else []
     meta = f"Generated: {ts}"
     if snapshot_ids:
         meta += f" &nbsp;|&nbsp; Snapshot: {', '.join(snapshot_ids)}"
-    n_studies = stats_df["study"].nunique() if not stats_df.empty else 0
+    n_studies = study_stats_df["study"].nunique() if not study_stats_df.empty else 0
 
     html = f"""<!DOCTYPE html>
 <html lang="en">

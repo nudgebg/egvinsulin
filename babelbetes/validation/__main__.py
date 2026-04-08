@@ -10,35 +10,8 @@ import argparse
 import os
 from pathlib import Path
 
-import pandas as pd
-
+from babelbetes.src import data_store
 from babelbetes.validation import compute, diff, report as report_module, snapshot
-
-
-def _load_store(data_dir: Path) -> dict[str, dict[str, pd.DataFrame]]:
-    """Load all available study/data_type combinations from the output directory.
-
-    Reads each (study_name, data_type) partition individually to keep schemas
-    consistent (different data types have different columns).
-
-    Expects structure: <data_dir>/study_name=<X>/data_type=<Y>/patient_id=<Z>/
-
-    Returns:
-        Nested dict {study_name: {data_type: DataFrame}}
-    """
-    store: dict[str, dict[str, pd.DataFrame]] = {}
-
-    for study_dir in sorted(data_dir.glob("study_name=*")):
-        study_name = study_dir.name.split("=", 1)[1]
-        for type_dir in sorted(study_dir.glob("data_type=*")):
-            data_type = type_dir.name.split("=", 1)[1]
-            try:
-                df = pd.read_parquet(type_dir)
-                store.setdefault(study_name, {})[data_type] = df
-            except Exception as e:
-                print(f"  Warning: could not load {study_name}/{data_type}: {e}")
-
-    return store
 
 
 def cmd_snapshot(args):
@@ -48,19 +21,36 @@ def cmd_snapshot(args):
         return 1
 
     print(f"Loading data from {data_dir} ...")
-    store = _load_store(data_dir)
+    store = data_store.load(str(data_dir))
 
-    total = sum(len(v) for v in store.values())
-    print(f"Loaded {len(store)} studies, {total} study/data_type combinations.")
+    total = sum(len(df) for df in store.values())
+    print(f"Loaded {len(store)} data types, {total} total rows.")
 
-    print("Computing stats ...")
-    records = compute.compute_basic_stats(store)
+    ts = snapshot._snapshot_id()
 
-    path = snapshot.save_stats(records)
-    print(f"Snapshot saved: {path}")
+    print("Computing study stats ...")
+    records = (compute.compute_basic_stats(store, verbose=True)
+               + compute.compute_study_stats_extended(store, verbose=True))
+    study_stats_path = snapshot.save_study_stats(records, snapshot_id=ts)
+    print(f"  → {study_stats_path}")
+
+    print("Computing patient stats ...")
+    patient_records = compute.compute_patient_stats(store, verbose=True)
+    patient_path = snapshot.save_patient_stats(patient_records, snapshot_id=ts)
+    print(f"  → {patient_path}")
+
+    print("Computing TDD ...")
+    tdd_df = compute.compute_tdd_per_patient(store, verbose=True)
+    tdd_path = snapshot.save_tdd(tdd_df, snapshot_id=ts)
+    print(f"  → {tdd_path}")
+
+    print("Computing CDF quantiles ...")
+    cdf_df = compute.compute_cdf_quantiles(store, verbose=True)
+    cdf_path = snapshot.save_cdf_quantiles(cdf_df, snapshot_id=ts)
+    print(f"  → {cdf_path}")
 
     # Print a quick summary table
-    df = snapshot.load_stats(path)
+    df = snapshot.load_study_stats(study_stats_path)
     pivot = df[df["metric"] == "row_count"].pivot_table(
         index="study", columns="data_type", values="value", aggfunc="sum"
     )
@@ -70,7 +60,7 @@ def cmd_snapshot(args):
 
 
 def cmd_show(args):
-    snapshots = snapshot.list_stats_snapshots()
+    snapshots = snapshot.list_study_stats_snapshots()
     if args.path:
         path = Path(args.path)
     elif snapshots:
@@ -79,7 +69,7 @@ def cmd_show(args):
         print("Error: no snapshots found. Run 'snapshot' first.")
         return 1
 
-    df = snapshot.load_stats(path)
+    df = snapshot.load_study_stats(path)
     print(f"Snapshot: {path}\n")
 
     if args.metric:
@@ -96,49 +86,43 @@ def cmd_show(args):
 
 
 def cmd_report(args):
-    data_dir = Path(args.data_dir)
-    if not data_dir.exists():
-        print(f"Error: data directory not found: {data_dir}")
+    stats_path    = Path(args.stats)    if args.stats    else snapshot.list_study_stats_snapshots()[-1]  if snapshot.list_study_stats_snapshots()  else None
+    patient_path  = Path(args.patient)  if args.patient  else snapshot.list_patient_stats_snapshots()[-1] if snapshot.list_patient_stats_snapshots() else None
+    tdd_path      = Path(args.tdd)      if args.tdd      else snapshot.list_tdd_snapshots()[-1]           if snapshot.list_tdd_snapshots()           else None
+    cdf_path      = Path(args.cdf)      if args.cdf      else snapshot.list_cdf_quantile_snapshots()[-1]  if snapshot.list_cdf_quantile_snapshots()  else None
+
+    missing = [name for name, p in [("stats", stats_path), ("patient", patient_path), ("tdd", tdd_path)] if p is None]
+    if missing:
+        print(f"Error: no {', '.join(missing)} snapshot(s) found. Run 'snapshot' first.")
         return 1
 
-    print(f"Loading data from {data_dir} ...")
-    store = _load_store(data_dir)
-    total = sum(len(v) for v in store.values())
-    print(f"Loaded {len(store)} studies, {total} study/data_type combinations.")
+    print(f"Stats snapshot:   {stats_path}")
+    print(f"Patient snapshot: {patient_path}")
+    print(f"TDD snapshot:     {tdd_path}")
+    print(f"CDF snapshot:     {cdf_path or '(none — CDF section skipped)'}")
 
-    sid = snapshot._snapshot_id()
+    study_stats_df   = snapshot.load_study_stats(stats_path)
+    patient_stats_df = snapshot.load_stats(patient_path)
+    tdd_df           = snapshot.load_tdd(tdd_path)
+    cdf_df           = snapshot.load_cdf_quantiles(cdf_path) if cdf_path else None
 
-    print("Computing basic stats ...")
-    basic_records = compute.compute_basic_stats(store)
+    store = None
+    if args.data_dir:
+        data_dir = Path(args.data_dir)
+        if not data_dir.exists():
+            print(f"Error: data directory not found: {data_dir}")
+            return 1
+        print(f"Loading store from {data_dir} ...")
+        store = data_store.load(str(data_dir))
 
-    print("Computing patient stats (this may take a while) ...")
-    patient_records = compute.compute_patient_stats(store)
-    patient_stats_df = pd.DataFrame(patient_records)
-
-    print("Computing extended study stats ...")
-    extended_records = compute.compute_study_stats_extended(store, patient_stats_df)
-
-    all_stats_records = basic_records + extended_records
-    stats_path = snapshot.save_stats(all_stats_records, snapshot_id=sid)
-    print(f"Stats snapshot saved:         {stats_path}")
-
-    patient_path = snapshot.save_patient_stats(patient_records, snapshot_id=sid)
-    print(f"Patient stats snapshot saved: {patient_path}")
-
-    print("Computing TDD per patient ...")
-    tdd_df = compute.compute_tdd_per_patient(store)
-    tdd_path = snapshot.save_tdd(tdd_df, snapshot_id=sid)
-    print(f"TDD snapshot saved:           {tdd_path}")
-
-    stats_df = snapshot.load_stats(stats_path)
     print("Generating HTML report ...")
-    out = report_module.generate_report(stats_df, patient_stats_df, tdd_df, store)
+    out = report_module.generate_report(study_stats_df, patient_stats_df, tdd_df, cdf_df=cdf_df, store=store)
     print(f"\nReport: {out}")
     return 0
 
 
 def cmd_diff(args):
-    snapshots = snapshot.list_stats_snapshots()
+    snapshots = snapshot.list_study_stats_snapshots()
 
     if args.a and args.b:
         path_a, path_b = Path(args.a), Path(args.b)
@@ -148,11 +132,11 @@ def cmd_diff(args):
         print("Error: need at least 2 snapshots. Run 'snapshot' first, or specify --a and --b.")
         return 1
 
-    snap_a = snapshot.load_stats(path_a)
-    snap_b = snapshot.load_stats(path_b)
+    snap_a = snapshot.load_study_stats(path_a)
+    snap_b = snapshot.load_study_stats(path_b)
 
     print(f"Comparing:\n  A: {path_a}\n  B: {path_b}\n")
-    diff_df = diff.diff_stats(snap_a, snap_b)
+    diff_df = diff.diff_study_stats(snap_a, snap_b)
     print(diff.format_diff_report(diff_df))
     return 0
 
@@ -169,9 +153,12 @@ def main():
     p_show.add_argument("--path", default=None, help="Path to a specific snapshot Parquet file")
     p_show.add_argument("--metric", default=None, help="Show only a single metric (e.g. row_count)")
 
-    p_report = sub.add_parser("report", help="Compute all stats, save snapshots, and generate HTML report")
-    p_report.add_argument("--data-dir", default=os.path.join(os.getcwd(), "data", "out"),
-                          help="Path to the output data directory (default: data/out)")
+    p_report = sub.add_parser("report", help="Generate HTML report from the latest (or specified) snapshots")
+    p_report.add_argument("--stats",    default=None, help="Path to a stats snapshot Parquet file (default: latest)")
+    p_report.add_argument("--patient",  default=None, help="Path to a patient-stats snapshot Parquet file (default: latest)")
+    p_report.add_argument("--tdd",      default=None, help="Path to a TDD snapshot Parquet file (default: latest)")
+    p_report.add_argument("--cdf",      default=None, help="Path to a CDF quantiles snapshot Parquet file (default: latest)")
+    p_report.add_argument("--data-dir", default=None, help="Path to the output data directory to load raw store for circadian patterns (optional)")
 
     p_diff = sub.add_parser("diff", help="Diff the two most recent snapshots")
     p_diff.add_argument("--a", default=None, help="Path to the earlier snapshot Parquet file")

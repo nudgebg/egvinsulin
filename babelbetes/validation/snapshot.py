@@ -10,7 +10,7 @@ def _snapshot_id() -> str:
     return datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
-def save_stats(records: list[dict], snapshot_id: str | None = None) -> Path:
+def save_study_stats(records: list[dict], snapshot_id: str | None = None) -> Path:
     """Save scalar study-level stats as a long-format Parquet snapshot.
 
     Args:
@@ -25,19 +25,19 @@ def save_stats(records: list[dict], snapshot_id: str | None = None) -> Path:
     SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
     df = pd.DataFrame(records)
     df["snapshot_id"] = snapshot_id
-    path = SNAPSHOT_DIR / f"{snapshot_id}_stats.parquet"
+    path = SNAPSHOT_DIR / f"{snapshot_id}_study_stats.parquet"
     df.to_parquet(path, index=False)
     return path
 
 
-def load_stats(path: Path | str) -> pd.DataFrame:
-    """Load a stats snapshot from a Parquet file."""
+def load_study_stats(path: Path | str) -> pd.DataFrame:
+    """Load a study stats snapshot from a Parquet file."""
     return pd.read_parquet(path)
 
 
-def list_stats_snapshots() -> list[Path]:
-    """Return all stats snapshot paths sorted chronologically (oldest first)."""
-    return sorted(SNAPSHOT_DIR.glob("*_stats.parquet"))
+def list_study_stats_snapshots() -> list[Path]:
+    """Return all study stats snapshot paths sorted chronologically (oldest first)."""
+    return sorted(SNAPSHOT_DIR.glob("*_study_stats.parquet"))
 
 
 def save_patient_stats(records: list[dict], snapshot_id: str | None = None) -> Path:
@@ -100,3 +100,32 @@ def load_tdd(path: Path | str) -> pd.DataFrame:
 def list_tdd_snapshots() -> list[Path]:
     """Return all TDD snapshot paths sorted chronologically."""
     return sorted(SNAPSHOT_DIR.glob("*_tdd.parquet"))
+
+
+def save_cdf_quantiles(df: pd.DataFrame, snapshot_id: str | None = None) -> Path:
+    """Save pre-computed CDF quantiles as a Parquet snapshot.
+
+    Args:
+        df: DataFrame with columns [study, data_type, quantile_level, value]
+            from compute.compute_cdf_quantiles().
+        snapshot_id: Optional timestamp string. Generated if not provided.
+
+    Returns:
+        Path to the saved Parquet file.
+    """
+    if snapshot_id is None:
+        snapshot_id = _snapshot_id()
+    SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
+    path = SNAPSHOT_DIR / f"{snapshot_id}_cdf_quantiles.parquet"
+    df.to_parquet(path, index=False)
+    return path
+
+
+def load_cdf_quantiles(path: Path | str) -> pd.DataFrame:
+    """Load a CDF quantiles snapshot from a Parquet file."""
+    return pd.read_parquet(path)
+
+
+def list_cdf_quantile_snapshots() -> list[Path]:
+    """Return all CDF quantile snapshot paths sorted chronologically."""
+    return sorted(SNAPSHOT_DIR.glob("*_cdf_quantiles.parquet"))
