@@ -20,22 +20,26 @@ setup(
         "pandas>=2.2.2,<3.0",
         "pyarrow",
         "scipy>=1.13.0,<2.0",
-        "ipykernel>=6.29.5",
         "matplotlib>=3.9.3,<4.0",
-        "ipywidgets>=8.1.5",
-        "notebook>=7.2.2",
-        "ipympl>=0.9.4",
-        "bokeh>=3.4.3,<4.0",
-        "graphviz>=0.20.3",
         "dask>=2024.8.0",
         "dask-expr>=1.1.10",
         "isodate>=0.7.2",
         "zipfile-deflate64-macos",
-        "pandera==0.28.1"
+        "pandera==0.28.1",
+        "tqdm",
     ],
 
     # Development/documentation dependencies
     extras_require={
+        "notebook": [
+            "ipykernel>=6.29.5",
+            "ipywidgets>=8.1.5",
+            "notebook>=7.2.2",
+            "ipympl>=0.9.4",
+            "bokeh>=3.4.3,<4.0",
+            "graphviz>=0.20.3",
+            "squarify>=0.4.3",
+        ],
         "dev": [
             "pytest>=8.2.2",
             "mkdocs>=1.6.1",
