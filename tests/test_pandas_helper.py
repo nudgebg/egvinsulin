@@ -46,7 +46,7 @@ def test_repetitive():
     df['datetime'] = pd.to_datetime(df['datetime'])  # Convert datetime column to pandas datetime
     i_all_repetitives, i_keep, i_drop = pandas_helper.repetitive(df, 'datetime', 'value', None)
     np.testing.assert_array_equal(i_all_repetitives, [1,2,6,7,8,9,10,11])
-    np.testing.assert_array_equal(i_keep, [0,12,1,3,4,5,6,9,11])
+    np.testing.assert_array_equal(i_keep, [0,1,3,4,5,6,9,11,12])
     np.testing.assert_array_equal(i_drop, [2,7,8,10])
 
 def test_repetitive_max_gap():
