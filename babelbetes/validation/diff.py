@@ -3,6 +3,11 @@ import pandas as pd
 
 _CHANGE_THRESHOLD_PCT = 5.0
 
+_ADDED     = "added"
+_REMOVED   = "removed"
+_CHANGED   = "changed"
+_UNCHANGED = "unchanged"
+
 
 def diff_study_stats(snap_a: pd.DataFrame, snap_b: pd.DataFrame) -> pd.DataFrame:
     """Diff two stats snapshots.
@@ -13,8 +18,8 @@ def diff_study_stats(snap_a: pd.DataFrame, snap_b: pd.DataFrame) -> pd.DataFrame
     - Metrics in both get delta and pct_change computed
 
     Args:
-        snap_a: Earlier snapshot DataFrame from snapshot.load_stats()
-        snap_b: Later snapshot DataFrame from snapshot.load_stats()
+        snap_a: Earlier snapshot DataFrame from snapshot.load_study_stats()
+        snap_b: Later snapshot DataFrame from snapshot.load_study_stats()
 
     Returns:
         DataFrame with columns: study, data_type, metric, value_before, value_after,
@@ -29,13 +34,13 @@ def diff_study_stats(snap_a: pd.DataFrame, snap_b: pd.DataFrame) -> pd.DataFrame
     merged["pct_change"] = merged["delta"] / merged["value_before"].abs() * 100
 
     merged["status"] = np.where(
-        merged["value_before"].isna(), "added",
-        np.where(merged["value_after"].isna(), "removed", "changed")
+        merged["value_before"].isna(), _ADDED,
+        np.where(merged["value_after"].isna(), _REMOVED,
+        np.where(merged["delta"] == 0, _UNCHANGED, _CHANGED))
     )
-    merged.loc[merged["delta"] == 0, "status"] = "unchanged"
 
     merged["flagged"] = (
-        (merged["status"] == "changed") &
+        (merged["status"] == _CHANGED) &
         (merged["pct_change"].abs() > _CHANGE_THRESHOLD_PCT)
     )
 
@@ -46,14 +51,14 @@ def format_diff_report(diff_df: pd.DataFrame) -> str:
     """Format a diff DataFrame as a human-readable text table."""
     lines = []
     for _, row in diff_df.iterrows():
-        if row["status"] == "unchanged":
+        if row["status"] == _UNCHANGED:
             continue
 
         flag = " ⚠️" if row["flagged"] else ""
         before = f"{row['value_before']:.1f}" if pd.notna(row["value_before"]) else "—"
         after = f"{row['value_after']:.1f}" if pd.notna(row["value_after"]) else "—"
 
-        if row["status"] in ("added", "removed"):
+        if row["status"] in (_ADDED, _REMOVED):
             pct_str = f"  [{row['status'].upper()}]"
         else:
             pct_str = f"  {row['pct_change']:+.1f}%{flag}"

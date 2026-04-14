@@ -140,7 +140,7 @@ def compute_basic_stats(store: dict[str, pd.DataFrame], verbose: bool = False) -
             "patient_count": grp[_SD.COL_NAME_PATIENT_ID].nunique(),
         })
         if col and col in df.columns:
-            stats["nan_count"] = df[col].isna().groupby(df["study_name"], observed=True).sum().astype(float)
+            stats["nan_count"] = (grp.size() - grp[col].count()).astype(float)
             stats["nan_pct"]   = stats["nan_count"] / stats["row_count"] * 100
 
         melted = (

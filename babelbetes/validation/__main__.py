@@ -85,11 +85,16 @@ def cmd_show(args):
     return 0
 
 
+def _latest(listing: list) -> Path | None:
+    return listing[-1] if listing else None
+
+
 def cmd_report(args):
-    stats_path    = Path(args.stats)    if args.stats    else snapshot.list_study_stats_snapshots()[-1]  if snapshot.list_study_stats_snapshots()  else None
-    patient_path  = Path(args.patient)  if args.patient  else snapshot.list_patient_stats_snapshots()[-1] if snapshot.list_patient_stats_snapshots() else None
-    tdd_path      = Path(args.tdd)      if args.tdd      else snapshot.list_tdd_snapshots()[-1]           if snapshot.list_tdd_snapshots()           else None
-    cdf_path      = Path(args.cdf)      if args.cdf      else snapshot.list_cdf_quantile_snapshots()[-1]  if snapshot.list_cdf_quantile_snapshots()  else None
+    stats_path   = Path(args.stats)   if args.stats   else _latest(snapshot.list_study_stats_snapshots())
+    patient_path = Path(args.patient) if args.patient else _latest(snapshot.list_patient_stats_snapshots())
+    tdd_path     = Path(args.tdd)     if args.tdd     else _latest(snapshot.list_tdd_snapshots())
+    # cdf is optional — report renders without it
+    cdf_path     = Path(args.cdf)     if args.cdf     else _latest(snapshot.list_cdf_quantile_snapshots())
 
     missing = [name for name, p in [("stats", stats_path), ("patient", patient_path), ("tdd", tdd_path)] if p is None]
     if missing:
@@ -102,7 +107,7 @@ def cmd_report(args):
     print(f"CDF snapshot:     {cdf_path or '(none — CDF section skipped)'}")
 
     study_stats_df   = snapshot.load_study_stats(stats_path)
-    patient_stats_df = snapshot.load_stats(patient_path)
+    patient_stats_df = snapshot.load_patient_stats(patient_path)
     tdd_df           = snapshot.load_tdd(tdd_path)
     cdf_df           = snapshot.load_cdf_quantiles(cdf_path) if cdf_path else None
 
