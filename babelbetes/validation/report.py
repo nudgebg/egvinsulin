@@ -11,7 +11,7 @@ import pandas as pd
 
 from babelbetes.validation import figures as fig_module
 
-REPORT_DIR = Path("data/validation")
+REPORT_DIR = Path("data/out/validation/reports")
 
 
 def _fig_to_b64(fig: plt.Figure) -> str:
@@ -110,6 +110,19 @@ def generate_report(
         render("Per-patient Geometric Mean vs Geometric Std",
                lambda: fig_module.plot_gm_vs_gs(patient_stats_df),
                "Each point is one patient. Spread shows inter-patient variability per study.")
+
+        if "tdd" in patient_stats_df["data_type"].values:
+            render("Daily TDD Split: Basal vs Bolus",
+                   lambda: fig_module.plot_tdd_split(patient_stats_df),
+                   "Geometric mean of each patient's daily dose, averaged per study.")
+
+    if store is not None:
+        from babelbetes.validation import compute as _compute
+        gap_dur_dict = _compute.compute_gap_durations(store)
+        if gap_dur_dict:
+            render("Gap and Chunk Duration CDFs",
+                   lambda: fig_module.plot_gap_chunk_cdfs(gap_dur_dict),
+                   "Empirical CDF of continuous data chunk lengths and gap lengths per study.")
 
     if store is not None:
         render("Circadian Patterns (Moving Averages)",

@@ -7,55 +7,73 @@ Usage:
     python -m babelbetes.validation report [--data-dir PATH]
 """
 import argparse
+import logging
 import os
 from pathlib import Path
-
+import pandas as pd
 from babelbetes.src import data_store
+from babelbetes.src.logger import Logger
 from babelbetes.validation import compute, diff, report as report_module, snapshot
+
+log = Logger.get_logger(__name__, level=logging.INFO)
 
 
 def cmd_snapshot(args):
     data_dir = Path(args.data_dir)
     if not data_dir.exists():
-        print(f"Error: data directory not found: {data_dir}")
+        log.error("Data directory not found: %s", data_dir)
         return 1
 
-    print(f"Loading data from {data_dir} ...")
+    log.info("Loading data from %s ...", data_dir)
     store = data_store.load(str(data_dir))
 
     total = sum(len(df) for df in store.values())
-    print(f"Loaded {len(store)} data types, {total} total rows.")
+    log.info("Loaded %d data types, %d total rows.", len(store), total)
+    rows = [
+        {"data_type": dt, "study": row["study_name"], "rows": row["count"]}
+        for dt, df in store.items()
+        for _, row in df.groupby("study_name", observed=True).size().rename("count").reset_index().iterrows()
+    ]
+    breakdown = pd.DataFrame(rows).pivot_table(index="study", columns="data_type", values="rows", aggfunc="sum", fill_value=0)
+    log.info("Row counts per study/data_type:\n%s", breakdown.to_string())
 
     ts = snapshot._snapshot_id()
 
-    print("Computing study stats ...")
-    records = (compute.compute_basic_stats(store, verbose=True)
-               + compute.compute_study_stats_extended(store, verbose=True))
-    study_stats_path = snapshot.save_study_stats(records, snapshot_id=ts)
-    print(f"  → {study_stats_path}")
-
-    print("Computing patient stats ...")
-    patient_records = compute.compute_patient_stats(store, verbose=True)
-    patient_path = snapshot.save_patient_stats(patient_records, snapshot_id=ts)
-    print(f"  → {patient_path}")
-
-    print("Computing TDD ...")
+    log.info("Computing TDD ...")
     tdd_df = compute.compute_tdd_per_patient(store, verbose=True)
     tdd_path = snapshot.save_tdd(tdd_df, snapshot_id=ts)
-    print(f"  → {tdd_path}")
+    log.info("  → %s", tdd_path)
 
-    print("Computing CDF quantiles ...")
+    log.info("Computing patient stats ...")
+    patient_records = (
+        (compute.compute_cgm_stats(store["cgm"])   if "cgm"   in store else [])
+        + (compute.compute_basal_stats(store["basal"]) if "basal" in store else [])
+        + (compute.compute_bolus_stats(store["bolus"]) if "bolus" in store else [])
+        + compute.compute_complete_days(store)
+        + compute.compute_tdd_stats(tdd_df)
+    )
+    patient_path = snapshot.save_patient_stats(patient_records, snapshot_id=ts)
+    log.info("  → %s", patient_path)
+
+    log.info("Computing study stats ...")
+    patient_stats_df = pd.DataFrame(patient_records)
+    records = (
+        compute.aggregate_study_stats(patient_stats_df)
+        + compute.compute_age_stats(store)
+    )
+    study_stats_path = snapshot.save_study_stats(records, snapshot_id=ts)
+    log.info("  → %s", study_stats_path)
+
+    log.info("Computing CDF quantiles ...")
     cdf_df = compute.compute_cdf_quantiles(store, verbose=True)
     cdf_path = snapshot.save_cdf_quantiles(cdf_df, snapshot_id=ts)
-    print(f"  → {cdf_path}")
+    log.info("  → %s", cdf_path)
 
-    # Print a quick summary table
     df = snapshot.load_study_stats(study_stats_path)
     pivot = df[df["metric"] == "row_count"].pivot_table(
         index="study", columns="data_type", values="value", aggfunc="sum"
     )
-    print("\nRow counts per study/data_type:")
-    print(pivot.to_string())
+    log.info("Row counts per study/data_type:\n%s", pivot.to_string())
     return 0
 
 
@@ -66,11 +84,11 @@ def cmd_show(args):
     elif snapshots:
         path = snapshots[-1]
     else:
-        print("Error: no snapshots found. Run 'snapshot' first.")
+        log.error("No snapshots found. Run 'snapshot' first.")
         return 1
 
     df = snapshot.load_study_stats(path)
-    print(f"Snapshot: {path}\n")
+    log.info("Snapshot: %s", path)
 
     if args.metric:
         df = df[df["metric"] == args.metric]
@@ -85,44 +103,43 @@ def cmd_show(args):
     return 0
 
 
-def _latest(listing: list) -> Path | None:
-    return listing[-1] if listing else None
-
-
 def cmd_report(args):
-    stats_path   = Path(args.stats)   if args.stats   else _latest(snapshot.list_study_stats_snapshots())
-    patient_path = Path(args.patient) if args.patient else _latest(snapshot.list_patient_stats_snapshots())
-    tdd_path     = Path(args.tdd)     if args.tdd     else _latest(snapshot.list_tdd_snapshots())
-    # cdf is optional — report renders without it
-    cdf_path     = Path(args.cdf)     if args.cdf     else _latest(snapshot.list_cdf_quantile_snapshots())
+    stats_path   = Path(args.stats)   if args.stats   else None
+    patient_path = Path(args.patient) if args.patient else None
+    tdd_path     = Path(args.tdd)     if args.tdd     else None
+    cdf_path     = Path(args.cdf)     if args.cdf     else None
 
-    missing = [name for name, p in [("stats", stats_path), ("patient", patient_path), ("tdd", tdd_path)] if p is None]
-    if missing:
-        print(f"Error: no {', '.join(missing)} snapshot(s) found. Run 'snapshot' first.")
+    try:
+        study_stats_df   = snapshot.load_study_stats(stats_path)
+        patient_stats_df = snapshot.load_patient_stats(patient_path)
+        tdd_df           = snapshot.load_tdd(tdd_path)
+    except FileNotFoundError as e:
+        log.error("%s", e)
         return 1
 
-    print(f"Stats snapshot:   {stats_path}")
-    print(f"Patient snapshot: {patient_path}")
-    print(f"TDD snapshot:     {tdd_path}")
-    print(f"CDF snapshot:     {cdf_path or '(none — CDF section skipped)'}")
+    # cdf is optional — report renders without it
+    try:
+        cdf_df = snapshot.load_cdf_quantiles(cdf_path)
+    except FileNotFoundError:
+        cdf_df = None
 
-    study_stats_df   = snapshot.load_study_stats(stats_path)
-    patient_stats_df = snapshot.load_patient_stats(patient_path)
-    tdd_df           = snapshot.load_tdd(tdd_path)
-    cdf_df           = snapshot.load_cdf_quantiles(cdf_path) if cdf_path else None
+    log.info("Stats snapshot:   %s", study_stats_df["snapshot_id"].iloc[0])
+    log.info("Patient snapshot: %s", patient_stats_df["snapshot_id"].iloc[0])
+    log.info("TDD snapshot:     %s", tdd_df["snapshot_id"].iloc[0])
+    log.info("CDF snapshot:     %s", cdf_df["snapshot_id"].iloc[0] if cdf_df is not None else "(none — CDF section skipped)")
 
     store = None
     if args.data_dir:
         data_dir = Path(args.data_dir)
         if not data_dir.exists():
-            print(f"Error: data directory not found: {data_dir}")
+            log.error("Data directory not found: %s", data_dir)
             return 1
-        print(f"Loading store from {data_dir} ...")
+        log.info("Loading store from %s ...", data_dir)
         store = data_store.load(str(data_dir))
 
-    print("Generating HTML report ...")
+    log.info("Generating HTML report ...")
     out = report_module.generate_report(study_stats_df, patient_stats_df, tdd_df, cdf_df=cdf_df, store=store)
-    print(f"\nReport: {out}")
+    log.info("Report: %s", out)
     return 0
 
 
@@ -140,7 +157,7 @@ def cmd_diff(args):
     snap_a = snapshot.load_study_stats(path_a)
     snap_b = snapshot.load_study_stats(path_b)
 
-    print(f"Comparing:\n  A: {path_a}\n  B: {path_b}\n")
+    log.info("Comparing:\n  A: %s\n  B: %s", path_a, path_b)
     diff_df = diff.diff_study_stats(snap_a, snap_b)
     print(diff.format_diff_report(diff_df))
     return 0

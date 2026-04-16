@@ -2,6 +2,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 
 import squarify
 from typing import NamedTuple
@@ -23,18 +24,19 @@ class _CDFConfig(NamedTuple):
 class _TDDConfig(NamedTuple):
     col: str
     xlabel: str
+    log_x: bool = False
 
 
 _CDF_CONFIGS = [
     _CDFConfig(data_type="cgm",   col="cgm",       xlabel="CGM (mg/dL)"),
     _CDFConfig(data_type="bolus", col="bolus",      xlabel="Bolus (U)",         log_x=True),
-    _CDFConfig(data_type="basal", col="basal_rate", xlabel="Basal rate (U/hr)"),
+    _CDFConfig(data_type="basal", col="basal_rate", xlabel="Basal rate (U/hr)", log_x=True),
 ]
 
 _TDD_CONFIGS = [
-    _TDDConfig(col="basal", xlabel="Basal TDD (U/day)"),
-    _TDDConfig(col="bolus", xlabel="Bolus TDD (U/day)"),
-    _TDDConfig(col="total", xlabel="Total TDD (U/day)"),
+    _TDDConfig(col="basal", xlabel="Basal TDD (U/day)", log_x=True),
+    _TDDConfig(col="bolus", xlabel="Bolus TDD (U/day)", log_x=True),
+    _TDDConfig(col="total", xlabel="Total TDD (U/day)", log_x=True),
 ]
 
 _CDF_QUANTILES = np.linspace(0, 1, 401)  # 0.25% resolution
@@ -87,9 +89,13 @@ def plot_days_per_study(stats_df: pd.DataFrame) -> plt.Figure:
 
     Args:
         stats_df: Columns [study, data_type, metric, value].
-                  Uses rows where metric="patient_days"; data_type is the bar group (cgm/bolus/basal/all).
+                  Uses rows where metric="patient_days" (cgm/bolus/basal) and
+                  metric="complete_days" (data_type="complete").
     """
-    data = (stats_df[stats_df["metric"] == "patient_days"]
+    data = (pd.concat([
+                stats_df[stats_df["metric"] == "patient_days"][["study", "data_type", "value"]],
+                stats_df[stats_df["metric"] == "complete_days"][["study", "data_type", "value"]],
+            ])
             .pivot_table(index="study", columns="data_type", values="value", aggfunc="sum")
             .fillna(0))
     if data.empty:
@@ -117,11 +123,11 @@ def plot_complete_days_treemap(stats_df: pd.DataFrame) -> plt.Figure:
 
     Args:
         stats_df: Columns [study, data_type, metric, value].
-                  Uses rows where metric="patient_days", data_type="all" (complete days only).
+                  Uses rows where metric="complete_days", data_type="complete".
     """
     data = (stats_df[
-                (stats_df["metric"] == "patient_days") &
-                (stats_df["data_type"] == "all")
+                (stats_df["metric"] == "complete_days") &
+                (stats_df["data_type"] == "complete")
             ]
             .groupby("study")["value"].sum()
             .sort_values(ascending=False))
@@ -179,6 +185,8 @@ def plot_tdd_cdfs(tdd_df: pd.DataFrame) -> plt.Figure:
             _plot_cdf_lines(ax, df, cfg.col, "study")
         ax.set_title(f"CDF — {cfg.col} TDD")
         ax.set_xlabel(cfg.xlabel)
+        if cfg.log_x:
+            ax.set_xscale("log")
 
     fig.tight_layout()
     return fig
@@ -221,6 +229,90 @@ def plot_gm_vs_gs(patient_stats_df: pd.DataFrame) -> plt.Figure:
         ax.set_ylabel("Geometric std")
         ax.set_title(f"gm vs gs — {data_type}")
         ax.legend(fontsize=7)
+
+    fig.tight_layout()
+    return fig
+
+
+def plot_tdd_split(patient_stats_df: pd.DataFrame, relative: bool = False) -> plt.Figure:
+    """Stacked bar chart of mean daily basal vs bolus TDD per study.
+
+    Args:
+        patient_stats_df: Columns [study, patient_id, data_type, metric, value].
+                          Uses data_type='tdd', metrics 'basal_gm' and 'bolus_gm'.
+        relative: When True, show percentage split instead of absolute U/day using a
+                  seaborn grouped bar chart. A dashed line at 50% is drawn for reference.
+    """
+    tdd = patient_stats_df[patient_stats_df["data_type"] == "tdd"]
+    basal = tdd[tdd["metric"] == "basal_gm"].groupby("study")["value"].mean()
+    bolus = tdd[tdd["metric"] == "bolus_gm"].groupby("study")["value"].mean()
+
+    studies = sorted(set(basal.index) | set(bolus.index))
+    basal_vals = np.array([basal.get(s, 0.0) for s in studies])
+    bolus_vals = np.array([bolus.get(s, 0.0) for s in studies])
+
+    fig, ax = _fig(10, 4)
+
+    if relative:
+        total = np.where(basal_vals + bolus_vals > 0, basal_vals + bolus_vals, 1.0)
+        long = pd.DataFrame({
+            "study":     studies * 2,
+            "component": ["Basal"] * len(studies) + ["Bolus"] * len(studies),
+            "pct":       np.concatenate([basal_vals / total * 100, bolus_vals / total * 100]),
+        })
+        sns.barplot(data=long, x="study", y="pct", hue="component",
+                    palette={"Basal": "steelblue", "Bolus": "salmon"}, ax=ax)
+        ax.axhline(50, color="gray", linestyle="--", linewidth=0.8, alpha=0.7)
+        ax.set_ylabel("TDD fraction (%)")
+        ax.set_title("Daily TDD: Basal vs Bolus Split (%)")
+        ax.set_xlabel("")
+    else:
+        x = np.arange(len(studies))
+        ax.bar(x, basal_vals, label="Basal", color="steelblue", alpha=0.85)
+        ax.bar(x, bolus_vals, bottom=basal_vals, label="Bolus", color="salmon", alpha=0.85)
+        ax.set_xticks(x)
+        ax.set_xticklabels(studies, rotation=30, ha="right")
+        ax.set_ylabel("Insulin (U/day)")
+        ax.set_title("Mean Daily TDD: Basal vs Bolus Split")
+
+    ax.tick_params(axis="x", rotation=30)
+    ax.legend()
+    fig.tight_layout()
+    return fig
+
+
+def plot_gap_chunk_cdfs(gap_dur_dict: dict[str, pd.DataFrame]) -> plt.Figure:
+    """CDF of gap and chunk durations per data type, coloured by study.
+
+    Args:
+        gap_dur_dict: Output of compute.compute_gap_durations().
+                      Dict keyed by data_type; each DataFrame has columns
+                      [study, patient_id, kind, dur_hrs].
+    """
+    data_types = [dt for dt in ("cgm", "basal", "bolus") if dt in gap_dur_dict]
+    if not data_types:
+        fig, ax = _fig()
+        ax.set_title("Gap/Chunk CDFs (no data)")
+        return fig
+
+    data = pd.concat(
+        [df.assign(data_type=dt) for dt, df in gap_dur_dict.items()],
+        ignore_index=True,
+    )
+
+    fig, axes = plt.subplots(2, len(data_types), figsize=(5 * len(data_types), 8))
+    if len(data_types) == 1:
+        axes = axes.reshape(2, 1)
+
+    for col_i, data_type in enumerate(data_types):
+        for row_i, kind in enumerate(("chunk", "gap")):
+            ax = axes[row_i, col_i]
+            subset = data[(data["data_type"] == data_type) & (data["kind"] == kind)]
+            if not subset.empty:
+                sns.ecdfplot(data=subset, x="dur_hrs", hue="study", ax=ax)
+            ax.set_title(f"{kind.capitalize()} duration CDF — {data_type}")
+            ax.set_xlabel("Duration (hrs)")
+            ax.set_ylabel("CDF")
 
     fig.tight_layout()
     return fig
