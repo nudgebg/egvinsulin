@@ -57,7 +57,7 @@ class ParquetStore:
             pd.DataFrame: When data_type is a single string.
             dict[str, pd.DataFrame]: When data_type is a list or None (keyed by data type).
         """
-        ALL_DATA_TYPES = ['cgm', 'bolus', 'basal', 'age']
+        ALL_DATA_TYPES = ['cgm', 'bolus', 'basal', 'age', 'carbs']
 
         filters = []
         if study is not None:

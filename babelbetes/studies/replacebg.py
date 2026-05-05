@@ -13,7 +13,7 @@ from babelbetes.src import pandas_helper, logger
 
 class ReplaceBG(StudyDataset):
 
-    _raw_attrs = ('_df_patient', '_df_bolus', '_df_basal', '_df_cgm')
+    _raw_attrs = ('_df_patient', '_df_uploads', '_df_bolus', '_df_basal', '_df_cgm', '_df_wizard')
 
     def __init__(self, study_path, subset=False):
         super().__init__(study_path, 'ReplaceBG', subset=subset)
@@ -25,19 +25,39 @@ class ReplaceBG(StudyDataset):
                                     dtype={'PtID': str}, subset=self.subset)
 
     @cached_property
+    def _df_uploads(self):
+        return pandas_helper.get_df(os.path.join(self.study_path, 'Data Tables', 'HDeviceUploads.txt'),
+                                    dtype={'PtId': str}, subset=self.subset).rename(columns={'PtId': 'PtID'})
+
+    @cached_property
+    def _excluded_patients(self) -> set:
+        dropped = set(self._df_patient.loc[self._df_patient['PtStatus'] != 'Completed', 'PtID'])
+        diasend = set(self._df_uploads.loc[self._df_uploads['DataSource'] == 'Diasend', 'PtID'])
+        faulty  = {'244', '277', '288'}
+        return dropped | diasend | faulty
+
+    def _apply_study_filters(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Filter excluded patients and clip to study window [0, RandDtDaysAfterEnroll + 182 days]."""
+        df = df[~df['PtID'].isin(self._excluded_patients)].copy()
+        #exclude data before/after study start (study was 26 weeks (182 days) after enrollment)
+        end_days = self._df_patient.set_index('PtID')['RandDtDaysAfterEnroll'] + 182 
+        df['_end_day'] = end_days.reindex(df['PtID']).values
+        df = df.query('DeviceDtTmDaysFromEnroll >= 0 and DeviceDtTmDaysFromEnroll <= _end_day')
+        return df.drop(columns=['_end_day'])
+
+    @cached_property
     def _df_bolus(self):
-        df_uploads = pandas_helper.get_df(os.path.join(self.study_path, 'Data Tables', 'HDeviceUploads.txt'),
-                                          dtype={'PtId': str}, subset=self.subset).rename(columns={'PtId': 'PtID'})
         df = pandas_helper.get_df(os.path.join(self.study_path, 'Data Tables', 'HDeviceBolus.txt'),
                                   dtype={'PtID': str}, subset=self.subset)
         df['datetime'] = self._enrollment_start + pd.to_timedelta(df['DeviceDtTmDaysFromEnroll'], unit='D') + pd.to_timedelta(df['DeviceTm'])
         df['hour_of_day'] = df.datetime.dt.hour
         df['day'] = df.datetime.dt.date
-        df.drop(columns=['DeviceDtTmDaysFromEnroll', 'DeviceTm'], inplace=True)
+        df.drop(columns=['DeviceTm'], inplace=True)
 
-        # Diasend specific: Diasend durations are in minutes not ms
+        # Diasend patients are excluded by _apply_study_filters, so the duration fix below is a no-op
+        # for remaining patients. Kept for correctness in case of partial Diasend uploads.
         df = pd.merge(df,
-                      df_uploads.rename(columns={'RecID': 'ParentHDeviceUploadsID'})[['PtID', 'ParentHDeviceUploadsID', 'DataSource']],
+                      self._df_uploads.rename(columns={'RecID': 'ParentHDeviceUploadsID'})[['PtID', 'ParentHDeviceUploadsID', 'DataSource']],
                       on=['PtID', 'ParentHDeviceUploadsID'])
         df.loc[df.DataSource == 'Diasend', 'Duration'] *= 60 * 1000
         df.loc[(df.DataSource == 'Diasend') & df.Extended.isna() & df.Duration.notna(), ['Duration']] = np.nan
@@ -53,7 +73,7 @@ class ReplaceBG(StudyDataset):
         df['datetime'] = self._enrollment_start + pd.to_timedelta(df['DeviceDtTmDaysFromEnroll'], unit='D') + pd.to_timedelta(df['DeviceTm'])
         df['hour_of_day'] = df.datetime.dt.hour
         df['day'] = df.datetime.dt.date
-        df.drop(columns=['DeviceDtTmDaysFromEnroll', 'DeviceTm'], inplace=True)
+        df.drop(columns=['DeviceTm'], inplace=True)
         df['Duration'] = pd.to_timedelta(df['Duration'], unit='ms')
         df['ExpectedDuration'] = pd.to_timedelta(df['ExpectedDuration'], unit='ms')
         df['SuprDuration'] = pd.to_timedelta(df['SuprDuration'], unit='ms')
@@ -66,12 +86,13 @@ class ReplaceBG(StudyDataset):
         df['datetime'] = self._enrollment_start + pd.to_timedelta(df['DeviceDtTmDaysFromEnroll'], unit='D') + pd.to_timedelta(df['DeviceTm'])
         df['hour_of_day'] = df.datetime.dt.hour
         df['day'] = df.datetime.dt.date
-        df.drop(columns=['DeviceDtTmDaysFromEnroll', 'DeviceTm'], inplace=True)
+        df.drop(columns=['DeviceTm'], inplace=True)
         return df.sort_values(by=['PtID', 'datetime'])
 
     def _extract_bolus_event_history(self):
+        df_bolus = self._apply_study_filters(self._df_bolus.copy())
+
         #drop actual duplicates
-        df_bolus = self._df_bolus.copy()
         df_bolus = df_bolus.drop_duplicates(subset=['PtID', 'datetime','BolusType','Normal','Extended','Duration'])
 
         #drop temporal duplciates keeping the maximum RecID row
@@ -109,7 +130,7 @@ class ReplaceBG(StudyDataset):
         return df_bolus
 
     def _extract_basal_event_history(self):
-        df_basal = self._df_basal.copy()
+        df_basal = self._apply_study_filters(self._df_basal.copy())
 
         #drop duplicates with same duration and rate
         _,_,i_drop = pandas_helper.get_duplicated_max_indexes(df_basal, ['PtID', 'datetime'], 'RecID')
@@ -127,7 +148,7 @@ class ReplaceBG(StudyDataset):
         return df_basal
 
     def _extract_cgm_history(self):
-        df_cgm = self._df_cgm.copy()
+        df_cgm = self._apply_study_filters(self._df_cgm.copy())
 
         #drop Calibrations
         df_cgm = df_cgm.loc[df_cgm.RecordType == 'CGM']
@@ -145,5 +166,28 @@ class ReplaceBG(StudyDataset):
         return df_cgm[[self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME, self.COL_NAME_CGM]]
 
     def _extract_age_data(self):
-        df_age = self._df_patient.copy()[['PtID', 'AgeAsOfEnrollDt']].rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'AgeAsOfEnrollDt': self.COL_NAME_AGE})
+        df_age = self._df_patient.copy()
+        df_age = df_age[~df_age['PtID'].isin(self._excluded_patients)]
+        df_age = df_age[['PtID', 'AgeAsOfEnrollDt']].rename(
+            columns={'PtID': self.COL_NAME_PATIENT_ID, 'AgeAsOfEnrollDt': self.COL_NAME_AGE})
         return df_age.astype({self.COL_NAME_PATIENT_ID: str, self.COL_NAME_AGE: int})
+
+    @cached_property
+    def _df_wizard(self):
+        df = pandas_helper.get_df(os.path.join(self.study_path, 'Data Tables', 'HDeviceWizard.txt'),
+                                  dtype={'PtId': str}, subset=self.subset).rename(columns={'PtId': 'PtID'})
+        df['datetime'] = (self._enrollment_start
+                          + pd.to_timedelta(df['DeviceDtTmDaysFromEnroll'], unit='D')
+                          + pd.to_timedelta(df['DeviceTm']))
+        return df.sort_values(by=['PtID', 'datetime'])
+
+    def _extract_carb_history(self):
+        df = self._apply_study_filters(self._df_wizard.copy())
+        df = df.dropna(subset=['CarbInput'])
+        df = df[df['CarbInput'] > 0]
+        # all temporal dups share the same CarbInput value, so drop_duplicates is sufficient
+        df = df.drop_duplicates(subset=['PtID', 'datetime', 'CarbInput'])
+        df = df[['PtID', 'datetime', 'CarbInput']]
+        return df.rename(columns={'PtID': self.COL_NAME_PATIENT_ID,
+                                  'datetime': self.COL_NAME_DATETIME,
+                                  'CarbInput': self.COL_NAME_CARBS})

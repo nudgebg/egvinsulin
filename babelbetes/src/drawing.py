@@ -187,8 +187,8 @@ def drawMovingAverage(ax, df, datetime_col, value_col, aggregator='mean', **kwar
     df = df.copy()
     
     df['hod'] = get_hour_of_day(df[datetime_col])
-    ma  = df[['hod',value_col]].sort_values('hod').rolling(window=len(df)//24, 
-                                                                          min_periods=len(df)//24, 
+    ma  = df[['hod',value_col]].sort_values('hod').rolling(window=len(df)//128, 
+                                                                          min_periods=len(df)//256, 
                                                                           on='hod', center=True).agg(aggregator)    
     ma = ma.sample(len(df)//10)
 
