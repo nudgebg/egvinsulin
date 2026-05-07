@@ -49,7 +49,7 @@ nav:
     - Replace BG: data_sets/REPLACE_BG.md
  - For Users:
     - Code Reference: reference.md
-    - Output Validation: validation.md
+    - Output Survey: survey.md
     - Dataset Checklist : checklist.md
     - Best Practices: best-practices.md
     - Virtual Environments: python-setup.md

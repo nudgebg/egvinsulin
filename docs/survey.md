@@ -1,6 +1,6 @@
-# Output Validation
+# Output Survey
 
-The validation framework computes quality metrics over a BabelBetes output directory and generates an HTML report. It is built around *snapshots* — immutable Parquet files that capture metrics at a point in time — so that data quality can be tracked across runs and study versions.
+The survey framework computes quality metrics over a BabelBetes output directory and generates an HTML report. It is built around *surveys* — immutable Parquet files that capture metrics at a point in time — so that data quality can be tracked across runs and study versions.
 
 ---
 
@@ -9,48 +9,48 @@ The validation framework computes quality metrics over a BabelBetes output direc
 ### Compute and report
 
 ```bash
-# Compute all metrics and save a snapshot
-python -m babelbetes.validation snapshot --data-dir data/out
+# Compute all metrics and save a survey
+python -m babelbetes.survey survey --data-dir data/out
 
-# Generate an HTML report from the latest snapshot
-python -m babelbetes.validation report
+# Generate an HTML report from the latest survey
+python -m babelbetes.survey report
 
 # Include circadian and gap/chunk figures (requires raw time series data)
-python -m babelbetes.validation report --data-dir data/out
+python -m babelbetes.survey report --data-dir data/out
 ```
 
 !!! note "Why `--data-dir` is optional for `report`"
-    Most figures are generated from the pre-computed snapshot files.
+    Most figures are generated from the pre-computed survey files.
     `--data-dir` is only needed for figures that cannot be computed from aggregated stats:
     **circadian patterns** (moving average by hour of day) and **gap/chunk CDFs** —
     both require access to individual timestamps.
 
-Snapshots are saved to `data/out/validation/snapshots/` and the HTML report is written to `data/out/validation/reports/report_<timestamp>.html`.
+Surveys are saved to `data/out/survey/surveys/` and the HTML report is written to `data/out/survey/reports/report_<timestamp>.html`.
 
 ### Track changes with `diff`
 
 ```bash
-# Compare the two most recent snapshots — flags changes > 5%
-python -m babelbetes.validation diff
+# Compare the two most recent surveys — flags changes > 5%
+python -m babelbetes.survey diff
 
-# Or compare two specific snapshots
-python -m babelbetes.validation diff \
-    --a data/out/validation/snapshots/20250101_000000_study_stats.parquet \
-    --b data/out/validation/snapshots/20250201_000000_study_stats.parquet
+# Or compare two specific surveys
+python -m babelbetes.survey diff \
+    --a data/out/survey/surveys/20250101_000000_study_stats.parquet \
+    --b data/out/survey/surveys/20250201_000000_study_stats.parquet
 ```
 
 The diff covers all study-level metrics, including the per-patient aggregates (e.g. `tir_study_gm` — geometric mean of individual patient TIR values across a study). Metrics that changed by more than 5% are flagged with `⚠️`.
 
 !!! note
-    The diff currently operates on study-level snapshots only. Patient-level diffing is not yet implemented.
+    The diff currently operates on study-level surveys only. Patient-level diffing is not yet implemented.
 
 ### Explore a single study or patient
 
-For targeted exploration without saving a snapshot, call the compute functions directly:
+For targeted exploration without saving a survey, call the compute functions directly:
 
 ```python
 from babelbetes.src import data_store
-from babelbetes.validation import compute
+from babelbetes.survey import compute
 import pandas as pd
 
 # Scope to one study, or filter further to one patient
@@ -81,24 +81,24 @@ The framework is split into four modules:
 | Module | Responsibility |
 |---|---|
 | `compute` | Pure functions that take DataFrames and return metrics as `list[dict]` |
-| `snapshot` | Save and load metric snapshots as Parquet files |
+| `survey` | Save and load metric surveys as Parquet files |
 | `figures` | Matplotlib/seaborn figures that accept pre-computed metric DataFrames |
-| `diff` | Compare two study-level snapshots and flag significant changes |
+| `diff` | Compare two study-level surveys and flag significant changes |
 
-`__main__.py` wires these together for the CLI. The `report` module renders snapshots into a self-contained HTML file.
+`__main__.py` wires these together for the CLI. The `report` module renders surveys into a self-contained HTML file.
 
 Metrics are stored in **long format** — one row per `(study, [patient_id,] data_type, metric, value)` — so any metric can be filtered, pivoted, or plotted without schema changes.
 
-### Snapshot files
+### Survey files
 
-Each `snapshot` run produces four Parquet files, all stamped with the same `YYYYMMDD_HHMMSS` timestamp:
+Each `survey` run produces four Parquet files, all stamped with the same `YYYYMMDD_HHMMSS` timestamp:
 
 | File | Contents |
 |---|---|
-| `<ts>_study_stats.parquet` | Study-level aggregates: columns `study`, `data_type`, `metric`, `value`, `snapshot_id` |
-| `<ts>_patient_stats.parquet` | Per-patient metrics: columns `study`, `patient_id`, `data_type`, `metric`, `value`, `snapshot_id` |
-| `<ts>_tdd.parquet` | Daily TDD per patient: columns `study`, `patient_id`, `date`, `basal`, `bolus`, `total`, `snapshot_id` |
-| `<ts>_cdf_quantiles.parquet` | Pre-computed CDF quantiles: columns `study`, `data_type`, `quantile_level`, `value`, `snapshot_id` |
+| `<ts>_study_stats.parquet` | Study-level aggregates: columns `study`, `data_type`, `metric`, `value`, `survey_id` |
+| `<ts>_patient_stats.parquet` | Per-patient metrics: columns `study`, `patient_id`, `data_type`, `metric`, `value`, `survey_id` |
+| `<ts>_tdd.parquet` | Daily TDD per patient: columns `study`, `patient_id`, `date`, `basal`, `bolus`, `total`, `survey_id` |
+| `<ts>_cdf_quantiles.parquet` | Pre-computed CDF quantiles: columns `study`, `data_type`, `quantile_level`, `value`, `survey_id` |
 
 ### Metrics reference
 
@@ -156,10 +156,10 @@ Every per-patient metric is aggregated across patients as a geometric mean (`_st
 
 ## API Reference
 
-::: babelbetes.validation.compute
+::: babelbetes.survey.compute
 
-::: babelbetes.validation.figures
+::: babelbetes.survey.figures
 
-::: babelbetes.validation.snapshot
+::: babelbetes.survey.survey
 
-::: babelbetes.validation.diff
+::: babelbetes.survey.diff

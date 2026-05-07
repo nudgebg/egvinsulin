@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from babelbetes.validation.compute import (
+from babelbetes.survey.compute import (
     compute_cgm_stats,
     compute_basal_stats,
     compute_bolus_stats,

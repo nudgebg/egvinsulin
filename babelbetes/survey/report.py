@@ -1,4 +1,4 @@
-"""HTML report generation for the BabelBetes validation system."""
+"""HTML report generation for the BabelBetes survey system."""
 import base64
 import io
 from datetime import datetime
@@ -9,9 +9,9 @@ matplotlib.use("Agg")  # non-interactive backend for headless report generation
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from babelbetes.validation import figures as fig_module
+from babelbetes.survey import figures as fig_module
 
-REPORT_DIR = Path("data/out/validation/reports")
+REPORT_DIR = Path("data/out/survey/reports")
 
 
 def _fig_to_b64(fig: plt.Figure) -> str:
@@ -53,21 +53,21 @@ def generate_report(
     store: dict[str, dict[str, pd.DataFrame]] | None = None,
     output_path: Path | None = None,
 ) -> Path:
-    """Generate a self-contained HTML validation report from pre-computed snapshots.
+    """Generate a self-contained HTML survey report from pre-computed surveys.
 
     Args:
-        study_stats_df:   Study-level stats. Columns: [study, data_type, metric, value, snapshot_id].
-                          From snapshot.load_study_stats().
+        study_stats_df:   Study-level stats. Columns: [study, data_type, metric, value, survey_id].
+                          From survey.load_study_stats().
         patient_stats_df: Per-patient stats. Columns: [study, patient_id, data_type, metric, value].
-                          From snapshot.load_patient_stats(). May be empty.
+                          From survey.load_patient_stats(). May be empty.
         tdd_df:           Daily TDD per patient. Columns: [study, patient_id, date, basal, bolus, total].
-                          From snapshot.load_tdd(). May be empty.
+                          From survey.load_tdd(). May be empty.
         cdf_df:           Pre-computed CDF quantiles. Columns: [study, data_type, quantile_level, value].
-                          From snapshot.load_cdf_quantiles(). CDF section skipped if None.
+                          From survey.load_cdf_quantiles(). CDF section skipped if None.
         store:            Optional raw data dict {data_type: df} for circadian pattern figures.
                           Circadian section skipped if None.
         output_path:      Optional override for the output HTML path.
-                          Default: data/validation/report_<timestamp>.html
+                          Default: data/survey/report_<timestamp>.html
 
     Returns:
         Path to the generated HTML file.
@@ -117,7 +117,7 @@ def generate_report(
                    "Geometric mean of each patient's daily dose, averaged per study.")
 
     if store is not None:
-        from babelbetes.validation import compute as _compute
+        from babelbetes.survey import compute as _compute
         gap_dur_dict = _compute.compute_gap_durations(store)
         if gap_dur_dict:
             render("Gap and Chunk Duration CDFs",
@@ -130,10 +130,10 @@ def generate_report(
                "Rolling average of values by hour of day, revealing daily patterns across studies.")
 
     # ── assemble HTML ──────────────────────────────────────────────────────────
-    snapshot_ids = study_stats_df["snapshot_id"].unique().tolist() if "snapshot_id" in study_stats_df.columns else []
+    survey_ids = study_stats_df["survey_id"].unique().tolist() if "survey_id" in study_stats_df.columns else []
     meta = f"Generated: {ts}"
-    if snapshot_ids:
-        meta += f" &nbsp;|&nbsp; Snapshot: {', '.join(snapshot_ids)}"
+    if survey_ids:
+        meta += f" &nbsp;|&nbsp; Survey: {', '.join(survey_ids)}"
     n_studies = study_stats_df["study"].nunique() if not study_stats_df.empty else 0
 
     html = f"""<!DOCTYPE html>
