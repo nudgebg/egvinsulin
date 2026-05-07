@@ -1,7 +1,4 @@
-This part of the project documentation focuses on
-an **information-oriented** approach. Use it as a
-reference for the technical implementation of the
-`BabelBetes` project code.
+This is the technical documentation of the `BabelBetes` core modules. 
 
 ::: babelbetes.run_functions
 

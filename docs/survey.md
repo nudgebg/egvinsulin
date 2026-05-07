@@ -1,6 +1,6 @@
 # Output Survey
 
-The survey framework computes quality metrics over a BabelBetes output directory and generates an HTML report. It is built around *surveys* — immutable Parquet files that capture metrics at a point in time — so that data quality can be tracked across runs and study versions.
+The survey framework computes quality metrics over a BabelBetes output directory and generates an HTML report. It is built around *surveys* — immutable Parquet files that capture patient and study metric aggregates at a point in time. This is useful to describe and compare study outputs as well as to check for (un)intended changes in the output for example after making changes to the code base.
 
 ---
 
