@@ -8,7 +8,7 @@ from babelbetes.studies.studydataset import StudyDataset
 from datetime import datetime
 import numpy as np
 import os
-from babelbetes.src import pandas_helper, logger
+from babelbetes import pandas_helper, logger
 
 
 class ReplaceBG(StudyDataset):

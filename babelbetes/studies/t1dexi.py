@@ -11,8 +11,8 @@ import isodate
 import zipfile_deflate64
 
 from babelbetes.studies.studydataset import StudyDataset
-from babelbetes.src.logger import Logger
-from babelbetes.src.pandas_helper import get_duplicated_max_indexes, get_df
+from babelbetes.logger import Logger
+from babelbetes.pandas_helper import get_duplicated_max_indexes, get_df
 
 def load_facm(path, subset):
         facm = get_df(path, subset=subset)

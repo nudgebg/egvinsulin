@@ -2,7 +2,7 @@
 # Author Jan Wrede
 # Copyright (c) 2025 nudgebg
 # Licensed under the MIT License. See LICENSE file for details.
-from babelbetes.src.logger import Logger
+from babelbetes.logger import Logger
 import pandera.pandas as pa
 from pandera.pandas import Column, DataFrameSchema, Check
 

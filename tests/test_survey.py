@@ -8,7 +8,7 @@ Skipped automatically when data/out is absent (CI without data).
 import pandas as pd
 import pytest
 
-from babelbetes.src import data_store
+from babelbetes import data_store
 from babelbetes.survey import compute, diff
 from babelbetes.survey import report as report_module
 from babelbetes.survey import survey

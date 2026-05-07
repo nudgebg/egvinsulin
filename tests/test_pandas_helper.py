@@ -5,7 +5,7 @@
 import pandas as pd
 import numpy as np
 import pytest
-from babelbetes.src import pandas_helper
+from babelbetes import pandas_helper
 
 def test_get_duplicated_max_indexes():
     test = pd.DataFrame({

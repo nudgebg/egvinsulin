@@ -15,7 +15,7 @@ if __name__ == "__main__":
     sys.path.append(parent_dir)
 
 from babelbetes.studies.flair import Flair  # Assuming Flair class is in flair.py
-from babelbetes.src import tdd
+from babelbetes import tdd
 
 def store_data_to_files(base_dir, pump_data, cgm_data):
     data_tables_dir = os.path.join(base_dir, "Data Tables")

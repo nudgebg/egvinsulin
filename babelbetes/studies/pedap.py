@@ -6,9 +6,9 @@ from functools import cached_property
 from babelbetes.studies.studydataset import StudyDataset
 import os
 import pandas as pd
-from babelbetes.src.date_helper import parse_flair_dates
-from babelbetes.src import pandas_helper as ph
-from babelbetes.src.logger import Logger
+from babelbetes.date_helper import parse_flair_dates
+from babelbetes import pandas_helper as ph
+from babelbetes.logger import Logger
 
 logger = Logger.get_logger(__name__)
 

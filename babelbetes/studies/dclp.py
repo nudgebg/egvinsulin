@@ -7,10 +7,10 @@ import pandas as pd
 from functools import cached_property
 from datetime import timedelta
 
-from babelbetes.src.find_periods import find_periods, Period
-from babelbetes.src import pandas_helper
+from babelbetes.pandas_helper import find_periods, Period
+from babelbetes import pandas_helper
 from babelbetes.studies.studydataset import StudyDataset
-from babelbetes.src.date_helper import parse_flair_dates
+from babelbetes.date_helper import parse_flair_dates
 
 
 class DCLP3(StudyDataset):
