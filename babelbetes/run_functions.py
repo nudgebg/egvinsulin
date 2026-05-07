@@ -74,7 +74,7 @@ import os
 from babelbetes.studies import StudyDataset, dataset_initializer
 import babelbetes.src.postprocessing as pp
 from babelbetes.src.logger import Logger
-from babelbetes.src.data_store import ParquetStore
+from babelbetes.src import data_store
 from datetime import datetime
 from tqdm import tqdm
 import argparse
@@ -107,8 +107,7 @@ def main(load_subset=False, remove_repetitive=True, input_dir=None, output_dir=N
   in_path = input_dir if input_dir else os.path.join(current_dir, 'data', 'raw')
   out_path = output_dir if output_dir else os.path.join(current_dir, 'data', 'out')
 
-  store = ParquetStore(out_path)
-      
+    
   if load_subset:
      logger.warning(f"ATTENTION: --test was provided: Running in test mode using a subset of the data.")
 
@@ -160,7 +159,7 @@ def main(load_subset=False, remove_repetitive=True, input_dir=None, output_dir=N
 
   # Process matched folders with progress indicators
   logger.info(f"Start processing:")
-  
+
   
   with tqdm(total=len(initialized_studies), desc=f"Processing studies", bar_format='Study {n_fmt}/{total_fmt} [{desc}]:|{bar}', unit="studies", leave=False) as progress:
     global_start_time = time()
@@ -168,13 +167,13 @@ def main(load_subset=False, remove_repetitive=True, input_dir=None, output_dir=N
       tqdm.write(f"[{current_time()}] {study.study_name} ...")
       
       # Clean up existing output for this study
-      removed_paths = store.cleanup(study.study_name, data_types)
+      removed_paths = data_store.cleanup(study.study_name, out_path, data_types)
       if removed_paths:
         tqdm.write(f"[{current_time()}] Cleaned up existing output: {len(removed_paths)} items removed")
-      
+
       start_time = time()
       try:
-         process_folder(study, store, progress, remove_repetitive=remove_repetitive, data_types=data_types)
+         process_folder(study, out_path, progress, remove_repetitive=remove_repetitive, data_types=data_types)
       except Exception as e:
           tqdm.write(f"[{current_time()}] Error processing {study.study_name}: {e}")
           logger.error(f"Error processing {study.study_name}: {e} \n" \
@@ -189,19 +188,19 @@ def main(load_subset=False, remove_repetitive=True, input_dir=None, output_dir=N
       study.unload_raw()
     tqdm.write(f"Processing completed in {time() - global_start_time:.2f} seconds.")
 
-def process_folder(study: StudyDataset, store: 'ParquetStore', progress, remove_repetitive, data_types):
+def process_folder(study: StudyDataset, out_path: str, progress, remove_repetitive, data_types):
       """Processes the data for a given study by loading, extracting, and saving bolus, basal, CGM, and age events.
 
         Args:
           study (StudyDataset): Study instance to extract data from.
-          store (ParquetStore): Store to write data to.
+          out_path (str): Root output directory (e.g. "data/out").
           progress (tqdm): Progress bar to update.
           remove_repetitive (bool): Whether to drop repetitive basal values.
           data_types (list): Data types to extract ['cgm', 'bolus', 'basal', 'age'].
         """
       if 'bolus' in data_types:
           progress.set_description_str(f"{study.__class__.__name__}: Extracting boluses")
-          store.save(study.bolus, study.study_name, 'bolus')
+          data_store.save(study.bolus, study.study_name, 'bolus', out_path)
           tqdm.write(f"[{current_time()}] [x] Boluses extracted")
 
       if 'basal' in data_types:
@@ -210,17 +209,17 @@ def process_folder(study: StudyDataset, store: 'ParquetStore', progress, remove_
           if remove_repetitive:
              progress.set_description_str(f"{study.__class__.__name__}: Removing repetitive basals")
              df = df.groupby(StudyDataset.COL_NAME_PATIENT_ID).apply(pp.drop_repetitive_basals, include_groups=False).reset_index(level=0)
-          store.save(df, study.study_name, 'basal')
+          data_store.save(df, study.study_name, 'basal', out_path)
           tqdm.write(f"[{current_time()}] [x] Basal extracted")
 
       if 'cgm' in data_types:
           progress.set_description_str(f"{study.__class__.__name__}: Extracting glucose")
-          store.save(study.cgm, study.study_name, 'cgm')
+          data_store.save(study.cgm, study.study_name, 'cgm', out_path)
           tqdm.write(f"[{current_time()}] [x] CGM extracted")
 
       if 'age' in data_types:
           progress.set_description_str(f"{study.__class__.__name__}: Extracting age data")
-          store.save(study.age, study.study_name, 'age')
+          data_store.save(study.age, study.study_name, 'age', out_path)
           tqdm.write(f"[{current_time()}] [x] Age data extracted")
       
 
