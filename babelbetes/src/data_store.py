@@ -6,94 +6,98 @@ import os
 import shutil
 import pandas as pd
 
+ALL_DATA_TYPES = ["cgm", "bolus", "basal", "age"]
 
-class ParquetStore:
-    """Read/write interface for the partitioned Parquet output store.
 
-    Data is stored as Hive-partitioned Parquet files under `base_path`,
-    with each data type in its own subdirectory to keep schemas homogeneous:
+def save(df: pd.DataFrame, study_name: str, data_type: str, base_path: str) -> None:
+    """Write a DataFrame to the partitioned Parquet store.
 
-        base_path/cgm/study_name=X/patient_id=Z/*.parquet
-        base_path/bolus/study_name=X/patient_id=Z/*.parquet
-        base_path/basal/study_name=X/patient_id=Z/*.parquet
-        base_path/age/study_name=X/patient_id=Z/*.parquet
+    Data is written to:
+        base_path/<data_type>/study_name=<study_name>/patient_id=<id>/*.parquet
 
     Args:
-        base_path (str): Root directory of the store (e.g. "data/out").
+        df:          DataFrame to save. Must contain a 'patient_id' column.
+        study_name:  Study identifier (e.g. "Flair"). Written as a partition column.
+        data_type:   One of 'cgm', 'bolus', 'basal', 'age'.
+        base_path:   Root output directory (e.g. "data/out").
     """
+    df = df.assign(study_name=study_name)
+    df.to_parquet(
+        os.path.join(base_path, data_type),
+        index=False,
+        partition_cols=["study_name", "patient_id"],
+        engine="pyarrow",
+        compression="snappy",
+        existing_data_behavior="delete_matching",
+    )
 
-    def __init__(self, base_path):
-        self.base_path = base_path
-        os.makedirs(base_path, exist_ok=True)
 
-    def save(self, df: pd.DataFrame, study_name: str, data_type: str):
-        """Write a DataFrame to the store for a given study and data type.
+def cleanup(study_name: str, base_path: str, data_types: list[str] | None = None) -> list[str]:
+    """Remove existing output for a study to ensure a clean write.
 
-        Args:
-            df (pd.DataFrame): Data to save.
-            study_name (str): Study identifier (e.g. "Flair").
-            data_type (str): One of 'cgm', 'bolus', 'basal', 'age'.
-        """
-        df = df.assign(study_name=study_name)
-        df.to_parquet(
-            os.path.join(self.base_path, data_type),
-            index=False,
-            partition_cols=['study_name', 'patient_id'],
-            engine="pyarrow",
-            compression="snappy",
-            existing_data_behavior='delete_matching',
-        )
+    Deletes:
+        base_path/<data_type>/study_name=<study_name>/
 
-    def load(self, study=None, data_type=None, patient=None):
-        """Load data from the store, optionally filtered by study, data type, or patient.
+    Args:
+        study_name:  Study whose output should be removed.
+        base_path:   Root output directory (e.g. "data/out").
+        data_types:  Data types to remove. Defaults to all four types.
 
-        Args:
-            study (str | list[str]): Filter by study name(s) (e.g. "Flair" or ["Flair", "DCLP3"]).
-            data_type (str | list[str]): One or more of 'cgm', 'bolus', 'basal', 'age'.
-                A single string returns a DataFrame; a list returns a dict[str, DataFrame].
-            patient (str | list[str]): Filter by patient ID(s).
+    Returns:
+        List of directory paths that were actually removed.
+    """
+    dts = data_types if data_types is not None else ALL_DATA_TYPES
+    removed = []
+    for dt in dts:
+        d = os.path.join(base_path, dt, f"study_name={study_name}")
+        if os.path.isdir(d):
+            shutil.rmtree(d)
+            removed.append(d)
+    return removed
 
-        Returns:
-            pd.DataFrame: When data_type is a single string.
-            dict[str, pd.DataFrame]: When data_type is a list or None (keyed by data type).
-        """
-        ALL_DATA_TYPES = ['cgm', 'bolus', 'basal', 'age', 'carbs']
 
-        filters = []
-        if study is not None:
-            studies = [study] if isinstance(study, str) else study
-            filters.append(("study_name", "in", studies))
-        if patient is not None:
-            patients = [patient] if isinstance(patient, str) else patient
-            filters.append(("patient_id", "in", patients))
+def load(
+    base_path: str,
+    data_types: list[str] | None = None,
+    studies: list[str] | str | None = None,
+    patients: list[str] | str | None = None,
+) -> dict[str, pd.DataFrame]:
+    """Load data from the partitioned Parquet store.
 
-        data_types = ALL_DATA_TYPES if data_type is None else [data_type] if isinstance(data_type, str) else data_type
+    Reads from:
+        base_path/<data_type>/study_name=<X>/patient_id=<Z>/*.parquet
 
-        R = {dt: pd.read_parquet(os.path.join(self.base_path, dt), filters=filters or None)
-             for dt in data_types}
+    The returned DataFrames include a 'study_name' column populated from the
+    Hive partition. Each data type has its own schema:
+        cgm:   patient_id (str), study_name (str), datetime (datetime64), cgm (float, mg/dL)
+        bolus: patient_id (str), study_name (str), datetime (datetime64), bolus (float, U),
+               delivery_duration (timedelta64)
+        basal: patient_id (str), study_name (str), datetime (datetime64), basal_rate (float, U/hr)
+        age:   patient_id (str), study_name (str), age (int)
 
-        return R
+    Args:
+        base_path:   Root output directory (e.g. "data/out").
+        data_types:  Data types to load. Defaults to all four ('cgm', 'bolus', 'basal', 'age').
+        studies:     Filter by study name(s). None loads all studies.
+        patients:    Filter by patient ID(s). None loads all patients.
 
-    def cleanup(self, study_name: str, data_types: list = None):
-        """Remove existing output for a study to ensure a clean write.
+    Returns:
+        Dict mapping data_type → DataFrame. Always returns a dict, even for a single data type.
+    """
+    dts = data_types if data_types is not None else ALL_DATA_TYPES
 
-        Args:
-            study_name (str): Study whose output should be removed.
-            data_types (list): Specific data types to remove. If None, removes
-                the study from all data type directories.
+    filters = []
+    if studies is not None:
+        filters.append(("study_name", "in", [studies] if isinstance(studies, str) else studies))
+    if patients is not None:
+        filters.append(("patient_id", "in", [patients] if isinstance(patients, str) else patients))
 
-        Returns:
-            list: Paths that were actually removed.
-        """
-        dts = data_types if data_types is not None else ['cgm', 'bolus', 'basal', 'age']
-        directories = [
-            os.path.join(self.base_path, dt, f"study_name={study_name}")
-            for dt in dts
-        ]
-
-        removed = []
-        for d in directories:
-            if os.path.isdir(d):
-                shutil.rmtree(d)
-                removed.append(d)
-        return removed
+    result = {}
+    for dt in dts:
+        df = pd.read_parquet(os.path.join(base_path, dt), filters=filters or None)
+        # Partition columns are Categorical by default from pyarrow; cast to string to avoid use errors
+        for col in ("study_name", "patient_id"):
+            if col in df.columns:
+                df[col] = df[col].astype(str)
+        result[dt] = df
+    return result
