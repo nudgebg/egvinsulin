@@ -330,7 +330,7 @@ def repetitive(df, datetime_col, value_col, max_duration):
         final_grp = grp
     
     #keep only the first of each subgroup
-    i_keep = final_grp.groupby(final_grp).head(1).index
+    i_keep = np.sort(final_grp.groupby(final_grp).head(1).index)
 
     i_drop = np.setdiff1d(i_all_repetitives, i_keep)
     return i_all_repetitives, i_keep, i_drop
