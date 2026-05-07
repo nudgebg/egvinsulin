@@ -3,11 +3,12 @@
 # Copyright (c) 2025 nudgebg
 # Licensed under the MIT License. See LICENSE file for details.
 import pandas as pd
+from collections import namedtuple
 import numpy as np
 import zipfile_deflate64
 import io
 from datetime import timedelta
-from babelbetes.src.logger import Logger
+from babelbetes.logger import Logger
 logger = Logger.get_logger(__name__)
 
 def get_duplicated_max_indexes(df, check_cols, max_col):
@@ -289,6 +290,13 @@ def get_df(path, usecols=None, subset=False, dtype=None, encoding=None):
     else:
         raise ValueError(f"Unsupported file format: {file_ending}")
 
+def drop_repetitive_basals(df, max_duration=timedelta(hours=4)):
+    """Drop consecutive repeated basal rate values, keeping the first and ensuring at least one
+    value is retained per max_duration window."""
+    _, _, i_drop = repetitive(df, 'datetime', 'basal_rate', max_duration)
+    return df.drop(i_drop)
+
+
 def repetitive(df, datetime_col, value_col, max_duration):
     """
     Get the indexes of repetitive values in a DataFrame based on a datetime column and a value column.
@@ -320,3 +328,43 @@ def repetitive(df, datetime_col, value_col, max_duration):
     i_keep = grp[~grp.duplicated()].index.union([df.index[-1]])
     i_drop = i_all_rep.difference(i_keep)
     return i_all_rep, i_keep, i_drop
+
+
+Period = namedtuple('Period', ['index_start', 'index_end', 'time_start', 'time_end'])
+
+
+def find_periods(df, value_col: str, time_col: str, start_trigger_fun: callable, stop_trigger_fun: callable,
+                 use_last_start_occurence=False):
+    """Find periods in a DataFrame based on start and stop triggers.
+
+    Args:
+        df (pandas.DataFrame): The DataFrame to search for periods.
+        value_col (str): The name of the column containing the trigger values.
+        time_col (str): The name of the column containing the time values.
+        start_trigger_fun (callable): The value that indicates the start of a period.
+        stop_trigger_fun (callable): The value that indicates the end of a period.
+        use_last_start_occurence (bool): If True, the last occurrence of the start trigger is used.
+
+    Returns:
+        list: A list of Period namedtuples with index_start, index_end, time_start, time_end.
+    """
+    if df[value_col].isnull().sum() > 0:
+        print("Warning: NaN values in the value column, rows will be dropped")
+    if df[time_col].isnull().sum() > 0:
+        print("Warning: NaN values in the time column, rows will be dropped")
+    df = df.dropna(subset=[time_col, value_col], how='any').sort_values(by=time_col)
+
+    periods = []
+    start_index = None
+    start_time = None
+
+    for index, row in df.iterrows():
+        if start_trigger_fun(row[value_col]) and ((start_index is None) or use_last_start_occurence):
+            start_index = index
+            start_time = row[time_col]
+        elif stop_trigger_fun(row[value_col]) and start_index is not None:
+            end_time = row[time_col]
+            periods.append(Period(start_index, index, start_time, end_time))
+            start_index = None
+
+    return periods

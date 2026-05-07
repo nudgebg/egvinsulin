@@ -5,7 +5,7 @@
 import pandas as pd
 import numpy as np
 from datetime import timedelta
-from babelbetes.src.logger import Logger
+from babelbetes.logger import Logger
 logger = Logger().get_logger(__name__)
 
 def total_delivered(df, datetime_col, rate_col):

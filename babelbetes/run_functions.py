@@ -72,9 +72,9 @@ For each study, the dataframes are saved in the `data/out/<study-name>/` folder:
 """
 import os
 from babelbetes.studies import StudyDataset, dataset_initializer
-import babelbetes.src.postprocessing as pp
-from babelbetes.src.logger import Logger
-from babelbetes.src import data_store
+from babelbetes.pandas_helper import drop_repetitive_basals
+from babelbetes.logger import Logger
+from babelbetes import data_store
 from datetime import datetime
 from tqdm import tqdm
 import argparse
@@ -141,7 +141,7 @@ def main(load_subset=False, remove_repetitive=True, input_dir=None, output_dir=N
     logger.info(f"Processing all available studies: {list(all_initialized_studies.keys())}")
   
   # Validate and process data_types parameter
-  available_data_types = ['cgm', 'bolus', 'basal', 'age']
+  available_data_types = ['cgm', 'bolus', 'basal', 'age', 'carbs']
   if data_types is not None:
     if not isinstance(data_types, list):
       data_types = [data_types]  # Convert single string to list
@@ -208,7 +208,7 @@ def process_folder(study: StudyDataset, out_path: str, progress, remove_repetiti
           df = study.basal
           if remove_repetitive:
              progress.set_description_str(f"{study.__class__.__name__}: Removing repetitive basals")
-             df = df.groupby(StudyDataset.COL_NAME_PATIENT_ID).apply(pp.drop_repetitive_basals, include_groups=False).reset_index(level=0)
+             df = df.groupby(StudyDataset.COL_NAME_PATIENT_ID).apply(drop_repetitive_basals, include_groups=False).reset_index(level=0)
           data_store.save(df, study.study_name, 'basal', out_path)
           tqdm.write(f"[{current_time()}] [x] Basal extracted")
 
@@ -221,6 +221,14 @@ def process_folder(study: StudyDataset, out_path: str, progress, remove_repetiti
           progress.set_description_str(f"{study.__class__.__name__}: Extracting age data")
           data_store.save(study.age, study.study_name, 'age', out_path)
           tqdm.write(f"[{current_time()}] [x] Age data extracted")
+
+      if 'carbs' in data_types:
+          try:
+              progress.set_description_str(f"{study.__class__.__name__}: Extracting carbs")
+              data_store.save(study.carbs, study.study_name, 'carbs', out_path)
+              tqdm.write(f"[{current_time()}] [x] Carbs extracted")
+          except NotImplementedError:
+              tqdm.write(f"[{current_time()}] [-] Carbs not implemented for {study.study_name}, skipping")
       
 
 if __name__ == "__main__":
@@ -230,7 +238,7 @@ if __name__ == "__main__":
   parser.add_argument('--output-dir', type=str, help="Specify a custom output directory. Defaults to 'data/out'.")
   parser.add_argument('--remove-repetitive', action='store_true', help="Remove repetitive values from the basal output dataframes.")
   parser.add_argument('--studies', nargs='*', help="Specify which studies to process. Available: IOBP2, Flair, PEDAP, DCLP3, DCLP5, ReplaceBG, Loop, T1DEXI, T1DEXIP. If not specified, all available studies will be processed.")
-  parser.add_argument('--data-types', nargs='*', choices=['cgm', 'bolus', 'basal', 'age'], help="Specify which data types to extract. Available: cgm, bolus, basal, age. If not specified, all data types will be extracted.")
+  parser.add_argument('--data-types', nargs='*', choices=['cgm', 'bolus', 'basal', 'age', 'carbs'], help="Specify which data types to extract. Available: cgm, bolus, basal, age, carbs. If not specified, all data types will be extracted.")
   args = parser.parse_args()
 
   logger.info(f"Using arguments:")

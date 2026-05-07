@@ -1,7 +1,9 @@
 # Replace BG 
 This page summarizes our insights about the clinical study data of the **Replace BG** study in efforts to understand how to handle bolus, basal, and cgm data, lists assumptions that were made, and poses open questions. 
 
-The full analysis of this dataset is provided in: `notebooks/understand-replacebg-dataset/understand-replace-bg.ipynb`
+Full analysis notebooks:
+- Bolus, basal, CGM: `notebooks/understand-replacebg-dataset/understand-replace-bg.ipynb`
+- Carbohydrates: `notebooks/understand-replacebg-dataset/2026-05-07 - Carbs ReplaceBG.ipynb`
 
 ## Study Overview
 - **Study Name**: A Randomized Trial Comparing Continuous Glucose Monitoring With and Without Routine Blood Glucose Monitoring in Adults with Type 1 Diabetes
@@ -232,6 +234,32 @@ As discussed in the section [Diasend vs. Tidepool data source](#diasend-vs-tidep
 
 ### Requested vs. Delivered
 See note on [discarded columns](#discarded-columns)
+
+## Carbohydrates
+
+Carbohydrate data comes from `HDeviceWizard.txt` (bolus wizard calculation events). There is no separate meal log.
+
+### Coverage
+- 204 / 226 patients have wizard data. The 22 missing patients uploaded via Diasend, which does not export wizard records.
+- 3 patients (244, 277, 288) have systematically inconsistent `CarbInput / InsulinCarbRatio ≠ RecommendedCarb` and are excluded.
+
+### Units
+`CarbInput` is in **grams** (the glossary label "mg" is a known documentation error, confirmed by the `CarbInput / ICR ≈ RecommendedCarb` identity).
+
+### Filtering
+| Step | Condition |
+|---|---|
+| Correction-only wizard uses | Drop `CarbInput` NaN or 0 (96,480 rows, 31%) |
+| Pre-enrollment data | `DeviceDtTmDaysFromEnroll < 0` |
+| Post-study data | `DeviceDtTmDaysFromEnroll > RandDtDaysAfterEnroll + 182` |
+| ICR-inconsistent patients | PtID ∈ {244, 277, 288} |
+| Exact duplicates | `drop_duplicates([PtID, datetime, CarbInput])` — ~2,004 rows (0.94%) |
+
+### Quality
+- 99.98% of wizard entries link back to a delivered bolus.
+- 1.6% of carb entries are linked to an interrupted bolus; these are kept (carbs were likely consumed).
+- Daily totals average 143 g/day with a median of 3 meals/day — clinically plausible for T1D adults.
+- Temporal distribution matches expected meal times (breakfast / lunch / dinner).
 
 ## Collected Questions
 - Is our assumption about [irrelevant columns ](#discarded-columns) correct?

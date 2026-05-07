@@ -12,4 +12,4 @@ This is the technical documentation of the `BabelBetes` core modules.
 ::: babelbetes.studies.t1dexi.T1DEXI
 ::: babelbetes.studies.t1dexi.T1DEXIP
 ::: babelbetes.studies.replacebg.ReplaceBG
-::: babelbetes.src
+::: babelbetes.data_store

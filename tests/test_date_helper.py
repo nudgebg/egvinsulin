@@ -5,7 +5,7 @@
 import pytest
 import pandas as pd
 from datetime import timedelta
-from babelbetes.src.date_helper import parse_flair_dates, convert_duration_to_timedelta
+from babelbetes.date_helper import parse_flair_dates, convert_duration_to_timedelta
 import numpy as np
 def test_parse_flair_dates():
     dates = pd.Series(['10/02/2021', '10/02/2021 07:30:00 PM', '10/03/2021'])

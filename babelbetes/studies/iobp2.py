@@ -5,9 +5,9 @@
 import pandas as pd
 from functools import cached_property
 from datetime import timedelta
-from babelbetes.src.pandas_helper import get_df
+from babelbetes.pandas_helper import get_df
 import os
-from babelbetes.src.date_helper import parse_flair_dates
+from babelbetes.date_helper import parse_flair_dates
 from babelbetes.studies.studydataset import StudyDataset
 
 class IOBP2(StudyDataset):
