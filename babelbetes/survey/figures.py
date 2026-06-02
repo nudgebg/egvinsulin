@@ -7,7 +7,7 @@ import seaborn as sns
 import squarify
 from typing import NamedTuple
 
-from babelbetes.src import drawing
+from babelbetes import drawing
 
 # Consistent colour palette keyed by study name (falls back to tab10 for unknown studies)
 _STUDY_COLORS: dict[str, str] = {}

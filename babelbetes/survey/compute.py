@@ -3,8 +3,8 @@ import logging
 import numpy as np
 import pandas as pd
 
-from babelbetes.src import tdd as tdd_module
-from babelbetes.src.logger import Logger
+from babelbetes import tdd as tdd_module
+from babelbetes.logger import Logger
 
 log = Logger.get_logger(__name__, level=logging.INFO)
 from babelbetes.studies.studydataset import StudyDataset as _SD

@@ -1,5 +1,9 @@
 # BabelBetes
-The BabelBetes project aims to standardize publicly available clinical trial data on continuous glucose monitoring (CGM) and insulin pump delivery, reducing the costs and time associated with data translation for researchers. Motivated by the challenges of inconsistent data formats, BabelBetes will streamline access to usable datasets, accelerating innovation in type 1 diabetes care.​
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20509047.svg)](https://doi.org/10.5281/zenodo.20509047)
+[![PyPI](https://img.shields.io/pypi/v/babelbetes)](https://pypi.org/project/babelbetes/)
+
+BabelBetes is the largest open-source data standardization pipeline for clinical diabetes trial datasets, currently normalizing approximately 500,000 subject-days of paired CGM and insulin pump delivery data across a variety of high quality publicly available datasets. It solves the "last mile" problem of inconsistent data formats, giving researchers and sponsors immediate access to shovel-ready data and accelerating innovation in type 1 diabetes care.
 
 ### Challenges with Publicly Available Clinical Trial Data
 Data is the raw material from which models are developed, simulations are composed, and new therapies to reduce the burden of living with type 1 diabetes are developed.

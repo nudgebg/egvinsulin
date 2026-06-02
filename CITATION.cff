@@ -1,0 +1,48 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: babelbetes
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Jan
+    family-names: Wrede
+    email: wrede.jan@gmail.com
+  - given-names: Lane
+    family-names: Desborough
+    email: lane@nudgebg.com
+identifiers:
+  - type: url
+    value: >-
+      https://github.com/nudgebg/babelbetes/releases/tag/v0.2.3
+    description: The URL of the release 0.2.3 of the software.
+  - type: doi
+    value: 10.5281/zenodo.20509047
+repository-code: 'https://github.com/nudgebg/babelbetes/'
+url: 'https://nudgebg.github.io/babelbetes/'
+repository-artifact: 'https://pypi.org/project/babelbetes/'
+abstract: >-
+  BabelBetes is the largest open-source data standardization
+  pipeline for clinical diabetes trial datasets, currently
+  normalizing approximately 500,000 subject-days of paired
+  CGM and insulin pump delivery data across a variety of
+  high quality publicly available datasets. It solves the
+  "last mile" problem of inconsistent data formats, giving
+  researchers and sponsors immediate access to shovel-ready
+  data and accelerating innovation in type 1 diabetes care.
+keywords:
+  - diabetes
+  - dataset
+  - pipeline
+  - standardization
+  - CGM
+  - CSII
+  - clinical trial
+  - JAEB
+license: MIT
+commit: df5bd0eb5e8e20eaf9b91767858aa3fcf37eae8d
+version: 0.2.3
+date-released: '2026-04-08'

@@ -112,7 +112,7 @@ def drawBoluses(ax, datetimes, boluses, **kwargs):
         ax.bar(datetimes, boluses, **defaults)
         
         # Add end caps to the boluses
-        ax.scatter(datetimes, boluses, marker='^', color=colors['Bolus'], s=20)
+        ax.scatter(datetimes, boluses, marker='^', color=defaults['color'], s=20)
 
 def drawExtendedBoluses(ax, datetimes, boluses_units, duration, color=colors['Bolus'], **kwargs):
     """Draws extended boluses on the given axes.

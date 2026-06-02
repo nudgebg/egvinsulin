@@ -11,8 +11,8 @@ import logging
 import os
 from pathlib import Path
 import pandas as pd
-from babelbetes.src import data_store
-from babelbetes.src.logger import Logger
+from babelbetes import data_store
+from babelbetes.logger import Logger
 from babelbetes.survey import compute, diff, report as report_module, survey
 
 log = Logger.get_logger(__name__, level=logging.INFO)
