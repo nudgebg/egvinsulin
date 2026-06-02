@@ -912,6 +912,67 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#carbohydrates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Carbohydrates
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Carbohydrates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coverage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#units" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Units
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filtering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quality
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#collected-questions" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -946,6 +1007,8 @@
   
     
     
+      
+        
       
         
       
@@ -1015,6 +1078,34 @@
     
   
     Code Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../survey/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output Survey
   
 
     
@@ -1678,6 +1769,67 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#carbohydrates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Carbohydrates
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Carbohydrates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#coverage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Coverage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#units" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Units
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filtering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filtering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quality
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#collected-questions" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1707,7 +1859,9 @@
 
 <h1 id="replace-bg">Replace BG</h1>
 <p>This page summarizes our insights about the clinical study data of the <strong>Replace BG</strong> study in efforts to understand how to handle bolus, basal, and cgm data, lists assumptions that were made, and poses open questions. </p>
-<p>The full analysis of this dataset is provided in: <code>notebooks/understand-replacebg-dataset/understand-replace-bg.ipynb</code></p>
+<p>Full analysis notebooks:
+- Bolus, basal, CGM: <code>notebooks/understand-replacebg-dataset/understand-replace-bg.ipynb</code>
+- Carbohydrates: <code>notebooks/understand-replacebg-dataset/2026-05-07 - Carbs ReplaceBG.ipynb</code></p>
 <h2 id="study-overview">Study Overview</h2>
 <ul>
 <li><strong>Study Name</strong>: A Randomized Trial Comparing Continuous Glucose Monitoring With and Without Routine Blood Glucose Monitoring in Adults with Type 1 Diabetes</li>
@@ -2047,6 +2201,53 @@ There are 226 unique patients in the cgm table</p>
 <p>As discussed in the section <a href="#diasend-vs-tidepool">Diasend vs. Tidepool data source</a>, Diasend boluses seem to be corrupt. At least the extended parts were almost always empty despite having a delivery duration. We resolve these by treating the Normal part as normal bolus. However, we can not guarantee that this is correct. However, if only affect ~1060 boluses (and even much less after dropping patients with incomplete data).</p>
 <h3 id="requested-vs-delivered">Requested vs. Delivered</h3>
 <p>See note on <a href="#discarded-columns">discarded columns</a></p>
+<h2 id="carbohydrates">Carbohydrates</h2>
+<p>Carbohydrate data comes from <code>HDeviceWizard.txt</code> (bolus wizard calculation events). There is no separate meal log.</p>
+<h3 id="coverage">Coverage</h3>
+<ul>
+<li>204 / 226 patients have wizard data. The 22 missing patients uploaded via Diasend, which does not export wizard records.</li>
+<li>3 patients (244, 277, 288) have systematically inconsistent <code>CarbInput / InsulinCarbRatio ≠ RecommendedCarb</code> and are excluded.</li>
+</ul>
+<h3 id="units">Units</h3>
+<p><code>CarbInput</code> is in <strong>grams</strong> (the glossary label "mg" is a known documentation error, confirmed by the <code>CarbInput / ICR ≈ RecommendedCarb</code> identity).</p>
+<h3 id="filtering">Filtering</h3>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Correction-only wizard uses</td>
+<td>Drop <code>CarbInput</code> NaN or 0 (96,480 rows, 31%)</td>
+</tr>
+<tr>
+<td>Pre-enrollment data</td>
+<td><code>DeviceDtTmDaysFromEnroll &lt; 0</code></td>
+</tr>
+<tr>
+<td>Post-study data</td>
+<td><code>DeviceDtTmDaysFromEnroll &gt; RandDtDaysAfterEnroll + 182</code></td>
+</tr>
+<tr>
+<td>ICR-inconsistent patients</td>
+<td>PtID ∈ {244, 277, 288}</td>
+</tr>
+<tr>
+<td>Exact duplicates</td>
+<td><code>drop_duplicates([PtID, datetime, CarbInput])</code> — ~2,004 rows (0.94%)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="quality">Quality</h3>
+<ul>
+<li>99.98% of wizard entries link back to a delivered bolus.</li>
+<li>1.6% of carb entries are linked to an interrupted bolus; these are kept (carbs were likely consumed).</li>
+<li>Daily totals average 143 g/day with a median of 3 meals/day — clinically plausible for T1D adults.</li>
+<li>Temporal distribution matches expected meal times (breakfast / lunch / dinner).</li>
+</ul>
 <h2 id="collected-questions">Collected Questions</h2>
 <ul>
 <li>Is our assumption about <a href="#discarded-columns">irrelevant columns </a> correct?</li>
