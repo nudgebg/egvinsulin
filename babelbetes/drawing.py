@@ -6,10 +6,8 @@ from datetime import timedelta
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import numpy as np
-import importlib 
-from babelbetes.src import pandas_helper
-importlib.reload(pandas_helper)   
-from babelbetes.src.pandas_helper import get_hour_of_day
+from babelbetes import pandas_helper
+from babelbetes.pandas_helper import get_hour_of_day
     
 colors = {'Bolus': 'red', 'Basal': 'blue', 'CGM': 'darkgray'}
 
@@ -187,8 +185,8 @@ def drawMovingAverage(ax, df, datetime_col, value_col, aggregator='mean', **kwar
     df = df.copy()
     
     df['hod'] = get_hour_of_day(df[datetime_col])
-    ma  = df[['hod',value_col]].sort_values('hod').rolling(window=len(df)//24, 
-                                                                          min_periods=len(df)//24, 
+    ma  = df[['hod',value_col]].sort_values('hod').rolling(window=len(df)//128, 
+                                                                          min_periods=len(df)//256, 
                                                                           on='hod', center=True).agg(aggregator)    
     ma = ma.sample(len(df)//10)
 

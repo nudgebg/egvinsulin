@@ -5,7 +5,7 @@
 import pandas as pd
 import numpy as np
 from datetime import timedelta
-from babelbetes.src.logger import Logger
+from babelbetes.logger import Logger
 logger = Logger().get_logger(__name__)
 
 def total_delivered(df, datetime_col, rate_col):
@@ -19,7 +19,88 @@ def total_delivered(df, datetime_col, rate_col):
     return r
 
 
+import pandas as pd
+import numpy as np
+
+def daily_delivered_dose(rates: pd.Series) -> pd.Series:
+    """
+    Calculate the delivered dose per calendar day from an irregularly-sampled
+    step-function rate series (previous rate remains active until next sample).
+
+    Parameters
+    ----------
+    rates : pd.Series
+        Index: DatetimeTzAware or naive timestamps (rate change times)
+        Values: delivery rate (e.g. units/hour)
+
+    Returns
+    -------
+    pd.Series
+        Index: date (one entry per calendar day with activity)
+        Values: delivered dose for that day (rate × hours)
+    """
+    rates = rates.sort_index()
+
+    # --- 1. Build a unified timeline: rate-change points + midnight boundaries ---
+    start = rates.index[0]
+    end   = rates.index[-1]
+
+    # Generate midnights from first event's day through day-after last event's day (sentinel)
+    midnights = pd.date_range(
+        start=start.normalize(),
+        end=end.normalize() + pd.Timedelta(days=1),
+        freq="D",
+        tz=rates.index.tz,
+    )
+    combined_index = rates.index.union(midnights)
+    rates_filled = rates.reindex(combined_index).ffill().bfill()
+
+    durations_hours = rates_filled.index.to_series().diff().shift(-1).dt.total_seconds().div(3600)
+    dose_per_segment = rates_filled * durations_hours  # NaN for last row (no next point)
+
+    # --- 4. Assign each segment to its calendar day and sum ---
+    daily_dose = (
+        dose_per_segment
+        .to_frame(name="dose")
+        .assign(day=dose_per_segment.index.normalize().date)
+        .groupby("day")["dose"]
+        .sum(min_count=1)
+    )
+
+    # Mask days that had no original data point
+    days_with_data = set(rates.index.normalize().date)
+    daily_dose[~daily_dose.index.isin(days_with_data)] = np.nan
+
+    # Remove phantom sentinel day beyond last event
+    daily_dose = daily_dose[daily_dose.index <= end.normalize().date()]
+
+    daily_dose.index.name = 'date'
+    daily_dose = daily_dose.to_frame(name='basal')
+    return daily_dose
+
 def calculate_daily_basal_dose(df):
+    """
+    Calculate the Total Daily Dose (TDD) of basal insulin for each day in the given DataFrame.
+    
+    Args:
+        df (pandas.DataFrame): The DataFrame containing the insulin data.
+    
+    Returns:
+        tdds (pandas.DataFrame):  dataframe with two columns: `date` and `dose` golding the daily total basal dose. 
+    
+    Required Column Names:
+        - datetime: The timestamp of each basal insulin rate event.
+        - basal_rate: The basal insulin rate event [U/hr].
+    """ 
+    
+    if df.empty:
+        logger.error('Empty dataframe passed to calculate daily basal dose')
+        raise ValueError('Empty dataframe passed to calculate daily basal dose')
+
+    rates = df.set_index('datetime').basal_rate
+    return daily_delivered_dose(rates)
+
+def calculate_daily_basal_dose_old(df):
     """
     Calculate the Total Daily Dose (TDD) of basal insulin for each day in the given DataFrame.
     
@@ -94,6 +175,6 @@ def calculate_tdd(df_bolus, df_basal):
     Returns:
         tdd (DataFrame): DataFrame containing both the bolus and basal tdd data.
     """
-    daily_basals = df_basal.groupby('patient_id').apply(calculate_daily_basal_dose, include_groups=False )
-    daily_bolus = df_bolus.groupby('patient_id').apply(calculate_daily_bolus_dose, include_groups=False)
+    daily_basals = df_basal.groupby('patient_id', observed=True).apply(calculate_daily_basal_dose, include_groups=False)
+    daily_bolus = df_bolus.groupby('patient_id', observed=True).apply(calculate_daily_bolus_dose, include_groups=False)
     return daily_basals.merge(daily_bolus, how='outer', on=['patient_id', 'date'])

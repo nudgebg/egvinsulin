@@ -26,6 +26,7 @@ setup(
         "isodate>=0.7.2",
         "zipfile-deflate64-macos",
         "pandera==0.28.1",
+        "squarify>=0.4.3",
         "tqdm",
     ],
 

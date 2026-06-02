@@ -5,7 +5,7 @@
 import pandas as pd
 from dask import dataframe as dd
 from functools import cached_property
-from babelbetes.src.logger import Logger
+from babelbetes.logger import Logger
 import os
 import zipfile_deflate64
 

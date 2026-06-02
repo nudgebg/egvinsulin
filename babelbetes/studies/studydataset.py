@@ -2,7 +2,7 @@
 # Author Jan Wrede
 # Copyright (c) 2025 nudgebg
 # Licensed under the MIT License. See LICENSE file for details.
-from babelbetes.src.logger import Logger
+from babelbetes.logger import Logger
 import pandera.pandas as pa
 from pandera.pandas import Column, DataFrameSchema, Check
 
@@ -35,6 +35,12 @@ AGE_SCHEMA = DataFrameSchema({
 # Backward-compatible alias removed after all studies are migrated
 AGE_OUTPUT_SCHEMA = AGE_SCHEMA
 
+CARBS_SCHEMA = DataFrameSchema({
+    "patient_id": Column(pa.String, nullable=False),
+    "datetime": Column(pa.DateTime, nullable=False),
+    "carbs": Column(pa.Float, nullable=False, checks=[Check.gt(0), Check.le(400)]),
+}, strict=True)
+
 
 class StudyDataset:
     """
@@ -61,6 +67,7 @@ class StudyDataset:
     COL_NAME_BOLUS_DELIVERY_DURATION = 'delivery_duration'
     COL_NAME_CGM = 'cgm'
     COL_NAME_AGE = 'age'
+    COL_NAME_CARBS = 'carbs'
 
     _raw_attrs = ()  # subclasses declare raw file cache attribute names here
 
@@ -94,6 +101,10 @@ class StudyDataset:
     def _extract_age_data(self):
         """(Abstract) Extract patient age at enrollment. Implement in subclasses."""
         raise NotImplementedError("Subclasses should implement the _extract_age_data method")
+
+    def _extract_carb_history(self):
+        """(Abstract) Extract carbohydrate meal entries. Implement in subclasses."""
+        raise NotImplementedError("Subclasses should implement the _extract_carb_history method")
 
     @property
     def bolus(self):
@@ -145,4 +156,16 @@ class StudyDataset:
         """
         df = self._extract_age_data()
         AGE_SCHEMA.validate(df, lazy=True)
+        return df
+
+    @property
+    def carbs(self):
+        """Carbohydrate meal entries as a validated DataFrame.
+
+        Returns:
+            pd.DataFrame: Columns: patient_id (str), datetime (datetime64),
+                carbs (float, grams, 0–400]. Only entries with carbs > 0 are included.
+        """
+        df = self._extract_carb_history()
+        CARBS_SCHEMA.validate(df, lazy=True)
         return df

@@ -1,7 +1,4 @@
-This part of the project documentation focuses on
-an **information-oriented** approach. Use it as a
-reference for the technical implementation of the
-`BabelBetes` project code.
+This is the technical documentation of the `BabelBetes` core modules. 
 
 ::: babelbetes.run_functions
 
@@ -15,4 +12,4 @@ reference for the technical implementation of the
 ::: babelbetes.studies.t1dexi.T1DEXI
 ::: babelbetes.studies.t1dexi.T1DEXIP
 ::: babelbetes.studies.replacebg.ReplaceBG
-::: babelbetes.src
+::: babelbetes.data_store
