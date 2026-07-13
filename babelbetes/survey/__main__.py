@@ -49,6 +49,7 @@ def cmd_survey(args):
         (compute.compute_cgm_stats(store["cgm"])   if "cgm"   in store else [])
         + (compute.compute_basal_stats(store["basal"]) if "basal" in store else [])
         + (compute.compute_bolus_stats(store["bolus"]) if "bolus" in store else [])
+        + (compute.compute_carb_stats(store["carbs"]) if "carbs" in store else [])
         + compute.compute_complete_days(store)
         + compute.compute_tdd_stats(tdd_df)
     )

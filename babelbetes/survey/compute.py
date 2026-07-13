@@ -22,9 +22,8 @@ GAP_THRESHOLDS = {
     "cgm":   pd.Timedelta(minutes=30),
     "basal": pd.Timedelta(hours=6),
     "bolus": pd.Timedelta(hours=16),
+    "carbs": pd.Timedelta(hours=36),
 }
-
-
 
 def _geometric_mean(x: np.ndarray) -> float:
     """Geometric mean of positive finite values."""
@@ -138,7 +137,8 @@ def _basal_patient_metrics(s: pd.Series) -> dict:
     Returns:
         Dict with all keys from `_patient_metrics` and `_chunk_gap_stats`.
     """
-    return {**_patient_metrics(s), **_chunk_gap_stats(s.index.to_series(), GAP_THRESHOLDS["basal"])}
+    return {**_patient_metrics(s), 
+            **_chunk_gap_stats(s.index.to_series(), GAP_THRESHOLDS["basal"])}
 
 
 def _bolus_patient_metrics(s: pd.Series) -> dict:
@@ -152,6 +152,23 @@ def _bolus_patient_metrics(s: pd.Series) -> dict:
     """
     return {**_patient_metrics(s), **_chunk_gap_stats(s.index.to_series(), GAP_THRESHOLDS["bolus"])}
 
+
+def _carb_patient_metrics(s: pd.Series) -> dict:
+    """Carb stats for a single datetime-indexed carb series.
+
+    Args:
+        s: Carb values (grams) for one patient with a `datetime` index.
+
+    Returns:
+        Dict with all keys from `_patient_metrics` and `_chunk_gap_stats`, plus
+        `mean_carbs_per_day` (geometric mean of daily carb totals).
+    """
+    daily_carbs = s.groupby(s.index.date).sum().values
+    return {
+        **_patient_metrics(s),
+        **_chunk_gap_stats(s.index.to_series(), GAP_THRESHOLDS["carbs"]),
+        "mean_carbs_per_day": _geometric_mean(daily_carbs),
+    }
 
 def _to_long(applied: pd.Series, data_type: str) -> list[dict]:
     """Convert a groupby.apply result (Series of dicts) to long-format records.
@@ -240,6 +257,28 @@ def compute_bolus_stats(df: pd.DataFrame) -> list[dict]:
             include_groups=False,
         ),
         "bolus",
+    )
+
+def compute_carb_stats(df: pd.DataFrame) -> list[dict]:
+    """Per-patient carb stats: value metrics, temporal coverage, and daily aggregation.
+
+    Args:
+        df: Carbohydrate DataFrame. Required columns: `study_name`, `patient_id`, `datetime`,
+            `carbs`.
+
+    Returns:
+        Long-format records with columns `study`, `patient_id`, `data_type`=`carbs`,
+        `metric`, `value`. Metrics: `row_count`, `nan_count`, `duplicate_count`, `min`,
+        `max`, `gm`, `gs`, `patient_days`, `data_fraction_days`, `missing_days`,
+        `samples_per_day`, `data_fraction`, `chunk_count`, `gm_chunk_dur_hrs`,
+        `gs_chunk_dur_hrs`, `gm_gap_dur_hrs`, `gs_gap_dur_hrs`, `mean_carbs_per_day`.
+    """
+    return _to_long(
+        df.groupby(["study_name", "patient_id"], observed=True).apply(
+            lambda g: _carb_patient_metrics(g.set_index("datetime")["carbs"]),
+            include_groups=False,
+        ),
+        "carbs",
     )
 
 

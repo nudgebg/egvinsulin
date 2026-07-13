@@ -10,6 +10,7 @@ import os
 import zipfile_deflate64
 
 from .studydataset import StudyDataset
+from babelbetes import pandas_helper
 
 def unzip_folder(zip_path, extract_to):
     """
@@ -167,3 +168,51 @@ class Loop(StudyDataset):
     def _extract_age_data(self):
         df_age = self._df_patient.copy()[['PtID', 'AgeAtEnrollment']].rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'AgeAtEnrollment': self.COL_NAME_AGE})
         return df_age.astype({self.COL_NAME_PATIENT_ID: str, self.COL_NAME_AGE: int})
+
+    def _extract_wizard_carbs(self):
+        df = pd.read_csv(os.path.join(self._extracted_path, 'Data Tables', 'LOOPDeviceWizard.txt'), sep='|',
+                         parse_dates=['UTCDtTm'], date_format='%Y-%m-%d %H:%M:%S',
+                         usecols=['PtID', 'RecID', 'UTCDtTm', 'CarbInput'])
+        df = df.dropna(subset=['CarbInput'])
+        df = df[df['CarbInput'] > 0]
+
+        # Convert to local datetime
+        df = df.merge(self._df_patient[['PtID', 'PtTimezoneOffset']], on='PtID', how='left')
+        df['UTCDtTm'] = df.UTCDtTm + pd.to_timedelta(df.PtTimezoneOffset, unit='hour')
+
+        # Drop temporal duplicates (keep max RecID)
+        _, _, i_drop = pandas_helper.get_duplicated_max_indexes(df, ['PtID', 'UTCDtTm'], 'RecID')
+        df = df.drop(index=i_drop)
+
+        return df[['PtID', 'UTCDtTm', 'CarbInput']]
+
+    def _extract_food_carbs(self):
+        df = pd.read_csv(os.path.join(self._extracted_path, 'Data Tables', 'LOOPDeviceFood.txt'), sep='|',
+                         parse_dates=['UTCDtTm'], date_format='%Y-%m-%d %H:%M:%S',
+                         usecols=['PtID', 'RecID', 'UTCDtTm', 'CarbsNet'])
+        df = df.dropna(subset=['CarbsNet'])
+        df = df[df['CarbsNet'] > 0]
+
+        # Convert to local datetime
+        df = df.merge(self._df_patient[['PtID', 'PtTimezoneOffset']], on='PtID', how='left')
+        df['UTCDtTm'] = df.UTCDtTm + pd.to_timedelta(df.PtTimezoneOffset, unit='hour')
+
+        # Drop temporal duplicates (keep max RecID)
+        _, _, i_drop = pandas_helper.get_duplicated_max_indexes(df, ['PtID', 'UTCDtTm'], 'RecID')
+        df = df.drop(index=i_drop)
+
+        return df[['PtID', 'UTCDtTm', 'CarbsNet']]
+
+    def _extract_carb_history(self):
+        wizard = self._extract_wizard_carbs().rename(columns={'CarbInput': 'carbs'})
+        food = self._extract_food_carbs().rename(columns={'CarbsNet': 'carbs'})
+
+        df = pd.concat([wizard, food], ignore_index=True)
+        df = df.sort_values(['PtID', 'UTCDtTm'])
+
+        # Rename and return
+        df['PtID'] = df['PtID'].astype('str')
+        df.rename(columns={'PtID': self.COL_NAME_PATIENT_ID,
+                           'UTCDtTm': self.COL_NAME_DATETIME,
+                           'carbs': self.COL_NAME_CARBS}, inplace=True)
+        return df[[self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME, self.COL_NAME_CARBS]]

@@ -6,7 +6,7 @@ import os
 import shutil
 import pandas as pd
 
-ALL_DATA_TYPES = ["cgm", "bolus", "basal", "age"]
+ALL_DATA_TYPES = ["cgm", "bolus", "basal", "age", "carbs"]
 
 
 def save(df: pd.DataFrame, study_name: str, data_type: str, base_path: str) -> None:
@@ -18,7 +18,7 @@ def save(df: pd.DataFrame, study_name: str, data_type: str, base_path: str) -> N
     Args:
         df:          DataFrame to save. Must contain a 'patient_id' column.
         study_name:  Study identifier (e.g. "Flair"). Written as a partition column.
-        data_type:   One of 'cgm', 'bolus', 'basal', 'age'.
+        data_type:   One of 'cgm', 'bolus', 'basal', 'age', 'carbs'
         base_path:   Root output directory (e.g. "data/out").
     """
     df = df.assign(study_name=study_name)
@@ -74,10 +74,11 @@ def load(
                delivery_duration (timedelta64)
         basal: patient_id (str), study_name (str), datetime (datetime64), basal_rate (float, U/hr)
         age:   patient_id (str), study_name (str), age (int)
+        carbs: patient_id (str), study_name (str), datetime (datetime64), carbs (float, g),
 
     Args:
         base_path:   Root output directory (e.g. "data/out").
-        data_types:  Data types to load. Defaults to all four ('cgm', 'bolus', 'basal', 'age').
+        data_types:  Data types to load. Defaults to all four ('cgm', 'bolus', 'basal', 'age', 'carbs').
         studies:     Filter by study name(s). None loads all studies.
         patients:    Filter by patient ID(s). None loads all patients.
 
