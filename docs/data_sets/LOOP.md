@@ -6,6 +6,7 @@ This page summarizes our insights about the clinical study data of the **Loop** 
 The analysis for this dataset were conducted in:   
  1. [`understand-loop-dataset.ipynb`](https://github.com/nudgebg/babelbetes/blob/develop/notebooks/understand-loop-dataset/understand-loop-dataset.ipynb)   
  2. [`2025-07-11 - Loop Anormalies in egv, tdd, iob.ipynb`](https://github.com/nudgebg/babelbetes/blob/develop/notebooks/understand-loop-dataset/2025-07-11%20-%20Loop%20Anormalies%20in%20egv%2C%20tdd%2C%20iob.ipynb) ([jump to update](#2025-07-11-anomalies-in-loop-dataset-update))
+ 3. [`loop_carb_analysis.ipynb`](https://github.com/nudgebg/babelbetes/blob/develop/notebooks/loop_carb_analysis.ipynb) (carbohydrate data analysis)
 
 
 ## Study Overview
@@ -272,6 +273,52 @@ The general trend can be seen in the CDF plot below showing the time between the
 ![](assets/loop-basal-coverage.png)
 
 As we can see most days have good coverage but about 10% have less coverage than 20 hours. This means that many hours of basal rates need to be forward filled from basal rates from previous days.
+
+## Carbohydrates
+For details see [`notebooks/2026-07-13 - Loop Carbohydrates.ipynb`](https://github.com/nudgebg/babelbetes/blob/develop/notebooks/2026-07-13%20-%20Loop%20Carbohydrates.ipynb)
+
+Loop provides carbohydrate data from two independent sources that were active in different study phases:
+
+| Source | File | Column | Patients | Entries | Phase |
+|--------|------|--------|----------|---------|-------|
+| **Bolus Calculator** | LOOPDeviceWizard.txt | CarbInput | 213 | 78,564 | Early (2017–mid 2018) |
+| **HealthKit Meals** | LOOPDeviceFood.txt | CarbsNet | 837 | 1,405,777 | Later (mid 2018–2019) |
+
+We can see that the two datasets cover a specific time-frame. Prior to november, 2018 all meals were stored in the `LOOPDeviceWizard.txt` file including calculation details like CIR/ISF. Afterwards, foodlogs were stored in `LOOPDeviceFood.txt` but without calculation details information. 205 patients have data in in both sources. 
+![loop_datasets_meals](assets/loop_wizard_food_overlap.png)
+This could be due to an algorithm change in Loop (unlikely because patients don't switch immediately) or a change in the Tidepool data model.
+
+
+Daily meal coverage is only about 90% meaning that ~10% of days has no meal logs. This could be due to patients not eating, forgetting to enter carbs, running in fully closed loop mode, switching devices etc, gaps between study enrollment and actual start etc. 
+- **Wizard**: Mean 86.1% of days have ≥1 entry (median 99.1%) among 213 patients
+- **Food**: Mean 88.9% of days have ≥1 entry (median 96.1%) among 837 patients
+
+### Meal Duplicates
+
+Each source is deduplicated independently on `[PtID, datetime]`, keeping the row with maximum `RecID` (handles cases where multiple records logged at same timestamp):
+- Wizard: 649 duplicate entries removed (0.54% of raw data)
+- Food: 13,549 duplicate entries removed (1.16% of raw data)
+
+#### Temporal Patterns
+
+Both sources show expected meal-time peaks when converted to local time (using `PtTimezoneOffset` from the patient roster). The local time correction reveals that entries cluster around breakfast (7–9 AM), lunch (12–1 PM), and dinner (6–8 PM), with a characteristic dip around midnight:
+
+![loop_carb_hourly_patterns](assets/loop_carb_hourly_patterns.png)
+
+#### Tiny Meal Entries
+
+Loop logs a significant number of tiny carb entries (<1g) pre-dominantly in the df_wizard dataframe.
+
+- **Wizard**: 8,800 entries (7.4%) with 0 < carbs < 1g
+- **Food**: 9,942 entries (0.7%) with 0 < carbs < 1g from 546 unique patients
+
+We assume these small entries are a result of how Loop models **extended meal absorption** over multiple hours, rather than logged as a single lump sum. As we can see, the Wizard has a significantly higher amount of such entries. This would speak to an underlying algorithm in how Loop handles slow absorbing meals.
+
+**Example**: Patient showing large meal boluses followed by many tiny carbphydrate logs over a couple of hours.
+
+![loop_carb_extended_absorption](assets/loop_carb_extended_absorption.png)
+
+These entries are **retained** in the extraction as they represent explicit meal modeling by the device.
 
 ## TDD Validation
 
