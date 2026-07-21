@@ -19,7 +19,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -27,7 +27,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
       
 
@@ -881,6 +881,62 @@
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#carbohydrates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Carbohydrates
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Carbohydrates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#meal-duplicates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Meal Duplicates
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Meal Duplicates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporal-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Temporal Patterns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tiny-meal-entries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tiny Meal Entries
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -1893,6 +1949,62 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#carbohydrates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Carbohydrates
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Carbohydrates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#meal-duplicates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Meal Duplicates
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Meal Duplicates">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#temporal-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Temporal Patterns
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tiny-meal-entries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tiny Meal Entries
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#tdd-validation" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1986,7 +2098,8 @@
 <p>This page summarizes our insights about the clinical study data of the <strong>Loop</strong> study in efforts to understand how to handle bolus, basal, and cgm data, list assumptions that were made, and pose open questions. </p>
 <p>The analysis for this dataset were conducted in: <br />
  1. <a href="https://github.com/nudgebg/babelbetes/blob/develop/notebooks/understand-loop-dataset/understand-loop-dataset.ipynb"><code>understand-loop-dataset.ipynb</code></a> <br />
- 2. <a href="https://github.com/nudgebg/babelbetes/blob/develop/notebooks/understand-loop-dataset/2025-07-11%20-%20Loop%20Anormalies%20in%20egv%2C%20tdd%2C%20iob.ipynb"><code>2025-07-11 - Loop Anormalies in egv, tdd, iob.ipynb</code></a> (<a href="#2025-07-11-anomalies-in-loop-dataset-update">jump to update</a>)</p>
+ 2. <a href="https://github.com/nudgebg/babelbetes/blob/develop/notebooks/understand-loop-dataset/2025-07-11%20-%20Loop%20Anormalies%20in%20egv%2C%20tdd%2C%20iob.ipynb"><code>2025-07-11 - Loop Anormalies in egv, tdd, iob.ipynb</code></a> (<a href="#2025-07-11-anomalies-in-loop-dataset-update">jump to update</a>)
+ 3. <a href="https://github.com/nudgebg/babelbetes/blob/develop/notebooks/loop_carb_analysis.ipynb"><code>loop_carb_analysis.ipynb</code></a> (carbohydrate data analysis)</p>
 <h2 id="study-overview">Study Overview</h2>
 <ul>
 <li><strong>Study Name</strong>: An Observational Study of Individuals with Type 1 Diabetes Using the Loop System for Automated Insulin Delivery: The Loop Observational Study (LOS)<br />
@@ -2396,6 +2509,62 @@ In the figure, the red markers indicate the duration.  These mostly reach from o
 <p>The general trend can be seen in the CDF plot below showing the time between the first and last reported basal rate for each day. 
 <img alt="" src="../assets/loop-basal-coverage.png" /></p>
 <p>As we can see most days have good coverage but about 10% have less coverage than 20 hours. This means that many hours of basal rates need to be forward filled from basal rates from previous days.</p>
+<h2 id="carbohydrates">Carbohydrates</h2>
+<p>For details see <a href="https://github.com/nudgebg/babelbetes/blob/develop/notebooks/2026-07-13%20-%20Loop%20Carbohydrates.ipynb"><code>notebooks/2026-07-13 - Loop Carbohydrates.ipynb</code></a></p>
+<p>Loop provides carbohydrate data from two independent sources that were active in different study phases:</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>File</th>
+<th>Column</th>
+<th>Patients</th>
+<th>Entries</th>
+<th>Phase</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Bolus Calculator</strong></td>
+<td>LOOPDeviceWizard.txt</td>
+<td>CarbInput</td>
+<td>213</td>
+<td>78,564</td>
+<td>Early (2017–mid 2018)</td>
+</tr>
+<tr>
+<td><strong>HealthKit Meals</strong></td>
+<td>LOOPDeviceFood.txt</td>
+<td>CarbsNet</td>
+<td>837</td>
+<td>1,405,777</td>
+<td>Later (mid 2018–2019)</td>
+</tr>
+</tbody>
+</table>
+<p>We can see that the two datasets cover a specific time-frame. Prior to november, 2018 all meals were stored in the <code>LOOPDeviceWizard.txt</code> file including calculation details like CIR/ISF. Afterwards, foodlogs were stored in <code>LOOPDeviceFood.txt</code> but without calculation details information. 205 patients have data in in both sources. 
+<img alt="loop_datasets_meals" src="../assets/loop_wizard_food_overlap.png" />
+This could be due to an algorithm change in Loop (unlikely because patients don't switch immediately) or a change in the Tidepool data model.</p>
+<p>Daily meal coverage is only about 90% meaning that ~10% of days has no meal logs. This could be due to patients not eating, forgetting to enter carbs, running in fully closed loop mode, switching devices etc, gaps between study enrollment and actual start etc. 
+- <strong>Wizard</strong>: Mean 86.1% of days have ≥1 entry (median 99.1%) among 213 patients
+- <strong>Food</strong>: Mean 88.9% of days have ≥1 entry (median 96.1%) among 837 patients</p>
+<h3 id="meal-duplicates">Meal Duplicates</h3>
+<p>Each source is deduplicated independently on <code>[PtID, datetime]</code>, keeping the row with maximum <code>RecID</code> (handles cases where multiple records logged at same timestamp):
+- Wizard: 649 duplicate entries removed (0.54% of raw data)
+- Food: 13,549 duplicate entries removed (1.16% of raw data)</p>
+<h4 id="temporal-patterns">Temporal Patterns</h4>
+<p>Both sources show expected meal-time peaks when converted to local time (using <code>PtTimezoneOffset</code> from the patient roster). The local time correction reveals that entries cluster around breakfast (7–9 AM), lunch (12–1 PM), and dinner (6–8 PM), with a characteristic dip around midnight:</p>
+<p><img alt="loop_carb_hourly_patterns" src="../assets/loop_carb_hourly_patterns.png" /></p>
+<h4 id="tiny-meal-entries">Tiny Meal Entries</h4>
+<p>Loop logs a significant number of tiny carb entries (&lt;1g) pre-dominantly in the df_wizard dataframe.</p>
+<ul>
+<li><strong>Wizard</strong>: 8,800 entries (7.4%) with 0 &lt; carbs &lt; 1g</li>
+<li><strong>Food</strong>: 9,942 entries (0.7%) with 0 &lt; carbs &lt; 1g from 546 unique patients</li>
+</ul>
+<p>We assume these small entries are a result of how Loop models <strong>extended meal absorption</strong> over multiple hours, rather than logged as a single lump sum. As we can see, the Wizard has a significantly higher amount of such entries. This would speak to an underlying algorithm in how Loop handles slow absorbing meals.</p>
+<p><strong>Example</strong>: Patient showing large meal boluses followed by many tiny carbphydrate logs over a couple of hours.</p>
+<p><img alt="loop_carb_extended_absorption" src="../assets/loop_carb_extended_absorption.png" /></p>
+<p>These entries are <strong>retained</strong> in the extraction as they represent explicit meal modeling by the device.</p>
 <h2 id="tdd-validation">TDD Validation</h2>
 <p>In order to verify if we correctly extracted basal rates, we compared our calculated TDDs with those reported by JAEB (using <strong>totalDailyInsBolus</strong> from the gluIndices.txt with Period <em>Months 1-6</em>). </p>
 <p>However, what we found is that our calculated TDDs are much higher than those provided by JAEB. Understanding the differences could help us reveal unknowns and wrong assumptions that we made about the data. </p>
@@ -2494,7 +2663,7 @@ In the figure, the red markers indicate the duration.  These mostly reach from o
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.indexes", "navigation.sections"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>
