@@ -1,0 +1,1646 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../python-setup/">
+      
+      
+        <link rel="next" href="../contribute/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Good Dataset Practices - Babelbetes</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../style.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#recommendations-for-dataset-providers" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Babelbetes" class="md-header__button md-logo" aria-label="Babelbetes" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Babelbetes
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Good Dataset Practices
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Babelbetes" class="md-nav__button md-logo" aria-label="Babelbetes" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Babelbetes
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Babelbetes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datasets
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Datasets
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_sets/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_sets/IOBP2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IOBP2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_sets/DCLP3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DCLP3
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_sets/DCLP5/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DCLP5
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_sets/PEDAP/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PEDAP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_sets/FLAIR/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FLAIR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_sets/LOOP/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LOOP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_sets/T1DEXI/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    T1DExi
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_sets/T1DEXIP/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    T1DEXIP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_sets/REPLACE_BG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Replace BG
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    For Users
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    For Users
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../survey/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output Survey
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../checklist/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dataset Checklist
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../best-practices/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Best Practices
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../python-setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Virtual Environments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    For Dataset Providers
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    For Dataset Providers
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Good Dataset Practices
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Good Dataset Practices
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Access
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#file-structure-and-glossary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File Structure and Glossary
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="File Structure and Glossary">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#redundant-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Redundant Data
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#patient-counts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Patient Counts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#datetimes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Datetimes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-consistency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Consistency
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data Consistency">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#special-values-and-nans" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Special Values and NaNs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#duplicates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Duplicates
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cgm-basal-and-boluses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CGM, Basal, and Boluses
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CGM, Basal, and Boluses">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cgm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CGM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#basal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#boluses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Boluses
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-gaps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Gaps
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data Gaps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#study-period-and-intervention-timeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Study Period and Intervention Timeline
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-per-patient-record-with-should-include-the-patients-start-and-stop-datetimes-of-different-study-periods-along-with-the-intervention-types-this-allows-researchers-to-correctly-interpret-and-trim-the-data-without-ambiguities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A per-patient record with should include the patient's start and stop datetimes of different study periods, along with the intervention types. This allows researchers to correctly interpret and trim the data without ambiguities.
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validation-measures-tdd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation Measures (TDD)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dataset-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dataset History
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contribute/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contribute
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../acknowledgements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Acknowledgements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../about/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    About
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../license/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    License
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Access
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#file-structure-and-glossary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File Structure and Glossary
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="File Structure and Glossary">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#redundant-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Redundant Data
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#patient-counts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Patient Counts
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#datetimes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Datetimes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-consistency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Consistency
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data Consistency">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#special-values-and-nans" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Special Values and NaNs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#duplicates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Duplicates
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cgm-basal-and-boluses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CGM, Basal, and Boluses
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="CGM, Basal, and Boluses">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cgm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CGM
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#basal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basal
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#boluses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Boluses
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-gaps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Gaps
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data Gaps">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#study-period-and-intervention-timeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Study Period and Intervention Timeline
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#a-per-patient-record-with-should-include-the-patients-start-and-stop-datetimes-of-different-study-periods-along-with-the-intervention-types-this-allows-researchers-to-correctly-interpret-and-trim-the-data-without-ambiguities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A per-patient record with should include the patient's start and stop datetimes of different study periods, along with the intervention types. This allows researchers to correctly interpret and trim the data without ambiguities.
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validation-measures-tdd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation Measures (TDD)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dataset-history" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dataset History
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="recommendations-for-dataset-providers">Recommendations for Dataset Providers</h1>
+<div class="admonition info">
+<p class="admonition-title">For researchers</p>
+<p>If you are a researcher looking for a checklist to guide the implementation of a new dataset parser, see the <a href="../checklist/">Dataset Processing Checklist</a> instead.</p>
+</div>
+<p>This page is addressed to <strong>clinical study investigators and dataset distributors</strong>. It summarizes learnings from the complex task of processing publicly available diabetes datasets and provides actionable recommendations that we believe would make future datasets easier to process and therefore positively impact diabetes innovation.</p>
+<hr />
+<h2 id="access">Access</h2>
+<p>Most datasets are readiliy available such as the ones hosted by JAEB. However, other datasets often require complicated request forms and approval processes. The friction introduced by complex access procedures limits research throughput — especially for multi-study comparative analyses.</p>
+<ul>
+<li>Approval processes should be avoided where possible.</li>
+<li>Data should be <strong>click-to-download ready</strong> once access is granted, without requiring additional coordination steps.</li>
+</ul>
+<hr />
+<h2 id="file-structure-and-glossary">File Structure and Glossary</h2>
+<p>To avoid ambiguity, filenames and column names should match the glossary exactly. Researchers should be able to understand what data is available and how to use it without having to make assumptions or contact the study team.</p>
+<ul>
+<li><strong>One file per data type</strong> is strongly preferred. When multiple files exist for the same data type, each file's origin and intended use should be clearly described.</li>
+<li>Avoid very large files. They require out-of-memory computation and create friction for researchers with limited hardware. Prefer <strong>splitting files by patient</strong> and using <strong>Parquet over CSV</strong>: Parquet is more storage-efficient and preserves column data types, eliminating a common class of parsing errors.</li>
+</ul>
+<h3 id="redundant-data">Redundant Data</h3>
+<p>When multiple files or columns contain the same information, document clearly which is authoritative. Without this, researchers are left guessing which source to trust.</p>
+<p>Documentation should clearly specify:</p>
+<ul>
+<li>Which files should be used for analysis  </li>
+<li>How each file was generated (device export, investigator post-processing, etc.)</li>
+<li>Explain which post-processing steps were already taken and therefore which columns to rely on. Consider flagging or removing corrupt columns and files altogether to avoid ambiguity. </li>
+</ul>
+<h3 id="patient-counts">Patient Counts</h3>
+<p>There can be discrepancies between the number of patients enrolled in a study and the number of patients represented in the distributed dataset. Some datasets include more patients than reported in the publicaiton (e.g. Loop). Document the expected number of patients and flag any known exclusions or exceptions or missing data types (e.g. import error). This helps resolve uncertainties and would allow repeat previously published results that can serve as a means to verify the extraction was performed correctly.</p>
+<hr />
+<h2 id="datetimes">Datetimes</h2>
+<p>Datetime handling is one of the most error-prone areas in clinical datasets. Errors here often go undetected for a long time because they produce plausible-looking results rather than immediate failures.</p>
+<p><strong>Prefer local datetimes.</strong> Since diabetes physiology follow diurnal patterns, local time information is absolutely necessary. It should be clear from the documentation which times are local and if they are synchronized. When UTC timestamps with offsets are provided instead, include the locale so that Daylight Saving Time shifts and travel-related timezone changes can be correctly applied. Ensure that locale information is avilable when traveling timezones. Ideally, provide local times at all times.</p>
+<p><strong>Handle device resets and time corrections before distribution.</strong> When timezones were corrected (e.g. for device resets or other sources of errors) it can become unclear which columns to trust and if these corrections have been applied everywhere. Provide only the corrected timestamps or if corrupt data is included for transparency, document clearly which corrections have been applied.</p>
+<p><strong>Use a consistent format throughout.</strong> Follow ISO 8601 for all datetimes. Mixed formats — such as some columns using <code>YYYY-MM-DD HH:MM:SS</code> and others using separate date and time columns, or timestamps expressed as days relative to study start — introduce parsing complexity and can silently compromise analyses that depend on calendar effects (e.g., weekday vs. weekend patterns, seasonal variation). Ensure that midnight times follow the same schema.</p>
+<hr />
+<h2 id="data-consistency">Data Consistency</h2>
+<p>To ensure automated pipelines can parse data reliably, column values should carry consistent meanings and use consistent labels throughout. Inconsistencies — different units in the same column, or different labels for the same concept — cause parsers to either fail visibly or, worse, silently misclassify data. </p>
+<ul>
+<li><strong>Avoid mixed units within a single column.</strong> For example, bolus durations should use a single unit consistently (not milliseconds in some rows and minutes in others). Similarly, glucose values should use a single unit (mg/dL or mmol/L, not both).</li>
+<li><strong>Document all unique values in every categorical column</strong>, including NaN. To prevent filtering logic from silently missing rows, every possible value — including edge cases — should be described. Synonyms and abbreviation variants for the same concept are a common source of silent data loss.</li>
+<li>
+<p><strong>Avoid column interdependencies</strong>, where the meaning or unit of one column depends on the value of another. For example, a <code>type</code> column (with values like <code>cgm</code>, <code>calibration</code>, <code>bgm</code>) that changes what the <code>glucose</code> column represents forces the parser to split and re-join data to interpret it correctly — and any undocumented type value silently corrupts the result. Even more problematic is when the <em>unit</em> of a value in one column depends on a field in a different table or row (e.g., bolus duration in milliseconds vs. minutes depending on data source). Each column should have a single, unambiguous meaning regardless of context.</p>
+</li>
+<li>
+<p>Examples: Flair dataset the bolus source sometimes was CLOSED_LOOP_MICRO_BOLUS and sometimes CL_MICRO_BOLUS. T1DEXI: used different wording for the same bolus types: combination vs. dual, standard vs. normal.</p>
+</li>
+</ul>
+<h3 id="special-values-and-nans">Special Values and NaNs</h3>
+<p>Magic numbers and NaN values require explicit documentation. Their meaning often depends on context and is easy to get wrong.</p>
+<ul>
+<li><strong>Zero deliveries in bolus data</strong> are generally unnecessary to report. However, zero basal rates carry meaningful information (a basal suspend) and must be preserved.</li>
+<li><strong>NaN basal rates</strong> can be ambiguous. During a pump suspend, a NaN rate may need to be interpreted as zero — a distinction that changes TDD calculations significantly. Document the value ranges and NaN meanings in the data glossary.</li>
+<li><strong>CGM magic numbers</strong> (e.g., 0, 39, 401 used to signal out-of-range readings) must be documented. Some datasets clamp values at 39 or 401 mg/dL; others encode out-of-range readings separately. </li>
+</ul>
+<h3 id="duplicates">Duplicates</h3>
+<p>Duplicates are difficult to resolve after the fact and should be addressed before distribution. They can arise from various reasons such as merging data from multiple sources, post-processing or from devices issuing updated records after initial submission.</p>
+<p>The most challengging deduplication is resolving <strong>temporal duplicates</strong>: records for the same patient and timestamp but with different values. But there are many other challengging duplications:</p>
+<ul>
+<li>The same extended bolus reported twice, one hour apart</li>
+<li>Conflicting basal rates at the same timestamp (e.g., 0 vs. 3 units/hour, or 2 vs. 3 units/hour)</li>
+<li>Near-identical basal rates that differ only due to rounding (e.g., 1.25 vs. 1.3 units/hour)</li>
+<li>Inconsistent duration formats for the same record (e.g., <code>01:00</code> vs. <code>1:00</code>)</li>
+<li>The same injection logged twice within seconds — ambiguous as to whether it is a duplicate or a split bolus</li>
+</ul>
+<p>The risks with unresolved duplicates are significant: they may be counted twice, the wrong record may be dropped at random, or a deterministic deduplication rule may systematically retain the wrong entry (e.g., always keeping the maximum or the latest value).</p>
+<p>Wherever possible, duplicates should be resolved before distribution, with documentation explaining the resolution strategy.</p>
+<hr />
+<h2 id="cgm-basal-and-boluses">CGM, Basal, and Boluses</h2>
+<h3 id="cgm">CGM</h3>
+<p>To avoid downstream parsing errors, out-of-range readings should be handled consistently and the chosen approach documented. Some datasets clamp values at 39 and 401 mg/dL; others use special codes. Both approaches are acceptable, but the choice must be clearly documented. Calibration events should be reported separately from glucose readings. When multiple CGM sources are available (e.g., raw device export, cloud platform export, pump-side CGM), document the differences.</p>
+<h3 id="basal">Basal</h3>
+<p>Obtaining the true patient's basal rate at all times is a very complex and time consuming challenge, often with many ambiguities. This is because temporary basal rate changes and pump suspends are often reported separtely. Also, pump suspends are often indistinguishable from missing data. And this varies based on the dataset and device type.. Therefore, it is important that the glossary explains which data is required or if the basal rate change events are already corrected for these effects.</p>
+<p>Ideally, pump suspends appear as explicit zero-rate events in the basal rate, not as separte events or NaN values.</p>
+<p>Closed loop mode introduces particular ambiguity: some pumps continue to report basal rates during closed loop operation, while others report zeros or stop reporting entirely. This must be documented.</p>
+<p><strong>Gaps in basal data</strong> are especially problematic. When no basal event is recorded for an extended period, it is unclear whether the pump was inactive, data is missing, or the last known rate persisted. Without explicit gap markers, downstream tools cannot safely distinguish these cases and are forced to make assumptions that may be wrong.</p>
+<ul>
+<li><strong>Do not ship both original and corrected basal rates.</strong> Only the corrected, trusted values should be distributed.</li>
+<li><strong>Mark data gaps explicitly</strong> so that downstream tools can distinguish missing data from periods of inactivity.</li>
+</ul>
+<h3 id="boluses">Boluses</h3>
+<p>Extended boluses can appear in many forms — upon completion or at delivery start; with the normal and extended parts in separate rows or separate columns; with the extended portion labeled or not. This can cause a parser to silently misattribute dose amounts or timings. To ensure consistent parsing, extended boluses deserve special attention in the documentation. </p>
+<p>For boluses, please ensure:</p>
+<ul>
+<li>The timestamp is documented as referring to delivery <strong>start</strong> or <strong>completion</strong></li>
+<li>The duration reflects early-stopped boluses accurately</li>
+<li>The delivery duration is always included</li>
+<li>The documentation explains if early stopped boluses (also pump suspend related) are reflected in the delivered dose</li>
+</ul>
+<hr />
+<h2 id="data-gaps">Data Gaps</h2>
+<p>Data gaps create fundamental uncertainty: was the device off, disconnected, not uploading, or was the pump still running with no events to report? This ambiguity is compounded when only some data types are missing during a gap period (e.g., CGM is present but basal rates are absent).</p>
+<p>A <strong>watchdog signal</strong> — a periodic heartbeat record from the device — would allow downstream tools to distinguish device inactivity from missing uploads. Documenting the minimum expected reporting frequency for each data type (e.g., "the pump reports at least one basal event per day") would also help.</p>
+<p>Where data gaps are known and their cause is understood (e.g., a scheduled device download, a sensor warm-up period, or a planned device removal), <strong>flag them explicitly with the reason</strong>. This makes them distinguishable from gaps caused by unknown device failures or upload issues, which require different handling in downstream analysis.</p>
+<h3 id="study-period-and-intervention-timeline">Study Period and Intervention Timeline</h3>
+<p>It is common to find data before or after the defined study period — collected during run-in phases, device familiarization, or post-study follow-up. Without context, researchers cannot tell whether this data is valid, should be excluded, or reflects a different treatment condition. Data outside the study period should either be removed before distribution or clearly labeled so it can be excluded.</p>
+<p>Crossover studies are particularly challenging: each patient transitions between interventions, and the timing of these transitions varies per patient. Incorrectly attributing data to the wrong arm of a crossover can invalidate the analysis espceially when the data needs to be processed differently (see section on Basal Rates for an example.)</p>
+<h2 id="a-per-patient-record-with-should-include-the-patients-start-and-stop-datetimes-of-different-study-periods-along-with-the-intervention-types-this-allows-researchers-to-correctly-interpret-and-trim-the-data-without-ambiguities">A per-patient record with should include the patient's start and stop datetimes of different study periods, along with the intervention types. This allows researchers to correctly interpret and trim the data without ambiguities.</h2>
+<h2 id="validation-measures-tdd">Validation Measures (TDD)</h2>
+<p>Providing <strong>daily Total Daily Dose (TDD)</strong> values — broken down by basal and bolus — is one of the most useful validation aids a dataset can include. Comparing extracted TDDs against a provider-supplied reference is an effective way for researchers to catch incorrect assumptions about basal rate handling early in their analysis.</p>
+<ul>
+<li>Ensure there is exactly one TDD value per patient per day.</li>
+<li>Document how basal TDD was calculated (e.g., whether it integrates delivered rates or uses a scheduled profile).</li>
+</ul>
+<hr />
+<h2 id="dataset-history">Dataset History</h2>
+<p>Datasets are not static artifacts. Errors are discovered, data is added, and file schemas are updated — sometimes years after initial distribution. For downstream processing pipelines like BabelBetes, this introduces a silent but serious compatibility problem: a parser written against one version of a dataset may fail or produce incorrect results when run against a revised version.</p>
+<p>BabelBetes currently supports exactly one version of each dataset. The retrieval date is documented in each dataset's page, and users are expected to obtain the same version. When datasets change, parsers may fail with an explicit error — or, in the case of schema changes, silently produce incorrect output.</p>
+<p>A good example of how this can work well: in collaboration with JAEB, missing basal data was identified in one of their distributed datasets. JAEB promptly updated the dataset with complete basal records.</p>
+<p>However, changes in the dataset can also introduce inconsistencies. Therefore, we recommend that dataset distributors maintain a <strong>versioned release history</strong>, similar to software release notes. This should include:</p>
+<ul>
+<li>A version identifier or release date for each dataset </li>
+<li>A file hash</li>
+<li>A description of what changed (added data, corrected values, renamed columns, restructured files)</li>
+<li>Which files or columns were affected</li>
+</ul>
+<p>Such a changelog would allow processing pipelines to detect version mismatches and prompt users to obtain the correct version before running — rather than failing silently or producing subtly wrong results.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.indexes", "navigation.sections"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

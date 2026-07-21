@@ -1,0 +1,1456 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../survey/">
+      
+      
+        <link rel="next" href="../best-practices/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Dataset Checklist - Babelbetes</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../style.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#dataset-processing-checklist" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Babelbetes" class="md-header__button md-logo" aria-label="Babelbetes" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Babelbetes
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Dataset Checklist
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Babelbetes" class="md-nav__button md-logo" aria-label="Babelbetes" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Babelbetes
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Babelbetes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Datasets
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Datasets
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_sets/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_sets/IOBP2/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IOBP2
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_sets/DCLP3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DCLP3
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_sets/DCLP5/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DCLP5
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_sets/PEDAP/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    PEDAP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_sets/FLAIR/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    FLAIR
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_sets/LOOP/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    LOOP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_sets/T1DEXI/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    T1DExi
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_sets/T1DEXIP/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    T1DEXIP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data_sets/REPLACE_BG/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Replace BG
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    For Users
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    For Users
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../survey/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output Survey
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dataset Checklist
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dataset Checklist
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-basal-rates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Basal Rates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-boluses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Boluses
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-cgm-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. CGM Values
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-timestamps-and-timezones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Timestamps and Timezones
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-datetime-adjustments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Datetime Adjustments
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-datetime-parsing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Datetime Parsing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-duplicates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Duplicates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-missing-data-and-special-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Missing Data and Special Values
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-incomplete-patients" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Incomplete Patients
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-data-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Data Inventory
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../best-practices/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Best Practices
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../python-setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Virtual Environments
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    For Dataset Providers
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    For Dataset Providers
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recommendations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Good Dataset Practices
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contribute/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contribute
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../acknowledgements/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Acknowledgements
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../about/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    About
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../license/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    License
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-basal-rates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Basal Rates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-boluses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Boluses
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-cgm-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. CGM Values
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-timestamps-and-timezones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Timestamps and Timezones
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-datetime-adjustments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Datetime Adjustments
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-datetime-parsing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Datetime Parsing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-duplicates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Duplicates
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8-missing-data-and-special-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Missing Data and Special Values
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-incomplete-patients" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Incomplete Patients
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10-data-inventory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        10. Data Inventory
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="dataset-processing-checklist">Dataset Processing Checklist</h1>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This checklist is for <strong>researchers implementing a new dataset parser</strong> in BabelBetes. It is based on pitfalls, challenges, and errors encountered while processing clinical diabetes datasets, and ensures that important aspects are not overlooked. If you are a dataset provider or investigator looking for guidance on how to structure and distribute your data, see <a href="../recommendations/">Recommendations for Dataset Providers</a> instead.</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Guiding principle: impact-based decisions</p>
+<p>The goal of every check here is to ensure the extracted data faithfully represents what actually happened clinically. Not every issue requires a fix. Before investing time in a complex resolution, ask: <strong>how often does this occur, and how much does it affect downstream analysis?</strong> An issue affecting &lt;1% of events that is difficult or impossible to resolve and has negligible expected impact (e.g. duplicated CGMS with almost identical values) on population-level metrics should be <strong>accepted and documented</strong>.</p>
+</div>
+<h2 id="1-basal-rates">1. Basal Rates</h2>
+<p>Basal rate data is the most complex data type — it requires assembling a continuous rate history from a mix of scheduled rates, temp basals, and suspend events.</p>
+<p>In FLAIR, 72,424 suspend events are stored in a separate table and are <em>not</em> reflected in the basal rate history — they must be manually merged. Temp basals in FLAIR come in two modes: "Percent" (multiply scheduled rate by percentage) and "Rate" (replace with absolute rate). In LOOP, suspend events are reported as <code>NaN</code> basal rates and must be replaced with 0, not dropped. In some datasets (e.g. T1DEXI) we have seen basal rates overlapping with the next basal rate's start time — the duration must be recalculated. In PEDAP and DCLP3, there are no temp basals or suspends to handle.</p>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Determine how <strong>suspends</strong> are represented: separate table, NaN rate, or 0 rate — and handle accordingly</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Check for <strong>temporary basal rates</strong>: are they in absolute units or percent of scheduled rate?</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> For percent temp basals: multiply the scheduled rate; for rate temp basals: replace the scheduled rate</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Check for basal rate <strong>overlaps</strong>: does a new rate start before the previous one expires? What could explain this? How often does it occur?</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Plot the daily moving average of basal rates — expect a physiological diurnal pattern</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Verify that basal data is consistent with the CGM and bolus data (same patients, same time range)</li>
+</ul>
+<h2 id="2-boluses">2. Boluses</h2>
+<p>Bolus data has three common sources of complexity: requested vs. delivered amounts, extended bolus duration, and duplicates from dual-source logging.</p>
+<p>Extended bolus timestamps can sometimes represent the <em>completion</em> of delivery, sometimes the start of delivery. Sometimes, duration is not provided and must be inferred (In DCLP3 and DCLP5). In some datasets, the duration column values represent different units depending on the data source (milliseconds for Tidepool, minutes for Diasend imports).</p>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Determine whether reported values are <strong>requested</strong> or <strong>delivered</strong> — use delivered</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Check the timestamp meaning: is it the start or the end of delivery? (Especially for extended boluses)</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Check for extended/square/dual-wave boluses — how is duration provided or inferred?</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> For datasets without explicit duration: implement matching logic; set outlier durations to median</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Check for orphan extended bolus parts (extended portion with no matching standard bolus)</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Validate bolus duration units: minutes, milliseconds, or ISO 8601?</li>
+</ul>
+<p>??? note "Old reference items"
+    5. [ ] Boluses
+        1. [ ] Requested vs. Delivered (check what timestamp means)
+        2. [ ] Extended bolus duration
+            1. Are there overlaps with the next bolus? Why?</p>
+<h2 id="3-cgm-values">3. CGM Values</h2>
+<p>CGM sensors have hard physical limits, and different datasets encode out-of-range values differently.</p>
+<p>DCLP3, DCLP5, and PEDAP store out-of-range CGM readings as <code>0</code>, with a separate <code>HighLowIndicator</code> column (1 = high/400, 2 = low/40). REPLACE BG and LOOP use sentinel values: 39 and 401 (or 38). LOOP had a handful of patients with values above and below these limits. One patient showed glucose values above 400, potentially from a modified CGM device (using a third party application such as xDrip or similar).</p>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Check the distribution of CGM values — are there values below 40 or above 400?</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Check for sentinel values (0, 38, 39, 401) used to represent out-of-range readings or error codes</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Determine how to handle each out-of-range case: replace with boundary value, or drop</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Check the unit: mg/dL or mmol/L? Convert if necessary</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Remove or flag any non-physiological values that are likely sensor artifacts</li>
+</ul>
+<h2 id="4-timestamps-and-timezones">4. Timestamps and Timezones</h2>
+<p>Diabetes physiology follows a daily pattern (circadian rhythm). Having datetimes in local time is absolutely mandatory — having only UTC time or incorrect timezone information will have a major impact on analysis.</p>
+<p>Most JAEB datasets store local time — and we confirmed this by checking the diurnal patterns. LOOP was an exception: datetimes were in UTC and required a static per-patient offset from the patient roster. The question was whether using a static value would cause large errors (e.g. are patients traveling much?). Fortunately, 37% of patients came with a <code>TmZnOffset</code> in the CGM records, which we used to estimate an expected error of less than 2 hours for &gt;96% of cases. After adjustment, the diurnal patterns confirmed times were local, showing postprandial glucose peaks in the morning, noon, and evening; stable overnight basal. This diurnal validation is the most reliable way to confirm timezone correctness.</p>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Check the glossary for any mention of UTC, local time, or timezone</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Verify with a diurnal CGM or bolus plot — expect peaks in the morning ~6–9am, ~12pm, ~6–8pm (for US patients)</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> If UTC or unknown: determine how timezone correction will be applied and for how many patients it is possible</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> If timezone data is incomplete, document the expected error and how many patients are affected</li>
+</ul>
+<h2 id="5-datetime-adjustments">5. Datetime Adjustments</h2>
+<p>Sometimes timestamps are corrupted due to device clock errors or incorrect timezone handling. FLAIR, DCLP3, and DCLP5 include a <code>DataDtTm_adjusted</code> column where JAEB already corrected such errors. These adjusted values need to be merged with the remaining unadjusted datetimes.</p>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Check whether an adjusted datetime column exists</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Check for strong jumps or overlapping data in the CGM trace that could indicate a clock correction</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Verify that adjusted datetimes correctly close the gaps (inspect time-difference distributions before/after)</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Document your decision: which column you used and why</li>
+</ul>
+<h2 id="6-datetime-parsing">6. Datetime Parsing</h2>
+<p>Datetime strings in clinical datasets often come in different formats and sometimes differ even within the same file.</p>
+<p>Some datasets have datetime strings where the time component is omitted entirely when the event occurs at midnight — <code>2020-01-01</code> instead of <code>2020-01-01 00:00:00</code>. T1DEXI stores datetimes as seconds offset from <code>1960-01-01</code>. REPLACE BG provides no absolute dates at all — only days elapsed since enrollment.</p>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Check whether datetime strings are consistent across all rows — inspect format, length, leading zeros, 12/24h</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Check whether the time component can be missing (midnight entries)</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Use <code>parse_flair_dates()</code> where applicable (FLAIR/DCLP5/PEDAP midnight-truncation pattern)</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> If multiple formats exist in the same column, split and parse separately</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Confirm parsed values are reasonable (no year 1960, no year 2099, no NaT at unexpected rates)</li>
+</ul>
+<p>??? note "Old reference items"
+    2. [ ] Datetime Strings
+        1. [ ] Datetime strings consistent?
+            1. [ ] If not, check how to parse efficiently and correctly. Use <code>parse_flair_dates</code> if applicable
+        2. [ ] Adjustments made?
+            1. [ ] Which one to use?
+            2. [ ] Check if adjustments make sense
+                1. [ ] Visually inspect gaps (sample)
+                2. [ ] Check summary statistics (do gaps get smaller?)</p>
+<h2 id="7-duplicates">7. Duplicates</h2>
+<p>Duplicates are universal. Every dataset we have processed contains them in some form. For example, FLAIR had ~9.2% temporal bolus duplicates (same patient + datetime, differing only in <code>BolusSource</code>). ~1/3 of temporal basal duplicates differ by exactly 0.005 U/h, and bolus duplicates from <code>CLOSED_LOOP_MICRO_BOLUS</code> are rounded up to the nearest 0.005 U increment while <code>CL_MICRO_BOLUS</code> entries are not. Another example is the LOOP dataset which contains 34.70% exact CGM duplicates (identical rows) but much more (38.41%) temporal duplicates (checking timestamp alone) which a normal <code>drop_duplicates()</code> would have missed.</p>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Check for <strong>exact duplicates</strong> across all relevant columns — why do they exist?</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Check for <strong>temporal duplicates</strong> (same patient + datetime, differing values) — which record to keep?</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Use a tolerance margin when checking for duplicates to uncover near-exact duplicates that differ only by a small rounding or precision error</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> For each duplicate type, try to understand the root cause</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Determine and document the resolution technique: drop, keep first, keep max, keep by RecordID, etc.</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> For temporal duplicates, check whether another column explains the difference (e.g., <code>BolusType</code> in DCLP3/DCLP5 explains apparent bolus duplicates that had distinct meanings)</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Quantify: how often do duplicates occur overall and per patient? Is it acceptable to document and move on?</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Are temporal duplicates correlated? Do they contain the same or similar value? CGM duplicates are often near-identical, possibly from multiple export sources with slight post-processing differences</li>
+</ul>
+<p>??? note "Old reference items"
+        3. [ ] Handle duplicates
+            1. Obvious duplicates: Decide which columns are relevant (e.g. datetime, patient, bolus amount, duration?) and drop duplicates.
+                1. Ask: Why are there duplicates? Did I miss including a relevant column that explains this?
+            1. [ ] Subset Duplicates (subset of columns)
+                1. Temporal duplicates (e.g. patient id, datetime)
+                    1. Which one to pick?
+                1. [ ] How often? Is it worth investigating?
+                    1. Check for correlation (e.g. CGM duplicates)
+                    2. [ ] Drop (keep first, max, record ID, or a different resolution technique might be better?)</p>
+<h2 id="8-missing-data-and-special-values">8. Missing Data and Special Values</h2>
+<p>Understand the meaning of special values before doing any computation.</p>
+<p>Often, the value of 0 or NaN is not obvious. By no means should such values be dropped before checking! Examples: In DCLP3 and DCLP5, a CGM value of <code>0</code> indicates an out-of-range reading (use <code>HighLowIndicator</code> to determine whether to replace with 40 or 400 mg/dL). In IOBP2, a missing time component in <code>DeviceDtTm</code> means midnight, not an error. In LOOP, a NaN basal rate actually refers to a pump suspend and should be replaced with 0. In T1DEXI, some FAORRES values appear as <code>5.397605e-79</code> — effectively zero but stored with a floating-point precision error, which makes finding duplicates with other zero values difficult.</p>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Profile every numeric column: check value ranges, count zeros, NaNs, and empty strings</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Profile every categorical column: check value counts and look for unexpected categories</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> For each special value (0, NaN, empty string): determine what it actually represents — is it truly zero, missing, or an out-of-range sentinel?</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Document the frequency and per-patient/per-day impact of each special value</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Confirm your interpretation is documented somewhere in the glossary or study documentation</li>
+</ul>
+<h2 id="9-incomplete-patients">9. Incomplete Patients</h2>
+<p>Not all patients have data across all modalities. Including patients with partial data will silently corrupt downstream analysis.</p>
+<p>In DCLP3, 125 patients appear in the basal and bolus files, but only 112 appear in the CGM file — 13 patients have no CGM data and must be excluded. In REPLACE BG, 208 of 226 patients have basal data, leaving 18 to exclude. In PEDAP (Release 3), the SC group had no complete basal data at all; this was only resolved in Release 4.</p>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Compute the set of unique patient IDs in each data type (CGM, bolus, basal)</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Identify patients missing from one or more datasets</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Decide and document which patients to include</li>
+</ul>
+<h2 id="10-data-inventory">10. Data Inventory</h2>
+<p>Before writing any extraction logic, verify that the data actually matches what is described.</p>
+<p>Datasets rarely document themselves completely. DCLP3 contained additional columns not listed in the glossary. LOOP's suppressed basal records came without detailed explanation.</p>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Cross-check all files and columns listed in the glossary against what is actually on disk</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Look for files not mentioned in the glossary that may contain relevant data</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Check for undocumented columns in known files</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.indexes", "navigation.sections"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
