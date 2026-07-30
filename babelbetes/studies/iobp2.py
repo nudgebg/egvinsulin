@@ -20,62 +20,67 @@ class IOBP2(StudyDataset):
 
     @cached_property
     def _df(self):
+        #keep the original raw column names throughout; rename to standard names only at the end of each extractor
         df = get_df(self._iletFilePath, usecols=['PtID', 'DeviceDtTm', 'CGMVal', 'BasalDelivPrev', 'BolusDelivPrev',
                                                   'MealBolusDelivPrev'], subset=self.subset, dtype={'PtID': str, 'CGMVal': float})
-        df.rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 'DeviceDtTm': self.COL_NAME_DATETIME, 'CGMVal': self.COL_NAME_CGM,
-                        'BasalDelivPrev': self.COL_NAME_BASAL_RATE, 'BolusDelivPrev': self.COL_NAME_BOLUS}, inplace=True)
         #date time strings without time component are assumed to be midnight
-        df[self.COL_NAME_DATETIME] = df[self.COL_NAME_DATETIME].transform(parse_flair_dates).astype('datetime64[ns]')
-        return df.sort_values([self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME])
+        df['DeviceDtTm'] = df['DeviceDtTm'].transform(parse_flair_dates).astype('datetime64[ns]')
+        return df.sort_values(['PtID', 'DeviceDtTm'])
 
     def _extract_bolus_event_history(self):
-        df_bolus = self._df.dropna(subset=[self.COL_NAME_BOLUS, 'MealBolusDelivPrev']).copy()
+        df_bolus = self._df['PtID', 'DeviceDtTm', 'BolusDelivPrev','MealBolusDelivPrev'].copy()
 
         #Bolus delivery is separated into two different columns: bolus and meal bolus.
-        df_bolus[self.COL_NAME_BOLUS] = df_bolus[self.COL_NAME_BOLUS] + df_bolus['MealBolusDelivPrev']
+        df_bolus['BolusDelivPrev'] = df_bolus['BolusDelivPrev'] + df_bolus['MealBolusDelivPrev']
+        df_bolus = df_bolus[df_bolus['BolusDelivPrev'] > 0]
+
+        #duplicates are resolved using last record
+        df_bolus = df_bolus.drop_duplicates(subset=['PtID', 'DeviceDtTm'], keep='last')
+
+        #insulin delivery is reported as the previous amount delivered. Therefore data is shifted to to align with algorithm announcement
+        df_bolus['DeviceDtTm'] = (df_bolus['DeviceDtTm'] - timedelta(minutes=5))
 
         #there are no extended boluses in ilet only standard/micro boluses
         df_bolus[self.COL_NAME_BOLUS_DELIVERY_DURATION] = pd.Timedelta('0 minutes')
 
-        #insulin delivery is reported as the previous amount delivered. Therefore data is shifted to to align with algorithm announcement
-        df_bolus[self.COL_NAME_DATETIME] = (df_bolus[self.COL_NAME_DATETIME] - timedelta(minutes=5))
-
-        #0 values are dropped
-        df_bolus = df_bolus[df_bolus.bolus > 0]
-
-        #reduce, return
-        df_bolus = df_bolus[[self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME, self.COL_NAME_BOLUS, self.COL_NAME_BOLUS_DELIVERY_DURATION]]
-        return df_bolus
+        #rename to standard names, reduce, return
+        df_bolus = df_bolus.rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 
+                                            'DeviceDtTm': self.COL_NAME_DATETIME, 
+                                            'BolusDelivPrev': self.COL_NAME_BOLUS})
+        return df_bolus[[self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME, self.COL_NAME_BOLUS, self.COL_NAME_BOLUS_DELIVERY_DURATION]]
 
     def _extract_cgm_history(self):
-        #get only cgms
-        df_cgm = self._df.dropna(subset=[self.COL_NAME_CGM]).copy()
+        #get only cgms, this also resolves duplicated rows which have CGM NaN
+        df_cgm = self._df.dropna(subset=['CGMVal']).copy()
 
         # replace magic numbers 39,401 with 40,400
-        df_cgm[self.COL_NAME_CGM] = df_cgm[self.COL_NAME_CGM].replace({ 39: 40, 401: 400 })
+        df_cgm['CGMVal'] = df_cgm['CGMVal'].replace({ 39: 40, 401: 400 })
 
         #there are only two duplicates (almost identical values), we keep just one
-        df_cgm = df_cgm.drop_duplicates([self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME], keep='first')
+        df_cgm = df_cgm.drop_duplicates(['PtID', 'DeviceDtTm'], keep='first')
 
-        #reduce, return
-        df_cgm = df_cgm[[self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME, self.COL_NAME_CGM]]
-        return df_cgm
+        #rename to standard names, reduce, return
+        df_cgm = df_cgm.rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 
+                                        'DeviceDtTm': self.COL_NAME_DATETIME, 'CGMVal': self.COL_NAME_CGM})
+        return df_cgm[[self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME, self.COL_NAME_CGM]]
 
     def _extract_basal_event_history(self):
-        df_basal = self._df.dropna(subset=[self.COL_NAME_BASAL_RATE]).copy()
+        df_basal = self._df['PtID', 'DeviceDtTm', 'BasalDelivPrev'].copy()
 
         #insulin delivery is reported as the previous amount delivered. Therefore data is shifted to to align with algorithm announcement
-        df_basal[self.COL_NAME_DATETIME] = (df_basal[self.COL_NAME_DATETIME] - timedelta(minutes=5))
+        df_basal['DeviceDtTm'] = (df_basal['DeviceDtTm'] - timedelta(minutes=5))
 
         #convert to rate
-        df_basal[self.COL_NAME_BASAL_RATE] = df_basal[self.COL_NAME_BASAL_RATE] * 12 # 5 minute delivery to hourly rate
+        df_basal['BasalDelivPrev'] = df_basal['BasalDelivPrev'] * 12 # 5 minute delivery to hourly rate
 
         #drop duplicates
-        df_basal = df_basal.drop_duplicates([self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME], keep='first')
+        df_basal = df_basal.drop_duplicates(['PtID', 'DeviceDtTm'], keep='last')
 
-        #reduce, return
-        df_basal = df_basal[[self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME, self.COL_NAME_BASAL_RATE]]
-        return df_basal
+        #rename to standard names, reduce, return
+        df_basal = df_basal.rename(columns={'PtID': self.COL_NAME_PATIENT_ID, 
+                                            'DeviceDtTm': self.COL_NAME_DATETIME, 
+                                            'BasalDelivPrev': self.COL_NAME_BASAL_RATE})
+        return df_basal[[self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME, self.COL_NAME_BASAL_RATE]]
 
     def _extract_age_data(self):
         age_file_path = os.path.join(self.study_path, 'Data Tables', 'IOBP2PtRoster.txt')

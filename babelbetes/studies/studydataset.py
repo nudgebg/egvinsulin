@@ -18,7 +18,7 @@ BOLUS_SCHEMA = DataFrameSchema({
     "datetime": Column(pa.DateTime, nullable=False),
     "bolus": Column(pa.Float, nullable=False, checks=[Check.ge(0)]),
     "delivery_duration": Column(pa.Timedelta, nullable=False),
-}, strict=True, unique=["patient_id", "datetime"])
+}, strict=True, unique=["patient_id", "datetime", "delivery_duration"])
 
 BASAL_SCHEMA = DataFrameSchema({
     "patient_id": Column(pa.String, nullable=False),

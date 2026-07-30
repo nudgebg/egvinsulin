@@ -36,6 +36,10 @@ These are text files ("|" separator) and host many columns related to the iLet p
 ### CGM Magic Numbers
 Less than 1% of the cgm values are 39 or 401 which mark beloa and above range values which are replaced by 40 and 400 as we've done in other datasets before.
 
+## Duplicates
+There are very few duplicates and the second record (that with the higher record index) in most cases is a NaN CGM value and 0 insulin. These look corrupted and should be dropped. The remaining number is only 4 rows and we apply the same logic here without further investigation.
+
+
 ## DateTimes
  DeviceDtTm has two formats within the data: mm/dd/yyy and mm/dd/yyyy HH:MM:SS. It is assumed that the missing time values are exactly midnight.  All DeviceDtTm values with only mm/dd/yyyy have 00:00:00 added. 
 
