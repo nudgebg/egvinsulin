@@ -8,38 +8,40 @@ from pandera.pandas import Column, DataFrameSchema, Check
 
 logger = Logger.get_logger(__name__)
 
+# NOTE on bounds: only physiologically *certain* invariants live here as hard checks —
+# non-negativity of doses, and (patient_id, datetime) uniqueness on every event stream.
+# Upper dose limits and CGM range are handled as *soft* checks in the validation layer
+# (a legitimate Omnipod bolus reaches ~46 U and T1DEXI/P clip CGM at 39/401), because a hard
+# bound there would crash extraction on real data.
 BOLUS_SCHEMA = DataFrameSchema({
     "patient_id": Column(pa.String, nullable=False),
     "datetime": Column(pa.DateTime, nullable=False),
-    "bolus": Column(pa.Float, nullable=False),
+    "bolus": Column(pa.Float, nullable=False, checks=[Check.ge(0)]),
     "delivery_duration": Column(pa.Timedelta, nullable=False),
-}, strict=True)
+}, strict=True, unique=["patient_id", "datetime"])
 
 BASAL_SCHEMA = DataFrameSchema({
     "patient_id": Column(pa.String, nullable=False),
     "datetime": Column(pa.DateTime, nullable=False),
-    "basal_rate": Column(pa.Float, nullable=False),
-}, strict=True)
+    "basal_rate": Column(pa.Float, nullable=False, checks=[Check.ge(0)]),
+}, strict=True, unique=["patient_id", "datetime"])
 
 CGM_SCHEMA = DataFrameSchema({
     "patient_id": Column(pa.String, nullable=False),
     "datetime": Column(pa.DateTime, nullable=False),
     "cgm": Column(pa.Float, nullable=False),
-}, strict=True)
+}, strict=True, unique=["patient_id", "datetime"])
 
 AGE_SCHEMA = DataFrameSchema({
     "patient_id": Column(pa.String, nullable=False, unique=True),
     "age": Column(pa.Int, nullable=False, checks=[Check.ge(0), Check.le(120)]),
-}, strict=True)
-
-# Backward-compatible alias removed after all studies are migrated
-AGE_OUTPUT_SCHEMA = AGE_SCHEMA
+}, strict=True, unique=["patient_id"])
 
 CARBS_SCHEMA = DataFrameSchema({
     "patient_id": Column(pa.String, nullable=False),
     "datetime": Column(pa.DateTime, nullable=False),
     "carbs": Column(pa.Float, nullable=False, checks=[Check.gt(0), Check.le(400)]),
-}, strict=True)
+}, strict=True, unique=["patient_id", "datetime"])
 
 
 class StudyDataset:
