@@ -28,7 +28,7 @@ class IOBP2(StudyDataset):
         return df.sort_values(['PtID', 'DeviceDtTm'])
 
     def _extract_bolus_event_history(self):
-        df_bolus = self._df['PtID', 'DeviceDtTm', 'BolusDelivPrev','MealBolusDelivPrev'].copy()
+        df_bolus = self._df[['PtID', 'DeviceDtTm', 'BolusDelivPrev','MealBolusDelivPrev']].copy()
 
         #Bolus delivery is separated into two different columns: bolus and meal bolus.
         df_bolus['BolusDelivPrev'] = df_bolus['BolusDelivPrev'] + df_bolus['MealBolusDelivPrev']
@@ -65,7 +65,7 @@ class IOBP2(StudyDataset):
         return df_cgm[[self.COL_NAME_PATIENT_ID, self.COL_NAME_DATETIME, self.COL_NAME_CGM]]
 
     def _extract_basal_event_history(self):
-        df_basal = self._df['PtID', 'DeviceDtTm', 'BasalDelivPrev'].copy()
+        df_basal = self._df[['PtID', 'DeviceDtTm', 'BasalDelivPrev']].copy()
 
         #insulin delivery is reported as the previous amount delivered. Therefore data is shifted to to align with algorithm announcement
         df_basal['DeviceDtTm'] = (df_basal['DeviceDtTm'] - timedelta(minutes=5))
